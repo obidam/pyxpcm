@@ -1,5 +1,5 @@
-Profile Classification Modelling (PCM)
-======================================
+Profile Classification Modelling (PCM) for xarray
+=================================================
 
 **Profile Classification Modelling** is an emerging scientific analysis approach based on vertical profiles classification that can be used in a variety of oceanographic problems (front detection, water mass identification, natural region contouring, reference profile selection for validation, etc ...).
 

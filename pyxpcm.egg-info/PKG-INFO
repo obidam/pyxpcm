@@ -1,14 +1,14 @@
 Metadata-Version: 1.1
 Name: pyxpcm
-Version: 0.1.0
+Version: 0.1.1
 Summary: Profile Classification Model
-Home-page: http://github.com/obidam/pypcm
+Home-page: http://github.com/obidam/pyxpcm
 Author: Guillaume Maze
 Author-email: gmaze@ifremer.fr
 License: UNKNOWN
 Description-Content-Type: text/markdown
-Description: Profile Classification Modelling (PCM)
-        ======================================
+Description: Profile Classification Modelling (PCM) for xarray
+        =================================================
         
         **Profile Classification Modelling** is an emerging scientific analysis approach based on vertical profiles classification that can be used in a variety of oceanographic problems (front detection, water mass identification, natural region contouring, reference profile selection for validation, etc ...).
         

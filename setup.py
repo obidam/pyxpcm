@@ -8,9 +8,9 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="pyxpcm",
-    version="0.1.0",
+    version="0.1.1",
     description='Profile Classification Model',
-    url='http://github.com/obidam/pypcm',
+    url='http://github.com/obidam/pyxpcm',
     author='Guillaume Maze',
     author_email='gmaze@ifremer.fr',
     long_description=long_description,

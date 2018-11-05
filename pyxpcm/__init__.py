@@ -1,4 +1,3 @@
-__version__ = "0.1.0"
 name = "pyxpcm"
 
 from pcmv5 import PCM as pcm
