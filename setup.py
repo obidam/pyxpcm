@@ -9,7 +9,7 @@ with open("README.md", "r") as fh:
 setuptools.setup(
     name="pyxpcm",
     version="0.1.1",
-    description='Profile Classification Model',
+    description='pyxpcm: Python Profile Classification Modelling for Xarray',
     url='http://github.com/obidam/pyxpcm',
     author='Guillaume Maze',
     author_email='gmaze@ifremer.fr',

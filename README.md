@@ -1,7 +1,7 @@
-Profile Classification Modelling (PCM) for xarray
-=================================================
+Python Profile Classification Modelling for Xarray
+==================================================
 
-**Profile Classification Modelling** is an emerging scientific analysis approach based on vertical profiles classification that can be used in a variety of oceanographic problems (front detection, water mass identification, natural region contouring, reference profile selection for validation, etc ...).
+**Profile Classification Modelling** is an scientific analysis approach based on vertical profiles classification that can be used in a variety of oceanographic problems (front detection, water mass identification, natural region contouring, reference profile selection for validation, etc ...).
 
 It is being developed at Ifremer/LOPS with collaboration with Telecom Bretagne since 2015 and is now mature enough (with publication and communications) to be distributed and made available publicly for continuous improvements with a community development.
 
@@ -16,6 +16,6 @@ Checkout our 1st dataset release from North-Atlantic Argo data:
 
 ## Install
 
-Simply use Pypi:
+Simply use pip:
 
     pip install pyxpcm
