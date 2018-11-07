@@ -16,9 +16,11 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     packages=setuptools.find_packages(),
+    package_data={'pyxpcm': ['data/*.nc']},
+    license='GPLv3',
     classifiers=[
         "Programming Language :: Python :: 2.7",
-        "License :: OSI Approved :: MIT License",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
     ],
 )

@@ -167,8 +167,26 @@
   <div class="section" id="examples">
 <span id="id1"></span><h1>Examples<a class="headerlink" href="#examples" title="Permalink to this headline">¶</a></h1>
 <p>To get you started with examples, first load a sample dataset of Argo profiles interpolated on standard depth levels:</p>
-<div class="highlight-python"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">pyxpcm</span> <span class="kn">import</span> <span class="n">datasets</span> <span class="k">as</span> <span class="n">pcmdata</span>
-<span class="n">ds</span> <span class="o">=</span> <span class="n">pcmdata</span><span class="o">.</span><span class="n">load_argo</span><span class="p">()</span>
+<div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [1]: </span><span class="kn">from</span> <span class="nn">pyxpcm</span> <span class="kn">import</span> <span class="n">datasets</span> <span class="k">as</span> <span class="n">pcmdata</span>
+
+<span class="gp">In [2]: </span><span class="n">ds</span> <span class="o">=</span> <span class="n">pcmdata</span><span class="o">.</span><span class="n">load_argo</span><span class="p">()</span>
+
+<span class="gp">In [3]: </span><span class="n">ds</span>
+<span class="gh">Out[3]: </span><span class="go"></span>
+<span class="go">&lt;xarray.Dataset&gt;</span>
+<span class="go">Dimensions:    (DEPTH: 21, N_PROF: 100)</span>
+<span class="go">Coordinates:</span>
+<span class="go">  * DEPTH      (DEPTH) float32 0.0 -5.0 -10.0 -15.0 -20.0 -25.0 -30.0 -35.0 ...</span>
+<span class="go">Dimensions without coordinates: N_PROF</span>
+<span class="go">Data variables:</span>
+<span class="go">    LATITUDE   (N_PROF) float32 dask.array&lt;shape=(100,), chunksize=(100,)&gt;</span>
+<span class="go">    LONGITUDE  (N_PROF) float32 dask.array&lt;shape=(100,), chunksize=(100,)&gt;</span>
+<span class="go">    TIME       (N_PROF) datetime64[ns] dask.array&lt;shape=(100,), chunksize=(100,)&gt;</span>
+<span class="go">    DBINDEX    (N_PROF) float64 dask.array&lt;shape=(100,), chunksize=(100,)&gt;</span>
+<span class="go">    TEMP       (N_PROF, DEPTH) float32 dask.array&lt;shape=(100, 21), chunksize=(100, 21)&gt;</span>
+<span class="go">    PSAL       (N_PROF, DEPTH) float32 dask.array&lt;shape=(100, 21), chunksize=(100, 21)&gt;</span>
+<span class="go">    SIG0       (N_PROF, DEPTH) float32 dask.array&lt;shape=(100, 21), chunksize=(100, 21)&gt;</span>
+<span class="go">    BRV2       (N_PROF, DEPTH) float32 dask.array&lt;shape=(100, 21), chunksize=(100, 21)&gt;</span>
 </pre></div>
 </div>
 </div>

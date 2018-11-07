@@ -7,6 +7,5 @@ import xarray as xr
 def load_argo(return_X_y=False):
     """Load and return a sample of Argo profiles on standard depth levels"""
     module_path = dirname(__file__)
-    # ncfile = 'NATL_HOMOGENEOUS_variables_7subset_1.nc'
     ncfile = 'argo_sample_test.nc'
     return xr.open_mfdataset(join(module_path, "data", ncfile))

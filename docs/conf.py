@@ -30,6 +30,15 @@
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
+# extensions = ['sphinx.ext.autodoc',
+#     'sphinx.ext.doctest',
+#     'sphinx.ext.todo',
+#     'sphinx.ext.coverage',
+#     'sphinx.ext.mathjax',
+#     'sphinx.ext.ifconfig',
+#     'sphinx.ext.viewcode',
+#     'sphinx.ext.githubpages']
+
 extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
@@ -37,7 +46,13 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.mathjax',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
-    'sphinx.ext.githubpages']
+    'sphinx.ext.githubpages',
+  'IPython.sphinxext.ipython_directive',
+  'IPython.sphinxext.ipython_console_highlighting',
+  'sphinx.ext.autodoc',
+  'sphinx.ext.doctest',
+  'sphinx.ext.inheritance_diagram',
+  'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -158,6 +173,3 @@ texinfo_documents = [
      author, 'pyxpcm', 'One line description of project.',
      'Miscellaneous'),
 ]
-
-
-

@@ -155,17 +155,17 @@
            <div itemprop="articleBody">
             
   <div class="section" id="usage">
-<span id="id1"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<span id="usage-matlab"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
 <p>Here are some typical use cases.</p>
 <div class="contents local topic" id="contents">
 <ul class="simple">
-<li><a class="reference internal" href="#train-a-pcm-on-your-data" id="id2">Train a PCM on your data</a></li>
-<li><a class="reference internal" href="#saving-and-loading-a-pcm" id="id3">Saving and loading a PCM</a></li>
-<li><a class="reference internal" href="#classify-a-profile-with-an-existing-pcm" id="id4">Classify a profile with an existing PCM</a></li>
+<li><a class="reference internal" href="#train-a-pcm-on-your-data" id="id1">Train a PCM on your data</a></li>
+<li><a class="reference internal" href="#saving-and-loading-a-pcm" id="id2">Saving and loading a PCM</a></li>
+<li><a class="reference internal" href="#classify-a-profile-with-an-existing-pcm" id="id3">Classify a profile with an existing PCM</a></li>
 </ul>
 </div>
 <div class="section" id="train-a-pcm-on-your-data">
-<h2><a class="toc-backref" href="#id2">Train a PCM on your data</a><a class="headerlink" href="#train-a-pcm-on-your-data" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id1">Train a PCM on your data</a><a class="headerlink" href="#train-a-pcm-on-your-data" title="Permalink to this headline">¶</a></h2>
 <p>Let&#8217;s create a dummy dataset: an array &#8216;temp&#8217; of dimension [N_LEVEL, N_SAMPLE] define along a vertical axis &#8216;dpt&#8217;.</p>
 <p>This could be any collection of vertical profiles, as long as it is a 2D plain matrix, without NaNs.</p>
 <p>Also note that the toolbox works with vertical axis with negative values and oriented from the surface toward the bottom.</p>
@@ -216,7 +216,7 @@ But no direct use of the PCM property should be done.</p>
 <p>The &#8216;POST&#8217; array is the class component probability for each data, &#8216;LABEL&#8217; is the class maximising &#8216;POST&#8217; for each data.</p>
 </div>
 <div class="section" id="saving-and-loading-a-pcm">
-<h2><a class="toc-backref" href="#id3">Saving and loading a PCM</a><a class="headerlink" href="#saving-and-loading-a-pcm" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id2">Saving and loading a PCM</a><a class="headerlink" href="#saving-and-loading-a-pcm" title="Permalink to this headline">¶</a></h2>
 <p>The toolbox comes with handy functions to save and load the PCM in a netcdf format.</p>
 <p>To save a PCM:</p>
 <div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="n">pcmsave</span><span class="p">(</span><span class="s">&#39;my_first_pcm.nc&#39;</span><span class="p">,</span> <span class="n">PCM</span><span class="p">);</span>
@@ -230,7 +230,7 @@ But no direct use of the PCM property should be done.</p>
 <a class="reference external" href="http://doi.org/10.17882/47106">http://doi.org/10.17882/47106</a></p>
 </div>
 <div class="section" id="classify-a-profile-with-an-existing-pcm">
-<h2><a class="toc-backref" href="#id4">Classify a profile with an existing PCM</a><a class="headerlink" href="#classify-a-profile-with-an-existing-pcm" title="Permalink to this headline">¶</a></h2>
+<h2><a class="toc-backref" href="#id3">Classify a profile with an existing PCM</a><a class="headerlink" href="#classify-a-profile-with-an-existing-pcm" title="Permalink to this headline">¶</a></h2>
 <p>It is important to note that the PCM has its own vertical axis, so that any new data defined on another vertical axis can
 be predicted with a PCM that was possibility train on another dataset:</p>
 <div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="c">% Load a profile classification model structure:</span>
