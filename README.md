@@ -19,6 +19,9 @@ It is being developed at Ifremer/LOPS with collaboration with Telecom Bretagne s
 Checkout our 1st dataset release from North-Atlantic Argo data: 
     http://doi.org/10.17882/47106
 
+Full documentation:
+https://pyxpcm.readthedocs.io
+
 ## Install
 
 Simply use pip:
