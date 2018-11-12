@@ -17,7 +17,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="pyxpcm",
-    version="0.1.2",
+    version="0.1.3",
     description='pyxpcm: Python Profile Classification Modelling for Xarray',
     url='http://github.com/obidam/pyxpcm',
     author='Guillaume Maze',
