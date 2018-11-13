@@ -91,8 +91,8 @@ class pcm:
                  verb=False):
         """Create the PCM instance
 
-        Inputs
-        ------
+        Parameters
+        ----------
         K: int
             The number of class, or cluster, in the classification model.
         feature_axis: numpy.array

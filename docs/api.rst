@@ -36,8 +36,8 @@ Methods
    pcm.fit
    pcm.fit_predict
 
-PCM-based statistics
-====================
+Statistics
+==========
 
 .. autosummary::
    :toctree: generated/

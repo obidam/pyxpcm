@@ -18,3 +18,5 @@ MANIFEST.in
 \.idea/
 
 stable-req\.txt
+
+docs/_build/

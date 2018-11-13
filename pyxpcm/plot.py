@@ -69,6 +69,13 @@ class _PlotScalerMethods(object):
     #     return line(self._da, *args, **kwargs)
 
 def scaler(m, ax=None, subplot_kws=None, **kwargs):
+    """Plot the scaler properties
+
+    Parameters
+    ----------
+    m: PCM class instance
+
+    """
     X_ave = m._scaler.mean_
     X_std = m._scaler.scale_
     X_unit = m._scaler_props['units']
@@ -92,14 +99,15 @@ def scaler(m, ax=None, subplot_kws=None, **kwargs):
 def quant(m, da, xlim=None):
     """Plot the q-th quantiles of a dataArray for each PCM component
 
-        Parameters
-        ----------
-        m: PCM class instance
-        da: xarray.DataArray with quantiles
+    Parameters
+    ----------
+    m: PCM class instance
 
-        Returns
-        -------
-        -
+    da: :class:`xarray.DataArray` with quantiles
+
+    Returns
+    -------
+    -
 
     """
     cmap = cmap_discretize(plt.cm.Paired, m.K)

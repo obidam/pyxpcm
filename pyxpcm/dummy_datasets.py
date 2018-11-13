@@ -4,7 +4,7 @@ __author__ = 'gmaze@ifremer.fr'
 from os.path import dirname, join
 import xarray as xr
 
-def load_argo(return_X_y=False):
+def load_argo():
     """Load and return a sample of Argo profiles on standard depth levels"""
     module_path = dirname(__file__)
     ncfile = 'argo_sample_test.nc'
