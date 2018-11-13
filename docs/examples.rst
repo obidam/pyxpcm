@@ -45,8 +45,8 @@ To check out for a single profile, you can simply use the xarray plot method:
 
 .. ipython:: python
 
-    @savefig examples_profile_sample.png width=5in
     ds['TEMP'].isel(N_PROF=0).plot()
+    @savefig examples_profile_sample.png width=5in
 
 Fit the PCM
 -----------

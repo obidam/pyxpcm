@@ -1,0 +1,341 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Usage &mdash; pyxpcm 0.1.3 documentation</title>
+  
+
+  
+  
+  
+  
+
+  
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+
+  
+        <link rel="index" title="Index"
+              href="../genindex.html"/>
+        <link rel="search" title="Search" href="../search.html"/>
+    <link rel="top" title="pyxpcm 0.1.3 documentation" href="../index.html"/> 
+
+  
+  <script src="../_static/js/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+   
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search">
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> pyxpcm
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                0.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview.html">Overview: What is a PCM?</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples.html">Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../install.html">Installation</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Guide</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../methodology.html">Statistics of Profile Classification Modelling</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../PCMclass.html">The PCM class</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../stats.html">Computing PCM-based statistics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../plotting.html">Plotting PCM results</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Help &amp; reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../whats-new.html">What&#8217;s New</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api.html">API reference</a></li>
+</ul>
+
+            
+          
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">pyxpcm</a>
+        
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html">Docs</a> &raquo;</li>
+        
+      <li>Usage</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/matlab/usage.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="usage">
+<span id="usage-matlab"></span><h1>Usage<a class="headerlink" href="#usage" title="Permalink to this headline">¶</a></h1>
+<p>Here are some typical use cases.</p>
+<div class="contents local topic" id="contents">
+<ul class="simple">
+<li><a class="reference internal" href="#train-a-pcm-on-your-data" id="id1">Train a PCM on your data</a></li>
+<li><a class="reference internal" href="#saving-and-loading-a-pcm" id="id2">Saving and loading a PCM</a></li>
+<li><a class="reference internal" href="#classify-a-profile-with-an-existing-pcm" id="id3">Classify a profile with an existing PCM</a></li>
+</ul>
+</div>
+<div class="section" id="train-a-pcm-on-your-data">
+<h2><a class="toc-backref" href="#id1">Train a PCM on your data</a><a class="headerlink" href="#train-a-pcm-on-your-data" title="Permalink to this headline">¶</a></h2>
+<p>Let&#8217;s create a dummy dataset: an array &#8216;temp&#8217; of dimension [N_LEVEL, N_SAMPLE] define along a vertical axis &#8216;dpt&#8217;.</p>
+<p>This could be any collection of vertical profiles, as long as it is a 2D plain matrix, without NaNs.</p>
+<p>Also note that the toolbox works with vertical axis with negative values and oriented from the surface toward the bottom.</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="c">% Dummy dataset:</span>
+<span class="n">N_SAMPLE</span> <span class="p">=</span> <span class="mi">1000</span><span class="p">;</span>
+<span class="n">N_LEVEL</span> <span class="p">=</span> <span class="mi">50</span><span class="p">;</span>
+<span class="n">temp</span> <span class="p">=</span> <span class="n">sort</span><span class="p">(</span><span class="nb">rand</span><span class="p">(</span><span class="n">N_LEVEL</span><span class="p">,</span> <span class="n">N_SAMPLE</span><span class="p">)</span><span class="o">*</span><span class="mi">10</span><span class="o">+</span><span class="mi">10</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="s">&#39;descend&#39;</span><span class="p">);</span>
+<span class="n">dpt</span> <span class="p">=</span> <span class="nb">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1000</span><span class="p">,</span> <span class="n">N_LEVEL</span><span class="p">)</span><span class="o">&#39;</span><span class="p">;</span>
+
+<span class="c">% Plot one random profile with:</span>
+<span class="n">plot</span><span class="p">(</span><span class="n">temp</span><span class="p">(:,</span> <span class="n">randi</span><span class="p">([</span><span class="mi">1</span><span class="p">,</span> <span class="n">N_SAMPLE</span><span class="p">],</span><span class="mi">1</span><span class="p">)),</span><span class="n">dpt</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now we can train a PCM on this data, using the same vertical axis:</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="n">K</span> <span class="p">=</span> <span class="mi">4</span><span class="p">;</span> <span class="c">% Number of class to fit</span>
+<span class="n">PCM</span> <span class="p">=</span> <span class="n">pcmtrain</span><span class="p">(</span><span class="n">temp</span><span class="p">,</span> <span class="n">K</span><span class="p">,</span> <span class="s">&#39;full&#39;</span><span class="p">,</span> <span class="n">dpt</span><span class="p">,</span> <span class="s">&#39;maxvar&#39;</span><span class="p">,</span><span class="nb">inf</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The parameter &#8216;full&#8217; defines the classification model covariance matrix shape.</p>
+<p>The parameter &#8216;maxvar&#8217;=inf is the maximum variance to be retained during the compression step, it is an option and is
+used here only because we have random data hard to reduce.</p>
+<p>The trained Profile Classification Model is in the PCM structure where all properties should be quite self-explanatory.
+But no direct use of the PCM property should be done.</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="o">&gt;&gt;</span> <span class="n">PCM</span>
+<span class="n">PCM</span> <span class="p">=</span>
+  <span class="n">struct</span> <span class="n">with</span> <span class="n">fields</span><span class="p">:</span>
+         <span class="n">DPTmodel</span><span class="p">:</span> <span class="p">[</span><span class="mi">501</span> <span class="n">double</span><span class="p">]</span>
+             <span class="n">EOFs</span><span class="p">:</span> <span class="p">[</span><span class="mi">5050</span> <span class="n">double</span><span class="p">]</span>
+                <span class="n">K</span><span class="p">:</span> <span class="mi">4</span>
+              <span class="n">LLH</span><span class="p">:</span> <span class="mf">13634.1879135846</span>
+               <span class="n">Np</span><span class="p">:</span> <span class="mi">1000</span>
+                <span class="n">V</span><span class="p">:</span> <span class="p">[</span><span class="mi">150</span> <span class="n">double</span><span class="p">]</span>
+            <span class="n">X_ave</span><span class="p">:</span> <span class="p">[</span><span class="mi">501</span> <span class="n">double</span><span class="p">]</span>
+            <span class="n">X_ref</span><span class="p">:</span> <span class="p">[</span><span class="mi">501</span> <span class="n">double</span><span class="p">]</span>
+            <span class="n">X_std</span><span class="p">:</span> <span class="p">[</span><span class="mi">501</span> <span class="n">double</span><span class="p">]</span>
+        <span class="n">covarTYPE</span><span class="p">:</span> <span class="s">&#39;full&#39;</span>
+         <span class="n">doREDUCE</span><span class="p">:</span> <span class="mi">1</span>
+           <span class="n">maxvar</span><span class="p">:</span> <span class="mi">100</span>
+              <span class="n">mix</span><span class="p">:</span> <span class="p">[</span><span class="mi">11</span> <span class="n">struct</span><span class="p">]</span>
+    <span class="n">normalization</span><span class="p">:</span> <span class="mi">1</span>
+           <span class="n">readme</span><span class="p">:</span> <span class="s">&#39;This PCM was created using pcmtrain.m&#39;</span>
+</pre></div>
+</div>
+<p>Now you can classify the dataset:</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="p">[</span><span class="n">POST</span> <span class="n">LABEL</span><span class="p">]</span> <span class="p">=</span> <span class="n">pcmpredict</span><span class="p">(</span><span class="n">PCM</span><span class="p">,</span> <span class="n">dpt</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The &#8216;POST&#8217; array is the class component probability for each data, &#8216;LABEL&#8217; is the class maximising &#8216;POST&#8217; for each data.</p>
+</div>
+<div class="section" id="saving-and-loading-a-pcm">
+<h2><a class="toc-backref" href="#id2">Saving and loading a PCM</a><a class="headerlink" href="#saving-and-loading-a-pcm" title="Permalink to this headline">¶</a></h2>
+<p>The toolbox comes with handy functions to save and load the PCM in a netcdf format.</p>
+<p>To save a PCM:</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="n">pcmsave</span><span class="p">(</span><span class="s">&#39;my_first_pcm.nc&#39;</span><span class="p">,</span> <span class="n">PCM</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>To load PCM:</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="n">PCM</span> <span class="p">=</span> <span class="n">pcmload</span><span class="p">(</span><span class="s">&#39;my_first_pcm.nc&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+<p>The North-Atlantic PCM trained on Argo data used in Maze et al (Pr.Oc., 2017) is published here:
+<a class="reference external" href="http://doi.org/10.17882/47106">http://doi.org/10.17882/47106</a></p>
+</div>
+<div class="section" id="classify-a-profile-with-an-existing-pcm">
+<h2><a class="toc-backref" href="#id3">Classify a profile with an existing PCM</a><a class="headerlink" href="#classify-a-profile-with-an-existing-pcm" title="Permalink to this headline">¶</a></h2>
+<p>It is important to note that the PCM has its own vertical axis, so that any new data defined on another vertical axis can
+be predicted with a PCM that was possibility train on another dataset:</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="c">% Load a profile classification model structure:</span>
+<span class="c">% (this netcdf file can be downloaded here: http://doi.org/10.17882/47106)</span>
+<span class="n">PCM</span> <span class="p">=</span> <span class="n">pcmload</span><span class="p">(</span><span class="s">&#39;Argo-NATL-PCM-model.nc&#39;</span><span class="p">);</span>
+<span class="c">% This PCM is defined on the 0-1405m depth range.</span>
+
+<span class="c">% Load an Argo profile (using the LOPS-Argo Matlab library):</span>
+<span class="p">[</span><span class="n">Co</span><span class="p">,</span><span class="n">Dim</span><span class="p">]</span> <span class="p">=</span> <span class="n">libargo</span><span class="p">.</span><span class="n">read_netcdf_allthefile</span><span class="p">(</span><span class="s">&#39;6900828_prof.nc&#39;</span><span class="p">);</span>
+<span class="n">pres</span> <span class="p">=</span> <span class="n">Co</span><span class="p">.</span><span class="n">pres_adjusted</span><span class="p">.</span><span class="n">data</span><span class="p">(</span><span class="mi">10</span><span class="p">,:);</span>
+<span class="n">dpt</span>  <span class="p">=</span> <span class="o">-</span><span class="p">(</span><span class="n">pres</span><span class="p">(:)</span><span class="o">*</span><span class="mf">1.019716</span><span class="p">);</span> <span class="c">% % Convert pressure to depth (rough approximation for demonstration purpose only)</span>
+<span class="n">temp</span> <span class="p">=</span> <span class="n">Co</span><span class="p">.</span><span class="n">temp_adjusted</span><span class="p">.</span><span class="n">data</span><span class="p">(</span><span class="mi">10</span><span class="p">,:)</span><span class="o">&#39;</span><span class="p">;</span>
+
+<span class="c">% Classify the new Argo profile:</span>
+<span class="p">[</span><span class="n">POST</span> <span class="n">LABEL</span><span class="p">]</span> <span class="p">=</span> <span class="n">pcmpredict</span><span class="p">(</span><span class="n">PCM</span><span class="p">,</span> <span class="n">dpt</span><span class="p">,</span> <span class="n">temp</span><span class="p">)</span> <span class="c">% Note that dpt and temp MUST be (z,:)</span>
+</pre></div>
+</div>
+<p>Note that this example uses the LOPS-Argo Matlab toolbox to load Argo netcdf data. <strong>The PCM toolbox does not depend on it, this
+is only for examples</strong>. The toolbox is available here:</p>
+<div class="highlight-text"><div class="highlight"><pre><span></span>svn checkout https://forge.ifremer.fr/svn/lpoargo/projects/matlab forge-lpoargo
+</pre></div>
+</div>
+<p>and add it to your path:</p>
+<div class="highlight-matlab"><div class="highlight"><pre><span></span><span class="n">addpath</span><span class="p">(</span><span class="s">&#39;forge-lpoargo&#39;</span><span class="p">);</span>
+</pre></div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           <div class="articleComments">
+            
+           </div>
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2018, Guillaume Maze.
+
+    </p>
+  </div>
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1.3',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true,
+            SOURCELINK_SUFFIX: '.txt'
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

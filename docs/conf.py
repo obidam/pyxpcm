@@ -18,10 +18,15 @@
 #
 import os
 import sys
-sys.path.insert(0, os.path.abspath('../pyxpcm'))
+# sys.path.insert(0, os.path.abspath('../pyxpcm'))
 
 print("python exec:", sys.executable)
 print("sys.path:", sys.path)
+
+import matplotlib
+matplotlib.use('agg')
+ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   '_build','html','_static')
 
 # -- General configuration ------------------------------------------------
 
@@ -42,9 +47,9 @@ print("sys.path:", sys.path)
 #     'sphinx.ext.githubpages']
 
 extensions = ['sphinx.ext.autodoc',
-'sphinx.ext.autosummary',
-'sphinx.ext.intersphinx',
-'sphinx.ext.extlinks',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.intersphinx',
+    'sphinx.ext.extlinks',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -52,12 +57,12 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.ifconfig',
     'sphinx.ext.viewcode',
     'sphinx.ext.githubpages',
-  'IPython.sphinxext.ipython_directive',
-  'IPython.sphinxext.ipython_console_highlighting',
-  'sphinx.ext.doctest',
- 'sphinx.ext.viewcode',
-  'sphinx.ext.inheritance_diagram',
-  'numpydoc']
+    'IPython.sphinxext.ipython_directive',
+    'IPython.sphinxext.ipython_console_highlighting',
+    'sphinx.ext.doctest',
+    'sphinx.ext.viewcode',
+    'sphinx.ext.inheritance_diagram',
+    'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
