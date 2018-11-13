@@ -20,3 +20,5 @@ MANIFEST.in
 stable-req\.txt
 
 docs/_build/
+
+docs/generated/
