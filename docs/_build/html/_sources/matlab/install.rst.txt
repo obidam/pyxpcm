@@ -1,4 +1,4 @@
-.. _installation:
+.. _installation_matlab:
 
 Installation
 ============
@@ -7,7 +7,7 @@ Get the source code
 ^^^^^^^^^^^^^^^^^^^
 Clone the last version of the toolbox from the git repository:
 
-.. code-block:: text
+.. code-block:: bash
 
     git clone https://github.com/obidam/pcm.git
 

@@ -16,10 +16,12 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../pyxpcm'))
 
+print("python exec:", sys.executable)
+print("sys.path:", sys.path)
 
 # -- General configuration ------------------------------------------------
 
@@ -40,6 +42,9 @@
 #     'sphinx.ext.githubpages']
 
 extensions = ['sphinx.ext.autodoc',
+'sphinx.ext.autosummary',
+'sphinx.ext.intersphinx',
+'sphinx.ext.extlinks',
     'sphinx.ext.doctest',
     'sphinx.ext.todo',
     'sphinx.ext.coverage',
@@ -49,8 +54,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.githubpages',
   'IPython.sphinxext.ipython_directive',
   'IPython.sphinxext.ipython_console_highlighting',
-  'sphinx.ext.autodoc',
   'sphinx.ext.doctest',
+ 'sphinx.ext.viewcode',
   'sphinx.ext.inheritance_diagram',
   'numpydoc']
 
@@ -98,6 +103,9 @@ pygments_style = 'sphinx'
 # If true, `todo` and `todoList` produce output, else they produce nothing.
 todo_include_todos = True
 
+autosummary_generate = True
+numpydoc_class_members_toctree = True
+numpydoc_show_class_members = False
 
 # -- Options for HTML output ----------------------------------------------
 
@@ -173,3 +181,15 @@ texinfo_documents = [
      author, 'pyxpcm', 'One line description of project.',
      'Miscellaneous'),
 ]
+
+# Example configuration for intersphinx: refer to the Python standard library.
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'iris': ('http://scitools.org.uk/iris/docs/latest/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+    'xarray': ('http://xarray.pydata.org/en/stable/', None),
+    'sklearn': ('https://scikit-learn.org/stable/', None),
+}

@@ -1,5 +1,7 @@
-Profile Classification Modelling: Methodology
-=============================================
+.. use "methodlogy"
+
+Statistics of Profile Classification Modelling
+==============================================
 
 Here I describe with more details the statistics behind PCM.
 
