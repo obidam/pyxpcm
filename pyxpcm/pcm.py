@@ -77,9 +77,9 @@ from sklearn.decomposition import PCA
 from sklearn.mixture import GaussianMixture
 
 class pcm:
-    """
-        Common base class for a Profile Classification Model
-        Consume and return xarrays
+    """Base class for a Profile Classification Model
+
+    Consume and return xarray objects
     """
     def __init__(self,
                  K=1,
@@ -141,7 +141,6 @@ class pcm:
                         'with_reducer': with_reducer,
                         'with_classifier': with_classifier,
                         'maxvar': maxvar,
-                        'inplace': inplace,
                         'feature_axis': np.float32(feature_axis),
                         'feature_name': feature_name}
         self._trained = False #todo _trained is a property, should be set/get with a decorator
