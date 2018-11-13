@@ -76,7 +76,7 @@ from sklearn.decomposition import PCA
 # http://scikit-learn.org/stable/modules/mixture.html
 from sklearn.mixture import GaussianMixture
 
-class PCM:
+class pcm:
     """
         Common base class for a Profile Classification Model
         Consume and return xarrays
@@ -88,9 +88,40 @@ class PCM:
                  scaling=1,
                  reduction=1, maxvar=99.9,
                  classif='gmm', COVARTYPE='full',
-                 inplace=False,
                  verb=False):
-        """Create the PCM instance"""
+        """Create the PCM instance
+
+        Inputs
+        ------
+        K: int
+            The number of class, or cluster, in the classification model.
+        feature_axis: numpy.array
+            The vertical axis that the PCM will work with (to train the classifier or to classify new data).
+        feature_name: str
+            The name to be used when searching for the feature variable in a :class:`xarray.Dataset`.
+        scaling: int (default: 1)
+            Define the scaling method:
+                0: No scaling
+                1: Center by mean and scale by std
+                2: Center by mean only
+        reduction: int (default: 1)
+            Define the dimensionality reduction method
+                0: No reduction
+                1: Reduction using PCA
+        maxvar: float (default: 99.9)
+            Maximum feature variance to preserve in the reduced dataset using PCA. In %.
+        classif: str (default: 'gmm')
+            Define the classification method.
+            The only method available as of now is a Gaussian Mixture Model.
+            See :class:`sklearn.mixture.GaussianMixture` for more details.
+        COVARTYPE: str (default: 'full')
+            Define the type of covariance matrix shape to be used in the default classifier GMM.
+            It can be ‘full’ (default), ‘tied’, ‘diag’ or ‘spherical’.
+        verb: boolean (default: False)
+            More verbose output when an instance is displayed.
+
+
+        """
         if   scaling==0: with_scaler = 'none'; with_mean=False; with_std = False
         elif scaling==1: with_scaler = 'normal'; with_mean=True; with_std = True
         elif scaling==2: with_scaler = 'center'; with_mean=True; with_std = False
@@ -363,6 +394,7 @@ class PCM:
         For a PCM, the fit method consists in the following operations:
 
         - pre-processing
+
             - interpolation to the feature_axis levels of the model
             - scaling
             - reduction
@@ -371,7 +403,9 @@ class PCM:
         Parameters
         ----------
         ds: xarray.Dataset
-        feature (optional): the xarray.Dataset variable name to be used as the PCM feature. If not specified, the
+
+        feature: str
+            The variable name in the xarray.Dataset to be used as PCM feature. If not specified, the
             variable is identified as PCM['feature_name'] or the variable having it as an attribute.
 
         Returns
@@ -485,7 +519,7 @@ class PCM:
         xarray.DataArray
             Component labels (if option 'inplace' = False)
 
-        **or**
+        *or*
 
         xarray.Dataset
             Input dataset with component labels as a 'PCM_LABELS' new xarray.DataArray (if option 'inplace' = True)

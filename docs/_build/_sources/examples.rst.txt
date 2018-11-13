@@ -20,7 +20,7 @@ The PCM class constructor takes at least 3 arguments:
 
 - ``K``: the number of class (integer) in the classification model,
 - ``feature_axis``: the vertical axis (numpy array) that the PCM will work with (to train the classifier or to classify new data),
-- ``feature_name``: the name (string) to be used when searching for the feature variable in an xarray.dataset.
+- ``feature_name``: the name (string) to be used when searching for the feature variable in an :class:`xarray.Dataset`.
 
 In the above instantiation, we created a PCM with 8 classes that will work with *temperature* on a vertical axis with a
 2m resolution from -500m to the surface. By default, the :class:`pyxpcm.pcm` class instance is set to use normalisation, dimensionality reduction with
@@ -59,17 +59,20 @@ Now that we have a collection of profiles and a PCM, we can simply *fit* the cla
 
 where the :func:`pyxpcm.pcm.fit` method requires:
 
-- a ``xarray.dataset``, here ``ds``
-- and a ``feature`` dictionnary-like argument with key the ``feature_name`` argument used to instantiate the PCM, and
-  with value the xarray.datarray name holding this feature in the provided xarray.dataset.
+- a :class:`xarray.Dataset`, here ``ds``
+- and a ``feature`` dictionnary-like argument with the ``feature_name`` argument used to instantiate the PCM as a key and
+  with value, the :class:`xarray.DataArray` name holding this feature in the provided :class:`xarray.Dataset`.
 
-In the example above we indicate to the PCM instance ``m`` that the feature named *temperature* is to be found in ``ds['TEMP']``.
+In the above example we indicate to the PCM instance ``m`` that the feature named *temperature* is to be found in
+``ds['TEMP']``.
+
+By default the PCM uses a Gaussian Mixture Model as a classifier. It is computed using the scikit-learn :class:`sklearn.mixture.GaussianMixture`.
 
 
 Classification and Prediction
 -----------------------------
 
-Once the PCM is trained, i.e. fitted to a training dataset, we can predict classes that profiles from a xarray.dataset belongs to. We can simply use the dummy dataset here:
+Once the PCM is trained, i.e. fitted with a training dataset, we can predict classes that profiles from a :class:`xarray.Dataset` belongs to. We can simply use the dummy dataset here:
 
 .. ipython:: python
 

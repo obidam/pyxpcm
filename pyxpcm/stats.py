@@ -15,8 +15,8 @@ def quant(ds,
           of=None,
           using='LABEL',
           q=[0.05, 0.5, 0.95],
-          dim=None,
           inplace=True,
+          dim=None,
           qname='QUANT'):
     """Compute q-th quantiles of a dataArray for each PCM component
 
@@ -25,17 +25,17 @@ def quant(ds,
         ds: xarray.Dataset
             The dataset to work with
         of: str
-            Name of the xarray.DataArray to compute quantiles of
+            Name of the xarray.DataArray to compute quantiles of.
         using: str
             Name of the xarray.DataArray with classification labels to use.
         q: float in the range of [0,1] (or sequence of floats)
             Quantiles to compute, which must be between 0 and 1 inclusive.
         dim : str, optional
-            Sampling Dimension over which to compute quantiles
+            Sampling Dimension over which to compute quantiles. Set to the first dimension by default.
 
         Returns
         -------
-        Q : xarray.DataArray, shape (K, n_quantiles, N_z=n_features)
+        Q: xarray.DataArray with shape (K, n_quantiles, N_z=n_features)
 
     """
     # if labels not in ds.data_vars:

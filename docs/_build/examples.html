@@ -206,7 +206,7 @@
 <ul class="simple">
 <li><code class="docutils literal"><span class="pre">K</span></code>: the number of class (integer) in the classification model,</li>
 <li><code class="docutils literal"><span class="pre">feature_axis</span></code>: the vertical axis (numpy array) that the PCM will work with (to train the classifier or to classify new data),</li>
-<li><code class="docutils literal"><span class="pre">feature_name</span></code>: the name (string) to be used when searching for the feature variable in an xarray.dataset.</li>
+<li><code class="docutils literal"><span class="pre">feature_name</span></code>: the name (string) to be used when searching for the feature variable in an <a class="reference external" href="http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.11.0)"><code class="xref py py-class docutils literal"><span class="pre">xarray.Dataset</span></code></a>.</li>
 </ul>
 <p>In the above instantiation, we created a PCM with 8 classes that will work with <em>temperature</em> on a vertical axis with a
 2m resolution from -500m to the surface. By default, the <a class="reference internal" href="generated/pyxpcm.pcm.html#pyxpcm.pcm" title="pyxpcm.pcm"><code class="xref py py-class docutils literal"><span class="pre">pyxpcm.pcm</span></code></a> class instance is set to use normalisation, dimensionality reduction with
@@ -242,7 +242,7 @@ Principal Component Analsysis and a Gaussian Mixture Model (GMM) as a classifier
 latitude (<code class="docutils literal"><span class="pre">LATITUDE</span></code>), longitude (<code class="docutils literal"><span class="pre">LONGITUDE</span></code>) and time (<code class="docutils literal"><span class="pre">TIME</span></code>).</p>
 <p>To check out for a single profile, you can simply use the xarray plot method:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [7]: </span><span class="n">ds</span><span class="p">[</span><span class="s1">&#39;TEMP&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">isel</span><span class="p">(</span><span class="n">N_PROF</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span><span class="o">.</span><span class="n">plot</span><span class="p">()</span>
-<span class="gh">Out[7]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x11783e550&gt;]</span>
+<span class="gh">Out[7]: </span><span class="go">[&lt;matplotlib.lines.Line2D at 0x11bb22210&gt;]</span>
 </pre></div>
 </div>
 </div>
@@ -264,37 +264,39 @@ latitude (<code class="docutils literal"><span class="pre">LATITUDE</span></code
 <span class="go">	 Reducer: &lt;class &#39;sklearn.decomposition.pca.PCA&#39;&gt;</span>
 <span class="go">Classification: &#39;gmm&#39;</span>
 <span class="go">	 Classifier: &lt;class &#39;sklearn.mixture.gaussian_mixture.GaussianMixture&#39;&gt;</span>
-<span class="go">	 log likelihood: -6.532548</span>
+<span class="go">	 log likelihood: -7.375201</span>
 </pre></div>
 </div>
 <p>where the <a class="reference internal" href="generated/pyxpcm.pcm.fit.html#pyxpcm.pcm.fit" title="pyxpcm.pcm.fit"><code class="xref py py-func docutils literal"><span class="pre">pyxpcm.pcm.fit()</span></code></a> method requires:</p>
 <ul class="simple">
-<li>a <code class="docutils literal"><span class="pre">xarray.dataset</span></code>, here <code class="docutils literal"><span class="pre">ds</span></code></li>
-<li>and a <code class="docutils literal"><span class="pre">feature</span></code> dictionnary-like argument with key the <code class="docutils literal"><span class="pre">feature_name</span></code> argument used to instantiate the PCM, and
-with value the xarray.datarray name holding this feature in the provided xarray.dataset.</li>
+<li>a <a class="reference external" href="http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.11.0)"><code class="xref py py-class docutils literal"><span class="pre">xarray.Dataset</span></code></a>, here <code class="docutils literal"><span class="pre">ds</span></code></li>
+<li>and a <code class="docutils literal"><span class="pre">feature</span></code> dictionnary-like argument with the <code class="docutils literal"><span class="pre">feature_name</span></code> argument used to instantiate the PCM as a key and
+with value, the <a class="reference external" href="http://xarray.pydata.org/en/stable/generated/xarray.DataArray.html#xarray.DataArray" title="(in xarray v0.11.0)"><code class="xref py py-class docutils literal"><span class="pre">xarray.DataArray</span></code></a> name holding this feature in the provided <a class="reference external" href="http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.11.0)"><code class="xref py py-class docutils literal"><span class="pre">xarray.Dataset</span></code></a>.</li>
 </ul>
-<p>In the example above we indicate to the PCM instance <code class="docutils literal"><span class="pre">m</span></code> that the feature named <em>temperature</em> is to be found in <code class="docutils literal"><span class="pre">ds['TEMP']</span></code>.</p>
+<p>In the above example we indicate to the PCM instance <code class="docutils literal"><span class="pre">m</span></code> that the feature named <em>temperature</em> is to be found in
+<code class="docutils literal"><span class="pre">ds['TEMP']</span></code>.</p>
+<p>By default the PCM uses a Gaussian Mixture Model as a classifier. It is computed using the scikit-learn <a class="reference external" href="https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture.html#sklearn.mixture.GaussianMixture" title="(in scikit-learn v0.20.0)"><code class="xref py py-class docutils literal"><span class="pre">sklearn.mixture.GaussianMixture</span></code></a>.</p>
 </div>
 <div class="section" id="classification-and-prediction">
 <h2>Classification and Prediction<a class="headerlink" href="#classification-and-prediction" title="Permalink to this headline">¶</a></h2>
-<p>Once the PCM is trained, i.e. fitted to a training dataset, we can predict classes that profiles from a xarray.dataset belongs to. We can simply use the dummy dataset here:</p>
+<p>Once the PCM is trained, i.e. fitted with a training dataset, we can predict classes that profiles from a <a class="reference external" href="http://xarray.pydata.org/en/stable/generated/xarray.Dataset.html#xarray.Dataset" title="(in xarray v0.11.0)"><code class="xref py py-class docutils literal"><span class="pre">xarray.Dataset</span></code></a> belongs to. We can simply use the dummy dataset here:</p>
 <div class="highlight-ipython"><div class="highlight"><pre><span></span><span class="gp">In [9]: </span><span class="n">LABELS</span> <span class="o">=</span> <span class="n">m</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">ds</span><span class="p">,</span> <span class="n">feature</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;temperature&#39;</span><span class="p">:</span> <span class="s1">&#39;TEMP&#39;</span><span class="p">})</span>
 
 <span class="gp">In [10]: </span><span class="n">LABELS</span>
 <span class="gh">Out[10]: </span><span class="go"></span>
 <span class="go">&lt;xarray.DataArray &#39;PCM_LABELS&#39; (N_PROF: 100)&gt;</span>
-<span class="go">array([5, 3, 4, 4, 1, 5, 0, 5, 2, 5, 4, 3, 1, 1, 4, 1, 1, 1, 7, 4, 2, 2, 4, 0,</span>
-<span class="go">       3, 1, 2, 1, 1, 4, 2, 1, 1, 7, 5, 4, 7, 1, 5, 7, 3, 5, 5, 5, 6, 6, 6, 0,</span>
-<span class="go">       4, 0, 0, 0, 1, 1, 4, 5, 0, 1, 3, 3, 1, 1, 3, 1, 4, 1, 1, 7, 7, 4, 4, 3,</span>
-<span class="go">       4, 1, 1, 1, 1, 7, 1, 1, 1, 1, 4, 4, 4, 1, 4, 7, 4, 1, 1, 4, 4, 4, 7, 2,</span>
-<span class="go">       2, 4, 1, 2])</span>
+<span class="go">array([5, 5, 2, 0, 0, 5, 7, 7, 4, 0, 2, 0, 1, 6, 2, 6, 1, 1, 1, 0, 4, 4, 2, 7,</span>
+<span class="go">       5, 1, 4, 6, 5, 0, 4, 1, 1, 2, 7, 2, 2, 1, 0, 2, 0, 0, 0, 5, 3, 3, 3, 3,</span>
+<span class="go">       0, 7, 7, 7, 5, 6, 6, 0, 7, 5, 5, 5, 6, 6, 5, 1, 2, 6, 6, 1, 4, 2, 0, 0,</span>
+<span class="go">       0, 4, 5, 6, 5, 1, 6, 6, 4, 4, 0, 2, 2, 6, 2, 2, 6, 5, 4, 0, 2, 2, 2, 4,</span>
+<span class="go">       4, 2, 4, 4])</span>
 <span class="go">Dimensions without coordinates: N_PROF</span>
 <span class="go">Attributes:</span>
 <span class="go">    long_name:  PCM labels</span>
 <span class="go">    units:      []</span>
 <span class="go">    valid_min:  0</span>
 <span class="go">    valid_max:  8</span>
-<span class="go">    llh:        -6.532548158231428</span>
+<span class="go">    llh:        -7.375201397879603</span>
 </pre></div>
 </div>
 </div>

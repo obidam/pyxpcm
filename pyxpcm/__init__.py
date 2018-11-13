@@ -4,7 +4,7 @@
 
 name = "pyxpcm"
 
-from pcm import PCM as pcm
+from pcm import pcm
 import dummy_datasets as datasets
 from . import stats
 from . import plot

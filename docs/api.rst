@@ -35,3 +35,28 @@ Methods
 
    pcm.fit
    pcm.fit_predict
+
+PCM-based statistics
+====================
+
+.. autosummary::
+   :toctree: generated/
+
+   stats.quant
+
+Plotting
+========
+
+.. autosummary::
+   :toctree: generated/
+
+   plot.scaler
+   plot.quant
+
+Dummy datasets
+==============
+
+.. autosummary::
+   :toctree: generated/
+
+   dummy_datasets.load_argo
