@@ -40,23 +40,6 @@ Documentation
     examples
     install
 
-**User Guide**
-
-* :doc:`methodology`
-* :doc:`PCMclass`
-* :doc:`stats`
-* :doc:`plotting`
-
-.. toctree::
-    :maxdepth: 1
-    :hidden:
-    :caption: Guide
-
-    methodology
-    PCMclass
-    stats
-    plotting
-
 **Help & reference**
 
 * :doc:`whats-new`

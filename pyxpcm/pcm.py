@@ -87,7 +87,7 @@ class pcm:
                  feature_name=None,
                  scaling=1,
                  reduction=1, maxvar=99.9,
-                 classif='gmm', COVARTYPE='full',
+                 classif='gmm', covariance_type='full',
                  verb=False):
         """Create the PCM instance
 
@@ -101,20 +101,22 @@ class pcm:
             The name to be used when searching for the feature variable in a :class:`xarray.Dataset`.
         scaling: int (default: 1)
             Define the scaling method:
-                0: No scaling
-                1: Center by mean and scale by std
-                2: Center by mean only
+
+            - 0: No scaling
+            - 1: Center by mean and scale by std
+            - 2: Center by mean only
         reduction: int (default: 1)
-            Define the dimensionality reduction method
-                0: No reduction
-                1: Reduction using PCA
+            Define the dimensionality reduction method:
+
+            - 0: No reduction
+            - 1: Reduction using PCA
         maxvar: float (default: 99.9)
             Maximum feature variance to preserve in the reduced dataset using PCA. In %.
         classif: str (default: 'gmm')
             Define the classification method.
             The only method available as of now is a Gaussian Mixture Model.
             See :class:`sklearn.mixture.GaussianMixture` for more details.
-        COVARTYPE: str (default: 'full')
+        covariance_type: str (default: 'full')
             Define the type of covariance matrix shape to be used in the default classifier GMM.
             It can be ‘full’ (default), ‘tied’, ‘diag’ or ‘spherical’.
         verb: boolean (default: False)
@@ -136,7 +138,7 @@ class pcm:
         
         self._props = {'K': np.int(K),
                         'llh': None,
-                        'COVARTYPE': COVARTYPE,
+                        'COVARTYPE': covariance_type,
                         'with_scaler': with_scaler,
                         'with_reducer': with_reducer,
                         'with_classifier': with_classifier,
