@@ -33,6 +33,7 @@ Methods
    pcm.fit_predict
    pcm.predict
    pcm.predict_proba
+   pcm.score
 
 Statistics
 ==========
