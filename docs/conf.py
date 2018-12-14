@@ -20,11 +20,14 @@ import os
 import sys
 
 import matplotlib
-matplotlib.use('TkAgg')
-# ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-#                                    '_build','html','_static')
+matplotlib.use('Agg')
+# Sometimes the savefig directory doesn't exist and needs to be created
+# https://github.com/ipython/ipython/issues/8733
+# becomes obsolete when we can pin ipython>=5.2; see doc/environment.yml
 ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   '_build','_static')
+                                   '_build','html','_static')
+if not os.path.exists(ipython_savefig_dir):
+    os.makedirs(ipython_savefig_dir)
 
 pyXpcm_src = os.path.abspath('..')
 print("pyXpcm loaded:", os.path.abspath('..'))

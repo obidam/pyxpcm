@@ -138,6 +138,36 @@ If you compute quantiles for a given variable, you can simply plot them using:
     pcmplot.quant(m, ds['TEMP_QUANT'])
     @savefig examples_quantiles.png width=5in
 
+Summary
+=======
+
+.. ipython:: python
+
+    from pyxpcm.pcmodel import pcm
+    from pyxpcm import datasets as pcmdata
+    from pyxpcm import stats as pcmstats
+    from pyxpcm import plot as pcmplot
+    import numpy as np
+
+    ds = pcmdata.load_argo()
+
+    # Model creation and fit:
+    m = pcm(K=8, feature_axis=np.arange(-500, 0, 2), feature_name='temperature')
+    m.fit(ds, feature={'temperature': 'TEMP'})
+
+    # Classify data:
+    m.predict(ds, feature={'temperature': 'TEMP'}, inplace=True)
+    m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
+
+    # Compute statistics:
+    ds = ds.compute()
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_Q')
+    pcmstats.quant(ds, of='PSAL', using='PCM_LABELS', name='PSAL_Q')
+
+    # Plots:
+    pcmplot.scaler(m)
+    pcmplot.quant(m, ds['TEMP_Q'])
+    pcmplot.quant(m, ds['PSAL_Q'], xlim=[36, 37])
 
 .. _Argo: http://argo.ucsd.edu/
 .. _Xarray: http://xarray.pydata.org/en/stable/data-structures.html#dataset
