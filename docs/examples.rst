@@ -139,9 +139,9 @@ If you compute quantiles for a given variable, you can simply plot them using:
     @savefig examples_quantiles.png width=5in
 
 Summary
-=======
+-------
 
-.. ipython:: python
+.. code-block:: python
 
     from pyxpcm.pcmodel import pcm
     from pyxpcm import datasets as pcmdata
@@ -149,6 +149,7 @@ Summary
     from pyxpcm import plot as pcmplot
     import numpy as np
 
+    # Load data
     ds = pcmdata.load_argo()
 
     # Model creation and fit:

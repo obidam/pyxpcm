@@ -52,7 +52,6 @@ Documentation
 
     whats-new
     api
-    api-io
 
 Indices and tables
 ------------------
