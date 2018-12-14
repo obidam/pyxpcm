@@ -53,6 +53,12 @@ Documentation
     whats-new
     api
 
+Indices and tables
+------------------
+
+* :ref:`genindex`
+* :ref:`modindex`
+* :ref:`search`
 
 .. _Xarray: http://xarray.pydata.org
 .. _netCDF: http://www.unidata.ucar.edu/software/netcdf

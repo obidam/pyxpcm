@@ -6,9 +6,6 @@
 # Created by gmaze on 2017/12/11
 __author__ = 'gmaze@ifremer.fr'
 
-# import os
-# import sys
-# import xarray as xr
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl

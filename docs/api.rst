@@ -4,9 +4,7 @@
 API reference
 #############
 
-This page provides an auto-generated summary of pyxpcm's API. For more details
-and examples, refer to the relevant chapters in the main part of the
-documentation.
+This page provides an auto-generated summary of pyXpcm's API. For more details and examples, refer to the relevant chapters in the main part of the documentation.
 
 Profile Classification Model
 ============================
@@ -15,8 +13,6 @@ Creating a PCM
 --------------
 .. autosummary::
    :toctree: generated/
-
-   pcm
 
 Attributes
 ----------
@@ -35,6 +31,8 @@ Methods
 
    pcm.fit
    pcm.fit_predict
+   pcm.predict
+   pcm.predict_proba
 
 Statistics
 ==========

@@ -50,6 +50,8 @@ map dataset variable names to the PCM feature names
     m = m.fit(ds, feature={'temperature': 'TEMP', 'salinity': 'PSAL', 'sea_level': 'SLA'})
 
 
+todo: Add the method to compute the appropriate BIC with independant samples
+
 Created on 2017/09/26
 @author: gmaze
 """
@@ -95,7 +97,8 @@ class pcm:
         ----------
         K: int
             The number of class, or cluster, in the classification model.
-        feature_axis: numpy.array
+
+        feature_axis: :class:`numpy.array`
             The vertical axis that the PCM will work with (to train the classifier or to classify new data).
         feature_name: str
             The name to be used when searching for the feature variable in a :class:`xarray.Dataset`.
@@ -103,13 +106,13 @@ class pcm:
             Define the scaling method:
 
             - 0: No scaling
-            - 1: Center by mean and scale by std
+            - **1: Center by mean and scale by std**
             - 2: Center by mean only
         reduction: int (default: 1)
             Define the dimensionality reduction method:
 
             - 0: No reduction
-            - 1: Reduction using PCA
+            - **1: Reduction using PCA**
         maxvar: float (default: 99.9)
             Maximum feature variance to preserve in the reduced dataset using PCA. In %.
         classif: str (default: 'gmm')
@@ -210,7 +213,7 @@ class pcm:
             x[0] = x[izok]
             return x;
         
-        def fit_transform(self, C, Caxis):
+        def transform(self, C, Caxis):
             """
                 Interpolate data on the PCM vertical axis
             """
@@ -243,6 +246,13 @@ class pcm:
     def scaler(self):
         """Return the scaler method"""
         return self._scaler
+
+    @property
+    def plot(self):
+        """
+        Access plotting functions
+        """
+        return _PlotMethods(self)
 
     def display(self, deep=False):
         """Display detailled parameters of the PCM
@@ -331,28 +341,29 @@ class pcm:
         return real_feature_name
 
     def preprocessing(self, ds, feature=None):
-        """"Pre-process data for classification
+        """"Pre-process data before classification
 
-            Possible pre-processing steps:
-                interpolation,
-                scaling,
-                reduction
+        Possible pre-processing steps:
 
-            Parameters
-            ----------
-            ds: xarray.Dataset
-            feature (optional): the xarray.Dataset variable name to be used as the PCM feature. If not specified, the
-                variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+        - interpolation,
+        - scaling,
+        - reduction
 
-            Returns
-            -------
-            X, the pre-processed feature variable
-            
-            Example
-            -------
-            m = pcm(K=8, feature_axis=range(0,-1000,-10), feature_name='temperature')
-            X = m.preprocessing(ds)
-            X = m.preprocessing(ds, feature={'temperature':'TEMP'})
+        Parameters
+        ----------
+        ds: :class:`xarray.DataSet`
+        feature (optional): the :class:`xarray.DataSet` variable name to be used as the PCM feature. If not specified, the
+            variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+
+        Returns
+        -------
+        X, the pre-processed feature variable
+
+        Example
+        -------
+        m = pcm(K=8, feature_axis=range(0,-1000,-10), feature_name='temperature')
+        X = m.preprocessing(ds)
+        X = m.preprocessing(ds, feature={'temperature':'TEMP'})
             
         """
         # Identify the feature in this dataset:
@@ -369,22 +380,27 @@ class pcm:
         # else:
         #     feature_axis = str(ds[feature_name].dims[1])
 
-        # INTERPOLATION:
+        # INTERPOLATION STEP:
         # (in this version, the interpoler class keeps consuming numpy arrays)
-        X = self._interpoler.fit_transform(ds[feature_name].values,
+        X = self._interpoler.transform(ds[feature_name].values,
                                            ds[feature_name][feature_axis_name].values)
 
-        # SCALING:
-        self._scaler.fit(X)
-        if 'units' in ds[feature_name].attrs:
-            self._scaler_props['units'] = ds[feature_name].attrs['units']
+        # FIT STEPS:
+        # Based on scikit-lean methods
+        # We need to fit the pre-processing methods in order to re-use them when
+        # predicting a new dataset
+        if not self._trained:
+            # SCALING:
+            self._scaler.fit(X)
+            if 'units' in ds[feature_name].attrs:
+                self._scaler_props['units'] = ds[feature_name].attrs['units']
+            # REDUCTION:
+            if self._props['with_reducer']:
+                self._reducer.fit(X)
 
-        X = self._scaler.transform(X)
-
-        # REDUCTION:
-        if self._props['with_reducer']:
-            self._reducer.fit(X)
-            X = self._reducer.transform(X)
+        # TRANSFORMATION STEPS:
+        X = self._scaler.transform(X) # Scaling
+        X = self._reducer.transform(X) # Reduction
 
         # Output:
         return X
@@ -396,17 +412,17 @@ class pcm:
 
         - pre-processing
 
-            - interpolation to the feature_axis levels of the model
+            - interpolation to the ``feature_axis`` levels of the model
             - scaling
             - reduction
         - estimate classifier parameters
 
         Parameters
         ----------
-        ds: xarray.Dataset
+        ds: :class:`xarray.DataSet`
 
         feature: str
-            The variable name in the xarray.Dataset to be used as PCM feature. If not specified, the
+            The variable name in the :class:`xarray.DataSet` to be used as PCM feature. If not specified, the
             variable is identified as PCM['feature_name'] or the variable having it as an attribute.
 
         Returns
@@ -430,29 +446,35 @@ class pcm:
     def predict(self, ds, feature=None, inplace=False, labelname='PCM_LABELS'):
         """Predict labels for profile samples
 
-           This method add these properties to the PCM object:
-              llh: The log likelihood of the model with regard to new data
+        This method add these properties to the PCM object:
 
-            Parameters
-            ----------
-            ds: xarray.Dataset
-            feature: str, optional
-                The xarray.Dataset variable name to be used as the PCM feature. If not specified, the
-                variable is identified as PCM['feature_name'] or the variable having it as an attribute.
-            inplace: boolean, False by default
-                If False, the method returns a xarray.DataArray with predicted labels
-                If True, a xarray.DataArray with labels is added to the input xarray.Dataset
-            labelname: str, default is 'PCM_LABELS'
-                Name of the DataArray with labels
+        - ``llh``: The log likelihood of the model with regard to new data
 
-            Returns
-            -------
-            xarray.DataArray
-                Component labels (if option 'inplace' = False)
-            or
-            xarray.Dataset
-                Input dataset with Component labels as a 'PCM_LABELS' new xarray.DataArray
-                (if option 'inplace' = True)
+        Parameters
+        ----------
+        ds: :class:`xarray.DataSet`
+
+        feature: str, optional
+            The :class:`xarray.DataSet` variable name to be used as the PCM feature. If not specified, the
+            variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+
+        inplace: boolean, False by default
+            If False, the method returns a :class:`xarray.DataArray` with predicted labels
+            If True, a :class:`xarray.DataArray` with labels is added to the input :class:``xarray.DataSet``
+
+        labelname: str, default is 'PCM_LABELS'
+            Name of the DataArray with labels
+
+        Returns
+        -------
+        :class:`xarray.DataArray`
+            Component labels (if option 'inplace' = False)
+
+        *or*
+
+        :class:`xarray.DataSet`
+            Input dataset with Component labels as a 'PCM_LABELS' new :class:`xarray.DataArray`
+            (if option 'inplace' = True)
         """
         # Check if the PCM is trained:
         validation.check_is_fitted(self, '_trained',
@@ -492,6 +514,7 @@ class pcm:
             return ds
         else:
             return labels
+        #
 
     def fit_predict(self, ds, feature=None, inplace=False, labelname='PCM_LABELS'):
         """Estimate PCM parameters and predict classes.
@@ -502,28 +525,28 @@ class pcm:
 
         Parameters
         ----------
-        ds: xarray.Dataset
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         feature: str
-            The xarray.Dataset variable name to be used as the PCM feature. If not specified, the variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+            The :class:`xarray.Dataset` variable name to be used as the PCM feature. If not specified, the variable is identified as PCM['feature_name'] or the variable having it as an attribute.
 
         inplace: boolean (False by default)
-            If False, the method returns a xarray.DataArray with predicted labels
-            If True, a xarray.DataArray with labels is added to the input xarray.Dataset
+            If False, the method returns a :class:`xarray.DataArray` with predicted labels
+            If True, a :class:`xarray.DataArray` with labels is added to the input :class:`xarray.Dataset`
 
         labelname: string ('PCM_LABELS')
             Name of the DataArray holding labels.
 
         Returns
         -------
-        xarray.DataArray
+        :class:`xarray.DataArray`
             Component labels (if option 'inplace' = False)
 
         *or*
 
-        xarray.Dataset
-            Input dataset with component labels as a 'PCM_LABELS' new xarray.DataArray (if option 'inplace' = True)
+        :class:`xarray.Dataset`
+            Input dataset with component labels as a 'PCM_LABELS' new :class:`xarray.DataArray` (if option 'inplace' = True)
 
         """
         # PRE-PROCESSING:
@@ -571,32 +594,39 @@ class pcm:
     def predict_proba(self, ds, feature=None, inplace=False, probname='PCM_POST', classaxisname='N_CLASS'):
         """Predict posterior probability of each component given the data
 
-           This method adds these properties to the PCM instance:
-               llh: The log likelihood of the model with regard to new data
+        This method adds these properties to the PCM instance:
 
-            Parameters
-            ----------
-            ds: xarray.Dataset
-            feature: str, optional
-                The xarray.Dataset variable name to be used as the PCM feature. If not specified, the
-                variable is identified as PCM['feature_name'] or the variable having it as an attribute.
-            inplace: boolean, False by default
-                If False, the method returns a xarray.DataArray with predicted labels
-                If True, a xarray.DataArray with labels is added to the input xarray.Dataset
-            probname: str, default is 'PCM_POST'
-                Name of the DataArray with prediction probability (posteriors)
-            classaxisname: str, default is 'N_CLASS'
-                Name of the dimension holding classes
+        - ``llh``: The log likelihood of the model with regard to new data
 
-            Returns
-            -------
-            xarray.DataArray
-                Probability of each Gaussian (state) in the model given each
-                sample (if option 'inplace' = False)
-            or
-            xarray.Dataset
-                Input dataset with Component Probability as a 'PCM_POST' new xarray.DataArray
-                (if option 'inplace' = True)
+        Parameters
+        ----------
+        ds: :class:`xarray.Dataset`
+
+        feature: str, optional
+            The :class:`xarray.Dataset` variable name to be used as the PCM feature. If not specified, the
+            variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+
+        inplace: boolean, False by default
+            If False, the method returns a :class:`xarray.DataArray` with predicted labels
+            If True, a :class:`xarray.DataArray` with labels is added to the input :class:`xarray.DataArray`
+
+        probname: str, default is 'PCM_POST'
+            Name of the DataArray with prediction probability (posteriors)
+
+        classaxisname: str, default is 'N_CLASS'
+            Name of the dimension holding classes
+
+        Returns
+        -------
+        :class:`xarray.DataArray`
+            Probability of each Gaussian (state) in the model given each
+            sample (if option 'inplace' = False)
+
+        *or*
+
+        :class:`xarray.Dataset`
+            Input dataset with Component Probability as a 'PCM_POST' new :class:`xarray.DataArray`
+            (if option 'inplace' = True)
 
 
         """
@@ -638,12 +668,35 @@ class pcm:
         else:
             return post
 
-    @property
-    def plot(self):
+    def score(self, ds, feature=None):
+        """Compute the per-sample average log-likelihood of the given data
+
+        Parameters
+        ----------
+        ds: :class:`xarray.Dataset`
+
+        feature: str, optional
+            The :class:`xarray.Dataset` variable name to be used as the PCM feature. If not specified, the
+            variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+
+        Returns
+        -------
+        log_likelihood: float
+            In the case of a GMM classifier, this is the Log likelihood of the Gaussian mixture given data
+
         """
-        Access plotting functions
-        """
-        return _PlotMethods(self)
+        # Check if the PCM is trained:
+        validation.check_is_fitted(self, '_trained',
+                                   msg="This %(name)s instance is not fitted yet. Call ‘fit’ with appropriate "
+                                       "arguments before using the predict method.")
+
+        # PRE-PROCESSING:
+        X = self.preprocessing(ds, feature=feature)
+
+        # COMPUTE THE PREDICTION SCORE:
+        llh = self._classifier.score(X)
+
+        return llh
 
 if __name__ == '__main__':
     from . import v5 as pcm

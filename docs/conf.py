@@ -18,15 +18,19 @@
 #
 import os
 import sys
-# sys.path.insert(0, os.path.abspath('../pyxpcm'))
+
+# import matplotlib
+# matplotlib.use('agg')
+# ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+#                                    '_build','html','_static')
+
+pyXpcm_src = os.path.abspath('..')
+print("pyXpcm loaded:", os.path.abspath('..'))
+sys.path.append(os.path.abspath('..'))
+import pyxpcm
 
 print("python exec:", sys.executable)
 print("sys.path:", sys.path)
-
-import matplotlib
-matplotlib.use('agg')
-ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                                   '_build','html','_static')
 
 # -- General configuration ------------------------------------------------
 
@@ -77,7 +81,7 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'pyxpcm'
+project = u'pyXpcm'
 copyright = u'2018, Guillaume Maze'
 author = u'Guillaume Maze'
 

@@ -79,5 +79,12 @@ Once the PCM is trained, i.e. fitted with a training dataset, we can predict cla
     LABELS = m.predict(ds, feature={'temperature': 'TEMP'})
     LABELS
 
+And since by default the PCM classifier is fuzzy, we can also predict the probabilities for profiles to belong to each of the classes:
+
+.. ipython:: python
+
+    POSTERIORS = m.predict_proba(ds, feature={'temperature': 'TEMP'})
+    POSTERIORS
+
 .. _Argo: http://argo.ucsd.edu/
 .. _Xarray: http://xarray.pydata.org/en/stable/data-structures.html#dataset
