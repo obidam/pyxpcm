@@ -14,7 +14,7 @@ Creating a PCM
 .. autosummary::
    :toctree: generated/
 
-   pcm.pcm
+   pcm
 
 Attributes
 ----------
@@ -22,8 +22,8 @@ Attributes
 .. autosummary::
    :toctree: generated/
 
-   pcm.pcm.K
-   pcm.pcm.feature_axis
+   pcm.K
+   pcm.feature_axis
 
 Methods
 -------
@@ -31,11 +31,11 @@ Methods
 .. autosummary::
    :toctree: generated/
 
-   pcm.pcm.fit
-   pcm.pcm.fit_predict
-   pcm.pcm.predict
-   pcm.pcm.predict_proba
-   pcm.pcm.score
+   pcm.fit
+   pcm.fit_predict
+   pcm.predict
+   pcm.predict_proba
+   pcm.score
 
 Statistics
 ==========
@@ -60,4 +60,4 @@ Dummy datasets
 .. autosummary::
    :toctree: generated/
 
-   dummy_datasets.load_argo
+   datasets.load_argo

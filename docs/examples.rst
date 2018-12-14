@@ -12,7 +12,7 @@ A Profile Classification Model can be created independently of any dataset using
 
 .. ipython:: python
 
-    from pyxpcm import pcm
+    from pyxpcm.pcmodel import pcm
     m = pcm(K=8, feature_axis=np.arange(-500,0,2), feature_name='temperature')
     m
 

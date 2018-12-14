@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-.. module:: pcm
+.. module:: pcmodel
    :synopsis: Profile Classification Model
 
 .. moduleauthor:: Guillaume Maze <gmaze@ifremer.fr>
