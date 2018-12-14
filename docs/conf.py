@@ -26,7 +26,7 @@ import sys
 
 pyXpcm_src = os.path.abspath('..')
 print("pyXpcm loaded:", os.path.abspath('..'))
-sys.path.append(os.path.abspath('..'))
+sys.path.insert(0, os.path.abspath('..'))
 import pyxpcm
 
 print("python exec:", sys.executable)

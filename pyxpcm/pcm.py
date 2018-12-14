@@ -699,7 +699,6 @@ class pcm:
         return llh
 
 if __name__ == '__main__':
-    from . import v5 as pcm
     from . import datasets as pcm_data
     ds = pcm_data.load_argo()
     # print dtrain
