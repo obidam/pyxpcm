@@ -17,7 +17,7 @@ def quant(ds,
           q=[0.05, 0.5, 0.95],
           inplace=True,
           dim=None,
-          qname='QUANT'):
+          name='QUANT'):
     """Compute q-th quantiles of a dataArray for each PCM component
 
         Parameters
@@ -36,6 +36,12 @@ def quant(ds,
         Returns
         -------
         Q: xarray.DataArray with shape (K, n_quantiles, N_z=n_features)
+
+        Example
+        -------
+        from pyxpcm import stats as pcmstats
+        ds = ds.compute()
+        pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', qname='TEMP_Q')
 
     """
     # if labels not in ds.data_vars:
@@ -64,9 +70,8 @@ def quant(ds,
                 dim_class = thisdim
                 found_class = True
         if not found_class:
-            dim_class = ("N_CLASS_%s")%(qname)
-        ds[qname] = xr.concat(qlist, dim=dim_class)
-        return ds
+            dim_class = ("N_CLASS_%s")%(name)
+        ds[name] = xr.concat(qlist, dim=dim_class)
     else:
         qlist = xr.concat(qlist, dim=("N_CLASS"))
         # qlist = xr.concat(qlist, dim=("N_CLASS_%s)"%(qname)))

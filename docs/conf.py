@@ -19,10 +19,12 @@
 import os
 import sys
 
-# import matplotlib
-# matplotlib.use('agg')
+import matplotlib
+matplotlib.use('TkAgg')
 # ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
 #                                    '_build','html','_static')
+ipython_savefig_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                                   '_build','_static')
 
 pyXpcm_src = os.path.abspath('..')
 print("pyXpcm loaded:", os.path.abspath('..'))
@@ -66,6 +68,8 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.doctest',
     'sphinx.ext.viewcode',
     'sphinx.ext.inheritance_diagram',
+    'matplotlib.sphinxext.only_directives',
+    'matplotlib.sphinxext.plot_directive',
     'numpydoc']
 
 # Add any paths that contain templates here, relative to this directory.

@@ -86,5 +86,58 @@ And since by default the PCM classifier is fuzzy, we can also predict the probab
     POSTERIORS = m.predict_proba(ds, feature={'temperature': 'TEMP'})
     POSTERIORS
 
+Note that since we're working with xarrays, one could in fact add these new variables directly to the dataset as new variables. This can simply be done using the ``inplace`` option set to True:
+
+.. ipython:: python
+
+    m.predict(ds, feature={'temperature': 'TEMP'}, inplace=True)
+    m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
+    ds
+
+We see that the ``ds`` object has two new variables added by each of these methods, the ``PCM_LABELS`` and ``PCM_POST``.
+The new variable name can be tuned to your convenience using the ``name`` option.
+
+Statistics
+----------
+
+In order to look at the structure of the classes, one can compute quantiles using the stats module.
+
+.. ipython:: python
+
+    from pyxpcm import stats as pcmstats
+    ds = ds.compute()
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', q=[0.05, 0.5, 0.95], name='TEMP_Q')
+    ds
+
+Plotting
+--------
+
+A few plotting functions are also available to get you started.
+
+PCM properties
+^^^^^^^^^^^^^^
+
+It is possible to plot the PCM scaler mean and std:
+
+.. ipython:: python
+
+    from pyxpcm import plot as pcmplot
+    pcmplot.scaler(m)
+    @savefig examples_scaler.png width=5in
+
+Quantiles
+^^^^^^^^^
+
+If you compute quantiles for a given variable, you can simply plot them using:
+
+.. ipython:: python
+
+    from pyxpcm import plot as pcmplot
+    from pyxpcm import stats as pcmstats
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_QUANT')
+    pcmplot.quant(m, ds['TEMP_QUANT'])
+    @savefig examples_quantiles.png width=5in
+
+
 .. _Argo: http://argo.ucsd.edu/
 .. _Xarray: http://xarray.pydata.org/en/stable/data-structures.html#dataset

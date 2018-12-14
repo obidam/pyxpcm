@@ -10,6 +10,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.colors as mcolors
+from sklearn.utils import validation
 
 def cmap_discretize(cmap, N):
     """Return a discrete colormap from the continuous colormap cmap.
@@ -30,10 +31,13 @@ def cmap_discretize(cmap, N):
     # Return colormap object.
     return mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
 
+def plot(m, ax=None, subplot_kws=None, **kwargs):
+    print "This would trigger a plot of the PCM !"
+
 class _PlotMethods(object):
     """
-    Enables use of pcmpack.plot functions as attributes on a PCM object.
-    For example, m.plot.scaler
+    Enables use of pyxpcm.plot functions as attributes on a PCM object.
+    For example, m.plot()
     """
 
     def __init__(self, m):
@@ -42,12 +46,9 @@ class _PlotMethods(object):
     def __call__(self, **kwargs):
         return plot(self._pcm, **kwargs)
 
-def plot(m, ax=None, subplot_kws=None, **kwargs):
-    print "This would trigger a plot of the PCM !"
-
 class _PlotScalerMethods(object):
     """
-    Enables use of pcmpack.plot functions as attributes on a PCM object.
+    Enables use of pyxpcm.plot functions as attributes on a PCM object.
     For example, m.plot.scaler
     """
 
@@ -55,7 +56,7 @@ class _PlotScalerMethods(object):
         self._pcm = m
 
     def __call__(self, **kwargs):
-        return plot_scaler(self._pcm, **kwargs)
+        return scaler(self._pcm, **kwargs)
 
     # @functools.wraps(hist)
     # def hist(self, ax=None, **kwargs):
@@ -73,13 +74,14 @@ def scaler(m, ax=None, subplot_kws=None, **kwargs):
     m: PCM class instance
 
     """
+    # Check if the PCM is trained:
+    validation.check_is_fitted(m, 'fitted')
+
     X_ave = m._scaler.mean_
     X_std = m._scaler.scale_
     X_unit = m._scaler_props['units']
     feature_axis = m._props['feature_axis']
     feature_name = m._props['feature_name']
-    print X_ave
-    print feature_axis
 
     fig, ax = plt.subplots(nrows=1, ncols=2, sharey='row', figsize=(10, 5), dpi=80, facecolor='w', edgecolor='k')
     ax[0].plot(X_ave, feature_axis, '-', linewidth=2, label='Sample Mean')
@@ -107,6 +109,9 @@ def quant(m, da, xlim=None):
     -
 
     """
+    # Check if the PCM is trained:
+    validation.check_is_fitted(m, 'fitted')
+
     cmap = cmap_discretize(plt.cm.Paired, m.K)
     # da must 3D with a dimension for: CLASS, QUANTILES and a vertical axis
     # The QUANTILES dimension is called "quantile"

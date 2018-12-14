@@ -148,7 +148,6 @@ class pcm:
                         'maxvar': maxvar,
                         'feature_axis': np.float32(feature_axis),
                         'feature_name': feature_name}
-        self._trained = False #todo _trained is a property, should be set/get with a decorator
         self._verb = verb #todo _verb is a property, should be set/get with a decorator
         
         self._interpoler = self.__Interp(axis=self._props['feature_axis'])
@@ -271,7 +270,7 @@ class pcm:
         prop_info = ('Feature axis: [%s, ..., %s]') % (repr(self._props['feature_axis'][0]),repr(self._props['feature_axis'][-1]))
         summary.append(prop_info)
         
-        prop_info = ('Trained: %r') % self._trained
+        prop_info = ('Fitted: %r') % hasattr(self,'fitted')
         summary.append(prop_info)
         
         # PCM workflow parameters:
@@ -302,8 +301,8 @@ class pcm:
         summary.append("\t Classifier: %s"%(type(self._classifier)))
         #prop_info = ('GMM covariance type: %s') % self._props['COVARTYPE']
         #summary.append(prop_info)
-        if (self._trained):
-            prop_info = ('\t log likelihood: %f') % self._props['llh']
+        if (hasattr(self,'fitted')):
+            prop_info = ('\t log likelihood of the training set: %f') % self._props['llh']
             summary.append(prop_info)
         
         if (deep):
@@ -341,7 +340,7 @@ class pcm:
         return real_feature_name
 
     def preprocessing(self, ds, feature=None):
-        """"Pre-process data before classification
+        """Pre-process data before classification
 
         Possible pre-processing steps:
 
@@ -389,7 +388,7 @@ class pcm:
         # Based on scikit-lean methods
         # We need to fit the pre-processing methods in order to re-use them when
         # predicting a new dataset
-        if not self._trained:
+        if not hasattr(self,'fitted'):
             # SCALING:
             self._scaler.fit(X)
             if 'units' in ds[feature_name].attrs:
@@ -440,7 +439,7 @@ class pcm:
         self._props['llh'] = self._classifier.score(X)
 
         # Done:
-        self._trained = True
+        self.fitted = True
         return self
 
     def predict(self, ds, feature=None, inplace=False, labelname='PCM_LABELS'):
@@ -477,9 +476,7 @@ class pcm:
             (if option 'inplace' = True)
         """
         # Check if the PCM is trained:
-        validation.check_is_fitted(self, '_trained',
-                                   msg="This %(name)s instance is not fitted yet. Call ‘fit’ with appropriate "
-                                       "arguments before using the predict method.")
+        validation.check_is_fitted(self, 'fitted')
 
         # PRE-PROCESSING:
         X = self.preprocessing(ds, feature=feature)
@@ -511,12 +508,11 @@ class pcm:
             if labelname in ds.data_vars:
                 warnings.warn( ("%s variable already in the dataset: overwriting")%(labelname) )
             ds[labelname] = labels
-            return ds
         else:
             return labels
         #
 
-    def fit_predict(self, ds, feature=None, inplace=False, labelname='PCM_LABELS'):
+    def fit_predict(self, ds, feature=None, inplace=False, name='PCM_LABELS'):
         """Estimate PCM parameters and predict classes.
 
         This method add these properties to the PCM object:
@@ -557,7 +553,7 @@ class pcm:
         self._props['llh'] = self._classifier.score(X)
 
         # Done fitting
-        self._trained = True
+        self.fitted = True
 
         # CLASSIFICATION PREDICTION:
         labels = self._classifier.predict(X)
@@ -574,7 +570,7 @@ class pcm:
         # dim_sample_name = list(set(ds[feature_name].dims).symmetric_difference([feature_axis]))[0]
 
         # Create a xarray.DataArray with labels:
-        labels = xr.DataArray(labels, dims=sampling_axis_name, name=labelname)
+        labels = xr.DataArray(labels, dims=sampling_axis_name, name=name)
         labels.attrs['long_name'] = 'PCM labels'
         labels.attrs['units'] = '[]'
         labels.attrs['valid_min'] = 0
@@ -583,15 +579,14 @@ class pcm:
 
         # Add labels to the dataset:
         if inplace:
-            if labelname in ds.data_vars:
-                warnings.warn( ("%s variable already in the dataset: overwriting")%(labelname) )
-            ds[labelname] = labels
-            return ds
+            if name in ds.data_vars:
+                warnings.warn( ("%s variable already in the dataset: overwriting")%(name) )
+            ds[name] = labels
         else:
             return labels
         #
 
-    def predict_proba(self, ds, feature=None, inplace=False, probname='PCM_POST', classaxisname='N_CLASS'):
+    def predict_proba(self, ds, feature=None, inplace=False, name='PCM_POST', classaxisname='N_CLASS'):
         """Predict posterior probability of each component given the data
 
         This method adds these properties to the PCM instance:
@@ -631,9 +626,7 @@ class pcm:
 
         """
         # Check if the PCM is trained:
-        validation.check_is_fitted(self, '_trained',
-                                   msg="This %(name)s instance is not fitted yet. Call ‘fit’ with appropriate "
-                                       "arguments before using the predict method.")
+        validation.check_is_fitted(self, 'fitted')
 
         # PRE-PROCESSING:
         X = self.preprocessing(ds, feature=feature)
@@ -652,7 +645,7 @@ class pcm:
         post = xr.DataArray(post_values, coords=[
                         (sampling_axis_name, ds[sampling_axis_name].values),
                         (classaxisname, range(0, self._props['K']))],
-                            name=probname)
+                            name=name)
         post.attrs['long_name'] = 'PCM posteriors'
         post.attrs['units'] = '[]'
         post.attrs['valid_min'] = 0
@@ -661,10 +654,9 @@ class pcm:
 
         # Add labels to the dataset:
         if inplace:
-            if probname in ds.data_vars:
-                warnings.warn(("%s variable already in the dataset: overwriting") % (probname))
-            ds[probname] = post
-            return ds
+            if name in ds.data_vars:
+                warnings.warn(("%s variable already in the dataset: overwriting") % (name))
+            ds[name] = post
         else:
             return post
 
@@ -686,9 +678,7 @@ class pcm:
 
         """
         # Check if the PCM is trained:
-        validation.check_is_fitted(self, '_trained',
-                                   msg="This %(name)s instance is not fitted yet. Call ‘fit’ with appropriate "
-                                       "arguments before using the predict method.")
+        validation.check_is_fitted(self, 'fitted')
 
         # PRE-PROCESSING:
         X = self.preprocessing(ds, feature=feature)
@@ -699,15 +689,31 @@ class pcm:
         return llh
 
 if __name__ == '__main__':
-    from . import datasets as pcm_data
-    ds = pcm_data.load_argo()
-    # print dtrain
-    m = pcm(K=3, feature_axis=ds['DEPTH'].values, feature_name='TEMP')
-    m.fit(ds)
-    print m
-    m.predict(ds, inplace=True)  # Add labels to the dataset
-    print ds
-    m.predict_proba(ds, inplace=True, probname='POSTERIORS',
-                    classaxisname='N_COMPONENT')
-    print ds
+    from pyxpcm.pcmodel import pcm
+    from pyxpcm import datasets as pcmdata
+    from pyxpcm import stats as pcmstats
+    from pyxpcm import plot as pcmplot
+    import numpy as np
 
+    m = pcm(K=8, feature_axis=np.arange(-500, 0, 2), feature_name='temperature')
+
+    ds = pcmdata.load_argo()
+    m.fit(ds, feature={'temperature': 'TEMP'})
+
+    # LABELS = m.predict(ds, feature={'temperature': 'TEMP'})
+    # POSTERIORS = m.predict_proba(ds, feature={'temperature': 'TEMP'})
+
+    m.predict(ds, feature={'temperature': 'TEMP'}, inplace=True)
+    m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
+
+    # Plot scaling data:
+    pcmplot.scaler(m)
+
+    # Compute and plot quantiles of classes:
+    ds = ds.compute()
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS')
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_Q')
+    pcmplot.quant(m, ds['TEMP_Q'])
+
+    pcmstats.quant(ds, of='PSAL', using='PCM_LABELS', name='PSAL_Q')
+    pcmplot.quant(m, ds['PSAL_Q'], xlim=[36, 37])

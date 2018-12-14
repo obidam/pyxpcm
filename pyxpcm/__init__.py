@@ -2,7 +2,10 @@
 .. moduleauthor:: Guillaume Maze <gmaze@ifremer.fr>
 """
 
+# Import class:
 from .pcmodel import pcm as pcm
+
+# Import
 from . import stats
 from . import plot
-import dummy_datasets as datasets
+from . import datasets
