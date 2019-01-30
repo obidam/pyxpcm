@@ -370,7 +370,8 @@ class pcm:
         sampling_axis_name = str(ds[feature_name].dims[0])
         feature_axis_name = str(ds[feature_name].dims[1])
 
-        # Ensure that the feature name is of shape [n_samples, n_features]:
+        # Ensure that feature is of shape [n_samples, n_features]:
+
         #   - the 2nd dimension of the feature_name variable must be the
         #       specified feature_axis
         # if (feature_axis != None):
@@ -437,6 +438,7 @@ class pcm:
         # CLASSIFICATION-MODEL TRAINING:
         self._classifier.fit(X)
         self._props['llh'] = self._classifier.score(X)
+        self._props['bic'] = self._classifier.bic(X)
 
         # Done:
         self.fitted = True
@@ -687,6 +689,59 @@ class pcm:
         llh = self._classifier.score(X)
 
         return llh
+
+    def bic(self, ds, feature=None):
+        """Compute Bayesian information criterion for the current model on the input X
+
+        Only for GMM classifier
+
+        Parameters
+        ----------
+        ds: :class:`xarray.Dataset`
+
+        feature: str, optional
+            The :class:`xarray.Dataset` variable name to be used as the PCM feature. If not specified, the
+            variable is identified as PCM['feature_name'] or the variable having it as an attribute.
+
+        Returns
+        -------
+        bic: float
+            The lower the better
+        """
+
+        # Check classifier:
+        if self._props['with_classifier'] != 'gmm':
+            raise Exception( ("BIC is only available for 'gmm' classifier ('%s')")%\
+                             (self._props['with_classifier']) )
+
+        def _n_parameters(_classifier):
+            """Return the number of free parameters in the model. See sklearn code"""
+            _, n_features = _classifier.means_.shape
+            if _classifier.covariance_type == 'full':
+                cov_params = _classifier.n_components * n_features * (n_features + 1) / 2.
+            elif _classifier.covariance_type == 'diag':
+                cov_params = _classifier.n_components * n_features
+            elif _classifier.covariance_type == 'tied':
+                cov_params = n_features * (n_features + 1) / 2.
+            elif _classifier.covariance_type == 'spherical':
+                cov_params = _classifier.n_components
+            mean_params = n_features * _classifier.n_components
+            return int(cov_params + mean_params + _classifier.n_components - 1)
+
+        # Check if the PCM is trained:
+        validation.check_is_fitted(self, 'fitted')
+
+        # PRE-PROCESSING:
+        X = self.preprocessing(ds, feature=feature)
+
+        # COMPUTE THE log-likelihood:
+        llh = self._classifier.score(X)
+
+        # COMPUTE BIC:
+        N_samples = X.shape[0]
+        bic = (-2 * llh * N_samples + _n_parameters(self._classifier) * np.log(N_samples))
+
+        return bic
 
 if __name__ == '__main__':
     from pyxpcm.pcmodel import pcm
