@@ -32,7 +32,7 @@ def cmap_discretize(cmap, N):
     return mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
 
 def plot(m, ax=None, subplot_kws=None, **kwargs):
-    print "This would trigger a plot of the PCM !"
+    print("This would trigger a plot of the PCM !")
 
 class _PlotMethods(object):
     """
