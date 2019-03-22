@@ -182,25 +182,27 @@ class pcm:
     class __Interp:
         """ Internal machinery for the interpolation of vertical profiles
             
-            This class is called once at PCM instance initialisation and
+            This class is called once at PCM instance initialisation
+            and
             whenever data to be classified are not on the PCM feature axis.
 
             Here we consume numpy arrays
         """
         def __init__(self, axis=None):
             self.axis = axis
-            self.doINTERPz = False
+            # self.doINTERPz = False
         
-        def isnecessary(self, C, Caxis):
-            """Check wether or not the input data vertical axis is different
-                from the PCM one, if not, avoid interpolation
-            """
-            #todo We should be smarter and recognize occurences of z in DPTmodel
-            # or viceversa in order to limit interpolation as much as possible !
-            z = np.float32(Caxis)
-            self.doINTERPz = not np.array_equiv(self.axis, Caxis)
-            return self.doINTERPz
-        
+        def issimilar(self, Caxis):
+            """Check if the output and input axis are similar"""
+            test = np.array_equiv(self.axis, Caxis)
+            return test
+
+        def isintersect(self, Caxis):
+            """Check if output axis can be spot sampled from the input axis"""
+            in1 = np.in1d(Caxis, self.axis)
+            test = self.axis.shape[0] == np.count_nonzero(in1)
+            return test
+
         def mix(self, x):
             """ 
                 Homogeneize the upper water column: 
@@ -210,15 +212,21 @@ class pcm:
             izok = np.where(~np.isnan(x))[0][0]
             #x[izmixed] = x[izok]
             x[0] = x[izok]
-            return x;
+            return x
         
         def transform(self, C, Caxis):
             """
                 Interpolate data on the PCM vertical axis
             """
-            if (self.isnecessary(C, Caxis)):
-                [Np, Nz] = C.shape            
-                # Possibly Create a mixed layer for the interpolation to work 
+            if (self.isintersect(Caxis)):
+                # Output axis is in the input axis, not need to interpolate:
+                # warnings.warn( "Output axis is in the input axis, not need to interpolate, simple intersection" )
+                in1 = np.in1d(Caxis, self.axis)
+                C = C[:,in1]
+            elif (not self.issimilar(Caxis)):
+                # warnings.warn( "Output axis is new, perform interpolation" )
+                [Np, Nz] = C.shape
+                # Possibly Create a mixed layer for the interpolation to work
                 # smoothly at the surface
                 if ((Caxis[0]<0.) & (self.axis[0] == 0.)):
                     Caxis = np.concatenate((np.zeros(1), Caxis))
@@ -229,6 +237,8 @@ class pcm:
                 # Linear interpolation of profiles onto the model grid:
                 f = interpolate.interp2d(Caxis, np.arange(Np), C, kind='linear')
                 C = f(self.axis, np.arange(Np))
+            else:
+                warnings.warn( "This is new situation I don't like !" )
             return C
 
     @property
@@ -274,7 +284,7 @@ class pcm:
         summary.append(prop_info)
         
         # PCM workflow parameters:
-        prop_info = ('Feature axis Interpolation: %r') % self._interpoler.doINTERPz
+        prop_info = ('Feature axis Interpolation:')
         summary.append(prop_info)    
         summary.append("\t Interpoler: %s"%(type(self._interpoler)))
         
@@ -365,13 +375,12 @@ class pcm:
         X = m.preprocessing(ds, feature={'temperature':'TEMP'})
             
         """
-        # Identify the feature in this dataset:
+        # Identify feature dims in this dataset:
         feature_name = self.__id_feature_name(ds, feature)
         sampling_axis_name = str(ds[feature_name].dims[0])
         feature_axis_name = str(ds[feature_name].dims[1])
 
         # Ensure that feature is of shape [n_samples, n_features]:
-
         #   - the 2nd dimension of the feature_name variable must be the
         #       specified feature_axis
         # if (feature_axis != None):
