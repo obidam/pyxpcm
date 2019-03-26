@@ -2,7 +2,7 @@ pyxpcm: Python Profile Classification Modelling
 ===============================================
 [![DOI](https://img.shields.io/badge/DOI--Article-10.1016%2Fj.pocean.2016.12.008-orange.svg)](http://dx.doi.org/10.1016/j.pocean.2016.12.008)
 [![Documentation Status](https://readthedocs.org/projects/pyxpcm/badge/?version=latest)](https://pyxpcm.readthedocs.io/en/latest/?badge=latest) 
-[![Build Status](https://travis-ci.org/gmaze/pyxpcm.svg?branch=master)](https://travis-ci.org/gmaze/pyxpcm)  
+[![Build Status](https://travis-ci.org/obidam/pyxpcm.svg?branch=master)](https://travis-ci.org/obidam/pyxpcm)  
 [![Python 3.6](https://img.shields.io/badge/python-3.6-blue.svg)](https://www.python.org/downloads/release/python-270/)
 [![](https://img.shields.io/badge/xarray-0.10.0-blue.svg)](http://xarray.pydata.org/en/stable/)  
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues) 
