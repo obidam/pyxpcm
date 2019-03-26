@@ -134,7 +134,7 @@ If you compute quantiles for a given variable, you can simply plot them using:
 
     from pyxpcm import plot as pcmplot
     from pyxpcm import stats as pcmstats
-    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_QUANT', inplace=True)
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_QUANT')
     pcmplot.quant(m, ds['TEMP_QUANT'])
     @savefig examples_quantiles.png width=5in
 
@@ -162,8 +162,8 @@ Summary
 
     # Compute statistics:
     ds = ds.compute()
-    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_Q', inplace=True)
-    pcmstats.quant(ds, of='PSAL', using='PCM_LABELS', name='PSAL_Q', inplace=True)
+    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_Q')
+    pcmstats.quant(ds, of='PSAL', using='PCM_LABELS', name='PSAL_Q')
 
     # Plots:
     pcmplot.scaler(m)
