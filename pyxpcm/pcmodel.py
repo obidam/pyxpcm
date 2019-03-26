@@ -78,10 +78,15 @@ from sklearn.decomposition import PCA
 # http://scikit-learn.org/stable/modules/mixture.html
 from sklearn.mixture import GaussianMixture
 
+class PCMFeatureError(Exception):
+    """Exception raised when features not found."""
+
+from sklearn.exceptions import NotFittedError
+
 class pcm:
     """Base class for a Profile Classification Model
 
-    Consume and return xarray objects
+    Consume and return :module:`xarray` objects
     """
     def __init__(self,
                  K=1,
@@ -106,25 +111,29 @@ class pcm:
             Define the scaling method:
 
             - 0: No scaling
-            - **1: Center by mean and scale by std**
-            - 2: Center by mean only
+            - **1: Center on sample mean and scale by sample std**
+            - 2: Center on sample mean only
+
         reduction: int (default: 1)
             Define the dimensionality reduction method:
 
             - 0: No reduction
-            - **1: Reduction using PCA**
+            - **1: Reduction using :class:`sklearn.decomposition.PCA`**
+
         maxvar: float (default: 99.9)
-            Maximum feature variance to preserve in the reduced dataset using PCA. In %.
+            Maximum feature variance to preserve in the reduced dataset using :class:`sklearn.decomposition.PCA`. In %.
+
         classif: str (default: 'gmm')
             Define the classification method.
             The only method available as of now is a Gaussian Mixture Model.
             See :class:`sklearn.mixture.GaussianMixture` for more details.
+
         covariance_type: str (default: 'full')
             Define the type of covariance matrix shape to be used in the default classifier GMM.
             It can be ‘full’ (default), ‘tied’, ‘diag’ or ‘spherical’.
+
         verb: boolean (default: False)
             More verbose output when an instance is displayed.
-
 
         """
         if   scaling==0: with_scaler = 'none'; with_mean=False; with_std = False
@@ -333,8 +342,11 @@ class pcm:
     def __id_feature_name(self, ds, feature):
         """Identify the dataset variable name to be used as a feature"""
         if isinstance(feature, dict):
-            real_feature_name = feature[self._props['feature_name']]
-            feature_name_found = real_feature_name in ds.data_vars
+            if self._props['feature_name'] in feature:
+                real_feature_name = feature[self._props['feature_name']]
+                feature_name_found = real_feature_name in ds.data_vars
+            else:
+                raise PCMFeatureError( ("%s not found in this dictionnary")%(self._props['feature_name']) )
         else:
             real_feature_name = self._props['feature_name']
             feature_name_found = real_feature_name in ds.data_vars
@@ -345,12 +357,16 @@ class pcm:
                         feature_name_found = True
                         continue
         if not feature_name_found:
-            raise Exception( ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
-                              "attribute to the variable you'd like to use or provide a dictionnary")%(self._props['feature_name']) )
+            # raise Exception( ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
+            #                   "attribute to the variable you'd like to use or provide a dictionnary")%(self._props['feature_name']) )
+            msg = ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
+                              "attribute to the variable you'd like to use or provide a dictionnary")%(self._props['feature_name'])
+            # raise(msg)
+            raise PCMFeatureError(msg)
         return real_feature_name
 
     def preprocessing(self, ds, feature=None):
-        """Pre-process data before classification
+        """Pre-process data before anything
 
         Possible pre-processing steps:
 
@@ -379,6 +395,7 @@ class pcm:
         feature_name = self.__id_feature_name(ds, feature)
         sampling_axis_name = str(ds[feature_name].dims[0])
         feature_axis_name = str(ds[feature_name].dims[1])
+        #todo Implement check on the implicitly assumption that dimensions are sampling/feature as dim(0) and dim(1)
 
         # Ensure that feature is of shape [n_samples, n_features]:
         #   - the 2nd dimension of the feature_name variable must be the
@@ -453,7 +470,7 @@ class pcm:
         self.fitted = True
         return self
 
-    def predict(self, ds, feature=None, inplace=False, labelname='PCM_LABELS'):
+    def predict(self, ds, feature=None, inplace=False, name='PCM_LABELS'):
         """Predict labels for profile samples
 
         This method add these properties to the PCM object:
@@ -472,7 +489,7 @@ class pcm:
             If False, the method returns a :class:`xarray.DataArray` with predicted labels
             If True, a :class:`xarray.DataArray` with labels is added to the input :class:``xarray.DataSet``
 
-        labelname: str, default is 'PCM_LABELS'
+        name: str, default is 'PCM_LABELS'
             Name of the DataArray with labels
 
         Returns
@@ -507,7 +524,7 @@ class pcm:
         # dim_sample_name = list(set(ds[feature_name].dims).symmetric_difference([feature_axis]))[0]
 
         # Create a xarray.DataArray with labels:
-        labels = xr.DataArray(labels, dims=sampling_axis_name, name=labelname)
+        labels = xr.DataArray(labels, dims=sampling_axis_name, name=name)
         labels.attrs['long_name'] = 'PCM labels'
         labels.attrs['units'] = '[]'
         labels.attrs['valid_min'] = 0
@@ -516,9 +533,9 @@ class pcm:
 
         # Add labels to the dataset:
         if inplace:
-            if labelname in ds.data_vars:
-                warnings.warn( ("%s variable already in the dataset: overwriting")%(labelname) )
-            ds[labelname] = labels
+            if name in ds.data_vars:
+                warnings.warn( ("%s variable already in the dataset: overwriting")%(name) )
+            ds[name] = labels
         else:
             return labels
         #
@@ -542,7 +559,7 @@ class pcm:
             If False, the method returns a :class:`xarray.DataArray` with predicted labels
             If True, a :class:`xarray.DataArray` with labels is added to the input :class:`xarray.Dataset`
 
-        labelname: string ('PCM_LABELS')
+        name: string ('PCM_LABELS')
             Name of the DataArray holding labels.
 
         Returns
@@ -597,7 +614,7 @@ class pcm:
             return labels
         #
 
-    def predict_proba(self, ds, feature=None, inplace=False, name='PCM_POST', classaxisname='N_CLASS'):
+    def predict_proba(self, ds, feature=None, inplace=False, name='PCM_POST', classdimname='N_CLASS'):
         """Predict posterior probability of each component given the data
 
         This method adds these properties to the PCM instance:
@@ -616,10 +633,10 @@ class pcm:
             If False, the method returns a :class:`xarray.DataArray` with predicted labels
             If True, a :class:`xarray.DataArray` with labels is added to the input :class:`xarray.DataArray`
 
-        probname: str, default is 'PCM_POST'
+        name: str, default is 'PCM_POST'
             Name of the DataArray with prediction probability (posteriors)
 
-        classaxisname: str, default is 'N_CLASS'
+        classdimname: str, default is 'N_CLASS'
             Name of the dimension holding classes
 
         Returns
@@ -655,7 +672,7 @@ class pcm:
         # Create a xarray.DataArray with posteriors:
         post = xr.DataArray(post_values, coords=[
                         (sampling_axis_name, ds[sampling_axis_name].values),
-                        (classaxisname, range(0, self._props['K']))],
+                        (classdimname, range(0, self._props['K']))],
                             name=name)
         post.attrs['long_name'] = 'PCM posteriors'
         post.attrs['units'] = '[]'
@@ -751,33 +768,3 @@ class pcm:
         bic = (-2 * llh * N_samples + _n_parameters(self._classifier) * np.log(N_samples))
 
         return bic
-
-if __name__ == '__main__':
-    from pyxpcm.pcmodel import pcm
-    from pyxpcm import datasets as pcmdata
-    from pyxpcm import stats as pcmstats
-    from pyxpcm import plot as pcmplot
-    import numpy as np
-
-    m = pcm(K=8, feature_axis=np.arange(-500, 0, 2), feature_name='temperature')
-
-    ds = pcmdata.load_argo()
-    m.fit(ds, feature={'temperature': 'TEMP'})
-
-    # LABELS = m.predict(ds, feature={'temperature': 'TEMP'})
-    # POSTERIORS = m.predict_proba(ds, feature={'temperature': 'TEMP'})
-
-    m.predict(ds, feature={'temperature': 'TEMP'}, inplace=True)
-    m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
-
-    # Plot scaling data:
-    pcmplot.scaler(m)
-
-    # Compute and plot quantiles of classes:
-    ds = ds.compute()
-    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS')
-    pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_Q')
-    pcmplot.quant(m, ds['TEMP_Q'])
-
-    pcmstats.quant(ds, of='PSAL', using='PCM_LABELS', name='PSAL_Q')
-    pcmplot.quant(m, ds['PSAL_Q'], xlim=[36, 37])

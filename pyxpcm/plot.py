@@ -31,8 +31,11 @@ def cmap_discretize(cmap, N):
     # Return colormap object.
     return mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
 
-def plot(m, ax=None, subplot_kws=None, **kwargs):
-    print("This would trigger a plot of the PCM !")
+def plot(m, type=None, ax=None, subplot_kws=None, **kwargs):
+    if type == 'scaler':
+        return scaler(m, ax=ax, subplot_kws=subplot_kws, **kwargs)
+    else:
+        print('You can plot the scaler properties using pcm.plot.scaler()')
 
 class _PlotMethods(object):
     """
@@ -46,25 +49,8 @@ class _PlotMethods(object):
     def __call__(self, **kwargs):
         return plot(self._pcm, **kwargs)
 
-class _PlotScalerMethods(object):
-    """
-    Enables use of pyxpcm.plot functions as attributes on a PCM object.
-    For example, m.plot.scaler
-    """
-
-    def __init__(self, m):
-        self._pcm = m
-
-    def __call__(self, **kwargs):
-        return scaler(self._pcm, **kwargs)
-
-    # @functools.wraps(hist)
-    # def hist(self, ax=None, **kwargs):
-    #     return hist(self._da, ax=ax, **kwargs)
-    #
-    # @functools.wraps(line)
-    # def line(self, *args, **kwargs):
-    #     return line(self._da, *args, **kwargs)
+    def scaler(self, **kwargs):
+        return plot(self._pcm, type='scaler', **kwargs)
 
 def scaler(m, ax=None, subplot_kws=None, **kwargs):
     """Plot the scaler properties
