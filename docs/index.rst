@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-pyXpcm: Profile Classification Modelling for Python Xarray
+pyXpcm: Profile Classification Modelling
 ==========================================================
 
 **Profile Classification Modelling** is a scientific analysis approach based on vertical profiles classification that can be used in a variety of oceanographic problems (front detection, water mass identification, natural region contouring, reference profile selection for validation, etc ...).
