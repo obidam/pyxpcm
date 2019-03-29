@@ -24,3 +24,5 @@ docs/_build/
 docs/generated/
 
 \.ipynb_checkpoints/
+
+docs/_ext/

@@ -27,7 +27,7 @@ def cmap_discretize(cmap, N):
     cdict = {}
     for ki, key in enumerate(('red', 'green', 'blue')):
         cdict[key] = [(indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki])
-                      for i in xrange(N + 1)]
+                      for i in np.arange(N + 1)]
     # Return colormap object.
     return mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
 
@@ -92,9 +92,15 @@ def quant(m, da, xlim=None):
 
     Returns
     -------
-    -
+    fig : :class:`matplotlib.pyplot.figure.Figure`
 
+    ax : :class:`matplotlib.axes.Axes` object or array of Axes objects.
+        *ax* can be either a single :class:`matplotlib.axes.Axes` object or an
+        array of Axes objects if more than one subplot was created.  The
+        dimensions of the resulting array can be controlled with the squeeze
+        keyword, see above.
     """
+
     # Check if the PCM is trained:
     validation.check_is_fitted(m, 'fitted')
 
@@ -129,3 +135,4 @@ def quant(m, da, xlim=None):
         ax[k].grid(True)
     plt.tight_layout()
 
+    return fig, ax

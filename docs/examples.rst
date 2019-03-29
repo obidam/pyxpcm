@@ -45,8 +45,8 @@ To check out for a single profile, you can simply use the xarray plot method:
 
 .. ipython:: python
 
-    ds['TEMP'].isel(N_PROF=0).plot()
     @savefig examples_profile_sample.png width=5in
+    ds['TEMP'].isel(N_PROF=0).plot()
 
 Fit the PCM
 -----------
@@ -120,10 +120,12 @@ PCM properties
 It is possible to plot the PCM scaler mean and std:
 
 .. ipython:: python
+    :okexcept:
+    :okwarning:
 
     from pyxpcm import plot as pcmplot
-    pcmplot.scaler(m)
     @savefig examples_scaler.png width=5in
+    pcmplot.scaler(m)
 
 Quantiles
 ^^^^^^^^^
@@ -135,8 +137,8 @@ If you compute quantiles for a given variable, you can simply plot them using:
     from pyxpcm import plot as pcmplot
     from pyxpcm import stats as pcmstats
     pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', name='TEMP_QUANT', inplace=True)
-    pcmplot.quant(m, ds['TEMP_QUANT'])
     @savefig examples_quantiles.png width=5in
+    pcmplot.quant(m, ds['TEMP_QUANT'])
 
 Summary
 -------
