@@ -717,9 +717,9 @@ class pcm:
         return llh
 
     def bic(self, ds, feature=None):
-        """Compute Bayesian information criterion for the current model on the input X
+        """Compute Bayesian information criterion for the current model on the input dataset
 
-        Only for GMM classifier
+        Only for a GMM classifier
 
         Parameters
         ----------

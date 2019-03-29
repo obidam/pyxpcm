@@ -3,13 +3,14 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-pyXpcm: Profile Classification Modelling for Python Xarray
-==========================================================
+pyXpcm: Ocean Profile Classification Model
+==========================================
 
-**Profile Classification Modelling** is a scientific analysis approach based on vertical profiles classification that can be used in a variety of oceanographic problems (front detection, water mass identification, natural region contouring, reference profile selection for validation, etc ...).
-It is being developed at Ifremer-LOPS in collaboration with IMT-Atlantique since 2015, and has become mature enough (with publication and communications) to be distributed and made publicly available for continuous improvements with a community development.
+**pyXpcm** is a python package to create and work with **Profile Classification Model** that consumes and produces [Xarray](https://github.com/pydata/xarray) objects. Xarray objects are N-D labeled arrays and datasets in Python.
 
-**pyXpcm** is a package consuming and producing Xarray_ objects. Xarray_ objects are N-D labeled arrays and datasets in Python. In future release, **pyXpcm** will be able to digest very large datasets, following the Pangeo_ initiative.
+A ocean **Profile Classification Model** allows to automatically assemble ocean profiles in clusters according to their vertical structure similarities.
+The geospatial properties of these clusters can be used to address a large variety of oceanographic problems: front detection, water mass identification, natural region contouring (gyres, eddies), reference profile selection for QC validation, etc... The vertical structure of these clusters furthermore provides a highly synthetic representation of large ocean areas that can be used for dimensionality reduction and coherent intercomparisons of ocean data (re)-analysis or simulations.
+
 
 References
 ----------

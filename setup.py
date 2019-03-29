@@ -17,8 +17,8 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="pyxpcm",
-    version="0.1.3",
-    description='pyxpcm: Python Profile Classification Modelling for Xarray',
+    version="0.3",
+    description='pyxpcm: Ocean Profile Classification Model',
     url='http://github.com/obidam/pyxpcm',
     author='Guillaume Maze',
     author_email='gmaze@ifremer.fr',
@@ -29,7 +29,7 @@ setuptools.setup(
     install_requires=requirements,
     license='GPLv3',
     classifiers=[
-        "Programming Language :: Python :: 2.7",
+        "Programming Language :: Python :: 3.6",
         "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: OS Independent",
         "Intended Audience :: Science/Research",

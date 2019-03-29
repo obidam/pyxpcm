@@ -3,7 +3,16 @@
 What's New
 ==========
 
-.. _whats-new.0.1.3:
+v0.2 (26 Mar. 2019)
+---------------------
+
+Upgrade to python 3.6 (compatible 2.7)
+
+Added test for continuous coverage
+
+Added score and bic methods
+
+Improved vocabulary consistency in methods
 
 v0.1.3 (12 Nov. 2018)
 ---------------------

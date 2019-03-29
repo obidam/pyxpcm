@@ -36,6 +36,7 @@ Methods
    pcmodel.pcm.predict
    pcmodel.pcm.predict_proba
    pcmodel.pcm.score
+   pcmodel.pcm.bic
 
 Statistics
 ==========
