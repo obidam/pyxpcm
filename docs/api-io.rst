@@ -38,16 +38,28 @@ Methods
    pcmodel.pcm.score
    pcmodel.pcm.bic
 
-Statistics
-==========
+Plotting
+--------
+
+.. autosummary::
+   :toctree: generated/
+
+   pcmodel.pcm.plot
+   pcm.plot.cmap
+   pcm.plot.colorbar
+   pcm.plot.scaler
+
+
+Statistic module
+================
 
 .. autosummary::
    :toctree: generated/
 
    stats.quant
 
-Plotting
-========
+Plotting module
+===============
 
 .. autosummary::
    :toctree: generated/
@@ -62,3 +74,4 @@ Dummy datasets
    :toctree: generated/
 
    datasets.load_argo
+   datasets.load_isas15

@@ -21,28 +21,29 @@ def quant(ds,
           name='QUANT'):
     """Compute q-th quantiles of a dataArray for each PCM component
 
-        Parameters
-        ----------
-        ds: :class:`xarray.DataSet`
-            The dataset to work with
-        of: str
-            Name of the :class:`xarray.DataArray` to compute quantiles for.
-        using: str
-            Name of the :class:`xarray.DataArray` with classification labels to use.
-        q: float in the range of [0,1] (or sequence of floats)
-            Quantiles to compute, which must be between 0 and 1 inclusive.
-        dim : str, optional
-            Sampling Dimension over which to compute quantiles. Set to the first dimension by default.
+    Parameters
+    ----------
+    ds: :class:`xarray.DataSet`
+        The dataset to work with
+    of: str
+        Name of the :class:`xarray.DataArray` to compute quantiles for.
+    using: str
+        Name of the :class:`xarray.DataArray` with classification labels to use.
+    q: float in the range of [0,1] (or sequence of floats)
+        Quantiles to compute, which must be between 0 and 1 inclusive.
+    dim : str, optional
+        Sampling Dimension over which to compute quantiles. Set to the first dimension by default.
 
-        Returns
-        -------
-        Q: :class:`xarray.DataArray` with shape (K, n_quantiles, N_z=n_features)
+    Returns
+    -------
+    Q: :class:`xarray.DataArray` with shape (K, n_quantiles, N_z=n_features)
 
-        Example
-        -------
+    Examples
+    --------
+    ::
         from pyxpcm import stats as pcmstats
         ds = ds.compute()
-        pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', qname='TEMP_Q')
+        pcmstats.quant(ds, of='TEMP', using='PCM_LABELS')
 
     """
     if using not in ds.data_vars:

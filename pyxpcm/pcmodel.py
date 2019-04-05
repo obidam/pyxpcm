@@ -133,7 +133,7 @@ class pcm:
             It can be ‘full’ (default), ‘tied’, ‘diag’ or ‘spherical’.
 
         verb: boolean (default: False)
-            More verbose output when an instance is displayed.
+            More verbose output
 
         """
         if   scaling==0: with_scaler = 'none'; with_mean=False; with_std = False
@@ -159,7 +159,7 @@ class pcm:
                         'feature_name': feature_name}
         self._verb = verb #todo _verb is a property, should be set/get with a decorator
         
-        self._interpoler = self.__Interp(axis=self._props['feature_axis'])
+        self._interpoler = self.__Interp(axis=self._props['feature_axis'], verb=self._verb)
         
         self._scaler = preprocessing.StandardScaler(with_mean=with_mean,
                                                     with_std=with_std)
@@ -180,7 +180,7 @@ class pcm:
         self.__i = 0
         return self
     
-    def next(self):
+    def __next__(self):
         if self.__i < self.K:
             i = self.__i
             self.__i += 1
@@ -197,8 +197,9 @@ class pcm:
 
             Here we consume numpy arrays
         """
-        def __init__(self, axis=None):
+        def __init__(self, axis=None, verb=False):
             self.axis = axis
+            self.verb = verb
             # self.doINTERPz = False
         
         def issimilar(self, Caxis):
@@ -215,7 +216,7 @@ class pcm:
         def mix(self, x):
             """ 
                 Homogeneize the upper water column: 
-                Set 1st nan value to the first non-NaN value
+                Set 1st nan values to the first non-NaN value
             """
             #izmixed = np.argwhere(np.isnan(x))
             izok = np.where(~np.isnan(x))[0][0]
@@ -227,13 +228,15 @@ class pcm:
             """
                 Interpolate data on the PCM vertical axis
             """
+            if np.any(Caxis>0):
+                raise ValueError("Feature axis (depth) must be <=0")
             if (self.isintersect(Caxis)):
                 # Output axis is in the input axis, not need to interpolate:
-                # warnings.warn( "Output axis is in the input axis, not need to interpolate, simple intersection" )
+                if self.verb: print( "Output axis is in the input axis, not need to interpolate, simple intersection" )
                 in1 = np.in1d(Caxis, self.axis)
                 C = C[:,in1]
             elif (not self.issimilar(Caxis)):
-                # warnings.warn( "Output axis is new, perform interpolation" )
+                if self.verb: print( "Output axis is new, will use interpolation" )
                 [Np, Nz] = C.shape
                 # Possibly Create a mixed layer for the interpolation to work
                 # smoothly at the surface
@@ -267,8 +270,7 @@ class pcm:
 
     @property
     def plot(self):
-        """
-        Access plotting functions
+        """Access plotting functions
         """
         return _PlotMethods(self)
 
@@ -340,22 +342,28 @@ class pcm:
         return copy.deepcopy(self)
 
     def __id_feature_name(self, ds, feature):
-        """Identify the dataset variable name to be used as a feature"""
+        """Identify the dataset variable name to be used as a feature
+            feature must be dictionary or None for automatic discovery
+        """
         if isinstance(feature, dict):
             if self._props['feature_name'] in feature:
                 real_feature_name = feature[self._props['feature_name']]
                 feature_name_found = real_feature_name in ds.data_vars
             else:
                 raise PCMFeatureError( ("%s not found in this dictionnary")%(self._props['feature_name']) )
-        else:
+        elif feature == None:
+            # Look for the feature in variables:
             real_feature_name = self._props['feature_name']
             feature_name_found = real_feature_name in ds.data_vars
+            # or in variable attributes:
             if not feature_name_found:
                 for v in ds.data_vars:
                     if ('feature_name' in ds[v].attrs) and (ds[v].attrs['feature_name'] is real_feature_name):
                         real_feature_name = v
                         feature_name_found = True
                         continue
+        else:
+            feature_name_found = False
         if not feature_name_found:
             # raise Exception( ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
             #                   "attribute to the variable you'd like to use or provide a dictionnary")%(self._props['feature_name']) )
@@ -395,7 +403,15 @@ class pcm:
         feature_name = self.__id_feature_name(ds, feature)
         sampling_axis_name = str(ds[feature_name].dims[0])
         feature_axis_name = str(ds[feature_name].dims[1])
-        #todo Implement check on the implicitly assumption that dimensions are sampling/feature as dim(0) and dim(1)
+        #todo Implement check on the implicit assumption that dimensions are sampling/feature as dim(0) and dim(1)
+        #in the mean time we simply raise a warning if the sampling axis is smaller than the feature one:
+        if len(ds[feature_name][feature_axis_name]) > len(ds[feature_name][sampling_axis_name]):
+            warnings.warn(("More variables (%s: %i) than samples (%s: %i)") % \
+                          (feature_axis_name, len(ds[feature_name][feature_axis_name]),\
+                           sampling_axis_name, len(ds[feature_name][sampling_axis_name])))
+        if len(ds[feature_name].dims)>2:
+            raise ValueError( ("pyXpcm does not handle N-dimensional arrays yet (%i), please use 2-D arrays only")%\
+                              (len(ds[feature_name].dims)))
 
         # Ensure that feature is of shape [n_samples, n_features]:
         #   - the 2nd dimension of the feature_name variable must be the
@@ -524,11 +540,12 @@ class pcm:
         # dim_sample_name = list(set(ds[feature_name].dims).symmetric_difference([feature_axis]))[0]
 
         # Create a xarray.DataArray with labels:
-        labels = xr.DataArray(labels, dims=sampling_axis_name, name=name)
+        # labels = xr.DataArray(labels, dims=sampling_axis_name, name=name)
+        labels = xr.DataArray(labels, dims=sampling_axis_name, coords={sampling_axis_name: ds[sampling_axis_name]}, name=name)
         labels.attrs['long_name'] = 'PCM labels'
-        labels.attrs['units'] = '[]'
+        labels.attrs['units'] = ''
         labels.attrs['valid_min'] = 0
-        labels.attrs['valid_max'] = self._props['K']
+        labels.attrs['valid_max'] = self._props['K']-1
         labels.attrs['llh'] = self._props['llh']
 
         # Add labels to the dataset:
@@ -598,11 +615,12 @@ class pcm:
         # dim_sample_name = list(set(ds[feature_name].dims).symmetric_difference([feature_axis]))[0]
 
         # Create a xarray.DataArray with labels:
-        labels = xr.DataArray(labels, dims=sampling_axis_name, name=name)
+        # labels = xr.DataArray(labels, dims=sampling_axis_name, name=name)
+        labels = xr.DataArray(labels, dims=sampling_axis_name, coords={sampling_axis_name: ds[sampling_axis_name]}, name=name)
         labels.attrs['long_name'] = 'PCM labels'
-        labels.attrs['units'] = '[]'
+        labels.attrs['units'] = ''
         labels.attrs['valid_min'] = 0
-        labels.attrs['valid_max'] = self._props['K']
+        labels.attrs['valid_max'] = self._props['K']-1
         labels.attrs['llh'] = self._props['llh']
 
         # Add labels to the dataset:
@@ -670,12 +688,19 @@ class pcm:
         sampling_axis_name = str(ds[feature_name].dims[0])
 
         # Create a xarray.DataArray with posteriors:
-        post = xr.DataArray(post_values, coords=[
-                        (sampling_axis_name, ds[sampling_axis_name].values),
-                        (classdimname, range(0, self._props['K']))],
+        # labels = xr.DataArray(labels, dims=sampling_axis_name, coords={sampling_axis_name: ds[sampling_axis_name]}, name=name)
+        # post = xr.DataArray(post_values, coords=[
+        #                 (sampling_axis_name, ds[sampling_axis_name]),
+        #                 (classdimname, range(0, self._props['K']))],
+        #                     name=name)
+        post = xr.DataArray(post_values,\
+                            dims=[sampling_axis_name, classdimname],\
+                            coords={
+                        sampling_axis_name: ds[sampling_axis_name],\
+                        classdimname: range(0, self._props['K'])},
                             name=name)
         post.attrs['long_name'] = 'PCM posteriors'
-        post.attrs['units'] = '[]'
+        post.attrs['units'] = ''
         post.attrs['valid_min'] = 0
         post.attrs['valid_max'] = 1
         post.attrs['llh'] = self._props['llh']

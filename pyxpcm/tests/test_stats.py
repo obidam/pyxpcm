@@ -49,17 +49,16 @@ def test_quant():
         pcmstats.quant(dsl, of='TEMP', using='NAME_B')
 
     with pytest.raises(TypeError):
-        # This will raise an error because data are stored as dask array, and quantile cannot work on this type
+        # This will raise an error if data are stored as dask array, because quantile cannot work on this type
         m = new_m()
-        dsl = ds.copy()
+        dsl = ds.copy() # pcmdata.load_argo() is using xr.open_mfdataset and return dask arrays
         m.fit_predict(dsl, feature={'temperature': 'TEMP'}, inplace=True)
         labelname = list(set(dsl.data_vars)-set(ds.data_vars))[0] # Name of the new variable in the dataset with LABELS
         pcmstats.quant(dsl, of='TEMP', using=labelname)
 
     # This must work:
     m = new_m()
-    dsl = ds.copy()
-    dsl = dsl.compute()
+    dsl = ds.copy().compute()
     m.fit_predict(dsl, feature={'temperature': 'TEMP'}, inplace=True)
     labelname = list(set(dsl.data_vars) - set(ds.data_vars))[0]  # Name of the new variable in the dataset with LABELS
     Q = pcmstats.quant(dsl, of='TEMP', using=labelname)

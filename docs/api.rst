@@ -37,16 +37,27 @@ Methods
    pcm.predict_proba
    pcm.score
 
-Statistics
-==========
+Plotting
+--------
+
+.. autosummary::
+   :toctree: generated/
+
+   pcm.plot
+   pcm.plot.cmap
+   pcm.plot.colorbar
+   plot.scaler
+
+Statistic module
+================
 
 .. autosummary::
    :toctree: generated/
 
    stats.quant
 
-Plotting
-========
+Plotting module
+===============
 
 .. autosummary::
    :toctree: generated/
@@ -61,3 +72,4 @@ Dummy datasets
    :toctree: generated/
 
    datasets.load_argo
+   datasets.load_isas15

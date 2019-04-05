@@ -10,6 +10,9 @@ MANIFEST.in
 # Setuptools distribution folder.
 /dist/
 
+# Local devel usefull folder.
+/local_playground/
+
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
 /*.egg
@@ -24,3 +27,5 @@ docs/_build/
 docs/generated/
 
 \.ipynb_checkpoints/
+
+docs/_ext/
