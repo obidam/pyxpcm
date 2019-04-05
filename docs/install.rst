@@ -6,7 +6,7 @@ Installation
 Required dependencies
 ^^^^^^^^^^^^^^^^^^^^^
 
-- Python 3.6 (compatible 2.7)
+- Python 3.6
 - Xarray 0.10.7
 
 Instructions
