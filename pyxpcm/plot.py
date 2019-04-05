@@ -9,11 +9,12 @@ __author__ = 'gmaze@ifremer.fr'
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 from sklearn.utils import validation
 
 def cmap_discretize(cmap, N):
-    """Return a discrete colormap from the continuous colormap cmap.
+    """Return a discrete colormap from a continuous colormap cmap.
 
         cmap: colormap instance, eg. cm.jet.
         N: number of colors.
@@ -31,6 +32,17 @@ def cmap_discretize(cmap, N):
     # Return colormap object.
     return mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
 
+def colorbar_index(ncolors, cmap, **kwargs):
+    """Adjust colorbar ticks with discrete colors"""
+    cmap = cmap_discretize(cmap, ncolors)
+    mappable = cm.ScalarMappable(cmap=cmap)
+    mappable.set_array([])
+    mappable.set_clim(-0.5, ncolors+0.5)
+    colorbar = plt.colorbar(mappable, **kwargs)
+    colorbar.set_ticks(np.linspace(0, ncolors, ncolors))
+    colorbar.set_ticklabels(range(ncolors))
+    return colorbar
+
 def plot(m, type=None, ax=None, subplot_kws=None, **kwargs):
     if type == 'scaler':
         return scaler(m, ax=ax, subplot_kws=subplot_kws, **kwargs)
@@ -40,16 +52,31 @@ def plot(m, type=None, ax=None, subplot_kws=None, **kwargs):
 class _PlotMethods(object):
     """
     Enables use of pyxpcm.plot functions as attributes on a PCM object.
-    For example, m.plot()
+    For example: m.plot(), m.plot.scaler(), m.plot.cmap('Jet')
     """
 
     def __init__(self, m):
         self._pcm = m
+        self._cmap = self.cmap()
 
     def __call__(self, **kwargs):
         return plot(self._pcm, **kwargs)
 
+    def cmap(self, name='Paired'):
+        """Return categorical colormap for this PCM"""
+        # Register this map:
+        self._cmap = cmap_discretize(plt.cm.get_cmap(name=name), self._pcm.K)
+        return self._cmap
+
+    def colorbar(self, cmap=None, **kwargs):
+        """Add a colorbar to current plot with centered ticks on discrete colors"""
+        if cmap==None:
+            cmap=self._cmap
+        z = { **{'fraction':0.03, 'label':'Class'}, **kwargs}
+        return colorbar_index(ncolors=self._pcm.K, cmap=cmap, **z)
+
     def scaler(self, **kwargs):
+        """Plot PCM scaler properties"""
         return plot(self._pcm, type='scaler', **kwargs)
 
 def scaler(m, ax=None, subplot_kws=None, **kwargs):
@@ -81,7 +108,7 @@ def scaler(m, ax=None, subplot_kws=None, **kwargs):
     fig.suptitle("Feature: %s" % feature_name, fontsize=12)
     plt.show()
 
-def quant(m, da, xlim=None):
+def quant(m, da, xlim=None, classdimname='N_CLASS'):
     """Plot the q-th quantiles of a dataArray for each PCM component
 
     Parameters
@@ -104,29 +131,31 @@ def quant(m, da, xlim=None):
     # Check if the PCM is trained:
     validation.check_is_fitted(m, 'fitted')
 
-    cmap = cmap_discretize(plt.cm.Paired, m.K)
-    # da must 3D with a dimension for: CLASS, QUANTILES and a vertical axis
+    # da must be 3D with a dimension for: CLASS, QUANTILES and a vertical axis
     # The QUANTILES dimension is called "quantile"
     # The CLASS dimension is identified as the one matching m.K length.
-    if (np.argwhere(np.array(da.shape) == m.K).shape[0]>1):
+    if classdimname in da.dims:
+        CLASS_DIM = classdimname
+    elif (np.argwhere(np.array(da.shape) == m.K).shape[0] > 1):
         raise ValueError("Can't distinguish the class dimension from the others")
-    for (i, iname) in zip(da.shape, da.dims):
-        if i == m.K:
-            CLASS_DIM = iname
-        elif iname == 'quantile':
-            QUANT_DIM = 'quantile'
-        else:
-            VERTICAL_DIM = iname
+    else:
+        CLASS_DIM = da.dims[np.argwhere(np.array(da.shape) == m.K)[0][0]]
+    QUANT_DIM = 'quantile'
+    VERTICAL_DIM = list(set(da.dims) - set([CLASS_DIM]) - set([QUANT_DIM]))[0]
 
+    nQ = len(da[QUANT_DIM]) # Nb of quantiles
+    cmapK = cmap_discretize(plt.cm.get_cmap(name='Paired'), m.K)
+    cmapQ = cmap_discretize(plt.cm.get_cmap(name='brg'), nQ)
     fig, ax = plt.subplots(nrows=1, ncols=m.K, figsize=(2 * m.K, 4), dpi=80, facecolor='w', edgecolor='k', sharey='row')
     if not xlim:
         xlim = np.array([0.9 * da.min(), 1.1 * da.max()])
-    for k in range(m.K):
-        Qk = da.sel(N_CLASS=k)
-        for q in Qk['quantile']:
-            Qkq = Qk.sel(quantile=q)
-            ax[k].plot(Qkq.values.T, da[VERTICAL_DIM], label=("%0.2f") % (Qkq['quantile']), color=cmap(k))
-        ax[k].set_title(("Component: %i") % (k), color=cmap(k))
+    for k in m:
+        # Qk = da.sel(CLASS_DIM=k)
+        Qk = da.loc[{CLASS_DIM:k}]
+        for (iq, q) in zip(np.arange(nQ), Qk[QUANT_DIM]):
+            Qkq = Qk.loc[{QUANT_DIM:q}]
+            ax[k].plot(Qkq.values.T, da[VERTICAL_DIM], label=("%0.2f") % (Qkq[QUANT_DIM]), color=cmapQ(iq))
+        ax[k].set_title(("Component: %i") % (k), color=cmapK(k))
         ax[k].legend(loc='lower right')
         ax[k].set_xlim(xlim)
         ax[k].set_ylim(np.array([da[VERTICAL_DIM].min(), da[VERTICAL_DIM].max()]))

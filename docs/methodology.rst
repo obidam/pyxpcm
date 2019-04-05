@@ -1,4 +1,4 @@
-.. use "methodlogy"
+.. use "methodology"
 
 Statistics of Profile Classification Modelling
 ==============================================

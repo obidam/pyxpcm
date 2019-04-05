@@ -111,9 +111,19 @@ def test_pcm_fit():
     assert check_is_fitted(m, 'fitted') is None
     assert check_is_fitted(m._classifier, 'weights_') is None
 
+    # Now assume the feature name is the real variable name in the dataset:
+    ds = pcmdata.load_argo()
+    ds['temperature'] = ds['TEMP']
+    ds = ds.drop('TEMP')
+    m = new_m() # feature is set to 'temperature' by default in tests
+    m.fit(ds)
+    assert m.fitted == True, "'fitted' property must be true after training"
+    assert check_is_fitted(m, 'fitted') is None
+    assert check_is_fitted(m._classifier, 'weights_') is None
+
     # Training leading to errors because feature data cannot be found:
     with pytest.raises(PCMFeatureError):
-        m.fit(ds.drop('TEMP'), feature={'temperature': 'TEMP'})
+        m.fit(ds, feature={'temperature': 'TEMP'})
 
     with pytest.raises(PCMFeatureError):
         m.fit(ds, feature='john')
