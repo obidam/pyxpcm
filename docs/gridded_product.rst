@@ -4,7 +4,6 @@
 
     import numpy as np
     import xarray as xr
-    import cartopy.crs as crs
 
 
 Working with gridded products
@@ -65,17 +64,16 @@ Masking
 In order to create a PCM from temperature profiles of this gridded product, we first need to determine the domain of analysis where profiles will be plain, i.e. will not contain any NaN. This will depend on the maximum depth of profiles to analyse.
 
 .. ipython:: python
-    :okexcept:
 
     ds['mask'] = np.bitwise_and( \
                     ~np.isnan(ds['TEMP'].isel(depth=0)), \
                     (ds['TEMP'].where(ds['depth']>=zmin).notnull().sum(dim='depth') == \
                                      len(np.where(ds['depth']>=zmin)[0])))
 
-    ax = plt.axes(projection=crs.PlateCarree())
-    ds['mask'].plot.contourf(levels=3, transform=crs.PlateCarree())
+    ax = plt.axes()
+    ds['mask'].plot.contourf(levels=3)
     @savefig examples_isas15_mask.png
-    ax.set_extent([-80,-30,25,55]); ax.coastlines(); ax.gridlines(); ax.set_title('PCM Mask')
+    ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); ax.set_title('PCM Mask')
 
 
 With this mask, we can easily select all temperature profiles reaching at least -800m depth.
@@ -122,13 +120,12 @@ Each profiles is labelled with one of the possible cluster index from 0 to K-1. 
 A map of labels can then be drawn:
 
 .. ipython:: python
-    :okexcept:
 
-    ax = plt.axes(projection=crs.PlateCarree())
-    LABELS.plot(cmap=m.plot.cmap(), transform=crs.PlateCarree(), add_colorbar=False)
+    ax = plt.axes()
+    LABELS.plot(cmap=m.plot.cmap(), add_colorbar=False)
     m.plot.colorbar()
     @savefig examples_isas15_labels.png
-    ax.set_extent([-80,-30,25,55]); ax.coastlines(); ax.gridlines(); ax.set_title('PCM Labels')
+    ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); ax.set_title('PCM Labels')
 
 Note that here we made use of the :class:`pyxpcm.plot` methods `cmap` and `colorbar` to produce appropriate colors for labels.
 
@@ -146,16 +143,12 @@ which can then be map like:
 
 .. ipython:: python
     :okwarning:
-    :okexcept:
 
     g = POSTERIORS.plot(x='longitude', y='latitude', col='N_CLASS', col_wrap=2, \
-                                transform=crs.PlateCarree(), subplot_kws={'projection':crs.PlateCarree()},\
                                  aspect=2, size=3)
     @savefig examples_isas15_posteriors.png
     for i, ax in enumerate(g.axes.flat):
-        ax.set_extent([-80,-30,25,55])
-        ax.coastlines()
-        ax.gridlines()
+        ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); 
 
 Summary
 -------
