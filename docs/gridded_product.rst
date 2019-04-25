@@ -65,6 +65,7 @@ Masking
 In order to create a PCM from temperature profiles of this gridded product, we first need to determine the domain of analysis where profiles will be plain, i.e. will not contain any NaN. This will depend on the maximum depth of profiles to analyse.
 
 .. ipython:: python
+   :okexcept:
 
     ds['mask'] = np.bitwise_and( \
                     ~np.isnan(ds['TEMP'].isel(depth=0)), \
@@ -121,6 +122,7 @@ Each profiles is labelled with one of the possible cluster index from 0 to K-1. 
 A map of labels can then be drawn:
 
 .. ipython:: python
+   :okexcept:
 
     ax = plt.axes(projection=crs.PlateCarree())
     LABELS.plot(cmap=m.plot.cmap(), transform=crs.PlateCarree(), add_colorbar=False)
@@ -144,6 +146,7 @@ which can then be map like:
 
 .. ipython:: python
     :okwarning:
+    :okexcept:
 
     g = POSTERIORS.plot(x='longitude', y='latitude', col='N_CLASS', col_wrap=2, \
                                 transform=crs.PlateCarree(), subplot_kws={'projection':crs.PlateCarree()},\
