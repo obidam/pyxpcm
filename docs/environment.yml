@@ -2,7 +2,7 @@ name: pyxpcm-docs
 channels:
   - conda-forge
 dependencies:
-  - python=3.7
+  - python=3.6
   - numpy=1.16.0
   - pandas=0.23.3
   - scipy=1.2.0
