@@ -34,10 +34,16 @@ with suppress(ImportError):
     import matplotlib
     matplotlib.use('Agg')
 
-try:
-    import cartopy
-except ImportError:
-    allowed_failures.update(['gridded_product.rst'])
+from unittest.mock import MagicMock
+
+class Mock(MagicMock):
+    @classmethod
+    def __getattr__(cls, name):
+        return MagicMock()
+
+MOCK_MODULES = ['cartopy']
+sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+
 
 pyXpcm_src = os.path.abspath('..')
 print("pyXpcm loaded:", os.path.abspath('..'))
