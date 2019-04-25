@@ -1,5 +1,6 @@
 .. ipython:: python
    :suppress:
+   :okexcept:
 
     import numpy as np
     import xarray as xr
