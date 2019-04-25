@@ -37,8 +37,8 @@ Methods
    pcm.predict_proba
    pcm.score
 
-Plotting
---------
+Plot
+----
 
 .. autosummary::
    :toctree: generated/
@@ -46,7 +46,6 @@ Plotting
    pcm.plot
    pcm.plot.cmap
    pcm.plot.colorbar
-   plot.scaler
 
 Statistic module
 ================
