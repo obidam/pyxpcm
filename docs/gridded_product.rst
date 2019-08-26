@@ -148,7 +148,7 @@ which can then be map like:
                                  aspect=2, size=3)
     @savefig examples_isas15_posteriors.png
     for i, ax in enumerate(g.axes.flat):
-        ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); 
+        ax.set_xlim([-80,-30]); ax.set_ylim([25,55]);
 
 Summary
 -------

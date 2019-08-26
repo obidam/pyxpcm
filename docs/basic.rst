@@ -36,6 +36,7 @@ Load a dataset
 To get you started, you can load a dummy sample dataset of Argo_ profiles interpolated on standard depth levels.
 
 .. ipython:: python
+    :okwarning:
 
     from pyxpcm import datasets as pcmdata
     ds = pcmdata.load_argo()
