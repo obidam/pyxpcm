@@ -32,7 +32,8 @@ To begin with, import libraries and fit a PCM on dummy data:
 
 
 .. ipython:: python
-   :suppress:
+    :suppress:
+    :okwarning:
 
     import numpy as np
     import matplotlib.pyplot as plt
