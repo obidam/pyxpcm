@@ -1,9 +1,9 @@
 .. ipython:: python
    :suppress:
+   :okexcept:
 
     import numpy as np
     import xarray as xr
-    import cartopy.crs as crs
 
 
 Working with gridded products
@@ -70,10 +70,10 @@ In order to create a PCM from temperature profiles of this gridded product, we f
                     (ds['TEMP'].where(ds['depth']>=zmin).notnull().sum(dim='depth') == \
                                      len(np.where(ds['depth']>=zmin)[0])))
 
-    ax = plt.axes(projection=crs.PlateCarree())
-    ds['mask'].plot.contourf(levels=3, transform=crs.PlateCarree())
+    ax = plt.axes()
+    ds['mask'].plot.contourf(levels=3)
     @savefig examples_isas15_mask.png
-    ax.set_extent([-80,-30,25,55]); ax.coastlines(); ax.gridlines(); ax.set_title('PCM Mask')
+    ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); ax.set_title('PCM Mask')
 
 
 With this mask, we can easily select all temperature profiles reaching at least -800m depth.
@@ -121,11 +121,11 @@ A map of labels can then be drawn:
 
 .. ipython:: python
 
-    ax = plt.axes(projection=crs.PlateCarree())
-    LABELS.plot(cmap=m.plot.cmap(), transform=crs.PlateCarree(), add_colorbar=False)
+    ax = plt.axes()
+    LABELS.plot(cmap=m.plot.cmap(), add_colorbar=False)
     m.plot.colorbar()
     @savefig examples_isas15_labels.png
-    ax.set_extent([-80,-30,25,55]); ax.coastlines(); ax.gridlines(); ax.set_title('PCM Labels')
+    ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); ax.set_title('PCM Labels')
 
 Note that here we made use of the :class:`pyxpcm.plot` methods `cmap` and `colorbar` to produce appropriate colors for labels.
 
@@ -145,13 +145,10 @@ which can then be map like:
     :okwarning:
 
     g = POSTERIORS.plot(x='longitude', y='latitude', col='N_CLASS', col_wrap=2, \
-                                transform=crs.PlateCarree(), subplot_kws={'projection':crs.PlateCarree()},\
                                  aspect=2, size=3)
     @savefig examples_isas15_posteriors.png
     for i, ax in enumerate(g.axes.flat):
-        ax.set_extent([-80,-30,25,55])
-        ax.coastlines()
-        ax.gridlines()
+        ax.set_xlim([-80,-30]); ax.set_ylim([25,55]); 
 
 Summary
 -------

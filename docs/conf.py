@@ -17,13 +17,37 @@
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
 import os
+import subprocess
 import sys
 
 from contextlib import suppress
+allowed_failures = set()
+
+if 'conda' in sys.executable:
+    print('conda environment:')
+    subprocess.run(['conda', 'list'])
+else:
+    print('pip environment:')
+    subprocess.run(['pip', 'list'])
 
 with suppress(ImportError):
     import matplotlib
     matplotlib.use('Agg')
+
+# from unittest.mock import MagicMock
+#
+# class Mock(MagicMock):
+#     @classmethod
+#     def __getattr__(cls, name):
+#         return MagicMock()
+#
+# MOCK_MODULES = ['cartopy']
+# sys.modules.update((mod_name, Mock()) for mod_name in MOCK_MODULES)
+autodoc_mock_imports = []
+try:
+    import cartopy
+except ImportError:
+    autodoc_mock_imports.append('cartopy')
 
 pyXpcm_src = os.path.abspath('..')
 print("pyXpcm loaded:", os.path.abspath('..'))
@@ -71,6 +95,10 @@ extensions = ['sphinx.ext.autodoc',
     'sphinx.ext.inheritance_diagram',
     'matplotlib.sphinxext.plot_directive',
     'numpydoc']
+
+# sphinx_gallery_conf = {
+#                        'expected_failing_examples': list(allowed_failures)
+#                        }
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
