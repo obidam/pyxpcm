@@ -55,14 +55,15 @@ Quantiles
 In order to look at the structure of the classes, we can use quantile variables (see :doc:`/statistics` in order to get more details on computing class-based quantiles).
 
 .. ipython:: python
+    :okwarning:
 
     @savefig examples_quantiles.png width=75%
     pcmplot.quant(m, ds['TEMP_Q'])
 
-
 The spread of each class can then be computed and plotted like:
 
 .. ipython:: python
+    :okwarning:
 
     spread = ds['TEMP_Q'].sel(quantile=[0.05, 0.95]).diff('quantile')
 
@@ -75,6 +76,7 @@ Profiles of a class
 To overlay all profiles attributed to a given class one can use:
 
 .. ipython:: python
+    :okwarning:
 
     @savefig examples_profiles_per_class.png width=100%
     fig, axes = plt.subplots(ncols=m.K, figsize=(15,6), sharex='col', sharey='row')
@@ -101,11 +103,12 @@ PCM colormap and colorbar
 A :class:`pyxpcm.pcm.plot` class instance has a colormap method to return a LinearSegmentedColormap matplotlib colormap:
 
 .. ipython:: python
+    :okwarning:
 
     cmap = m.plot.cmap()
     ax = plt.subplot(1,1,1); ax.axis("off")
     @savefig examples_colormap.png width=200px height=20px
-    plt.imshow(np.outer(np.ones(10),np.arange(0,1,0.01)),aspect='auto',cmap=cmap,origin="lower")
+    plt.imshow(np.outer(np.ones(10), np.arange(0,1,0.01)), aspect='auto', cmap=cmap, origin="lower")
 
 
 Misc
@@ -114,6 +117,7 @@ Misc
 One can also simply use the Xarray_ plotting capabilities:
 
 .. ipython:: python
+    :okwarning:
 
     @savefig examples_quantiles_xr1.png width=100%
     g = ds['TEMP_Q'].plot(y='DEPTH', hue='quantile', col='N_CLASS', col_wrap=3)
