@@ -38,16 +38,15 @@ Methods
    pcmodel.pcm.score
    pcmodel.pcm.bic
 
-Plotting
+Plot
 --------
 
 .. autosummary::
    :toctree: generated/
 
    pcmodel.pcm.plot
-   pcm.plot.cmap
-   pcm.plot.colorbar
-   pcm.plot.scaler
+   pcmodel.pcm.plot.cmap
+   pcmodel.pcm.plot.colorbar
 
 
 Statistic module
