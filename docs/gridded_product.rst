@@ -21,7 +21,7 @@ Load a dataset
 Let's first load a dummy gridded dataset, a sub-domain over the Gulf Stream from the ISAS15_ product:
 
 .. ipython:: python
-
+    :okwarning:
     from pyxpcm import datasets as pcmdata
     ds = pcmdata.load_isas15()
     ds
