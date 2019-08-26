@@ -28,7 +28,8 @@ To begin with, import libraries and fit a PCM on dummy data (see also use case s
     m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
 
 .. ipython:: python
-   :suppress:
+    :suppress:
+    :okwarning:
 
     import numpy as np
     from pyxpcm.pcmodel import pcm
@@ -49,6 +50,7 @@ Quantiles
 For instance, in order to look at the typical structure of a class, one can compute quantiles of the classified variable. This can be done like:
 
 .. ipython:: python
+    :okwarning:
 
     ds = ds.compute() # This is necessary if data are in dask arrays
     pcmstats.quant(ds, of='TEMP', using='PCM_LABELS', q=[0.05, 0.5, 0.95], name='TEMP_Q')
