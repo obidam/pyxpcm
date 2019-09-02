@@ -11,6 +11,7 @@ import sys
 import xarray as xr
 import numpy as np
 import dask.array
+import warnings
 
 def quant(ds,
           of=None,
@@ -90,3 +91,102 @@ def quant(ds,
         # qlist = xr.concat(qlist, dim=("N_CLASS"))
         # qlist = xr.concat(qlist, dim=("N_CLASS_%s)"%(qname)))
         return qlist
+
+def robustness(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outname='PCM_ROBUSTNESS'):
+    """ Compute classification robustness
+
+        Parameters
+        ----------
+        ds: :class:`xarray.Dataset`
+            Input dataset
+
+        name: str, default is 'PCM_POST'
+            Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
+
+        classdimname: str, default is 'N_CLASS'
+            Name of the dimension holding classes
+
+        inplace: boolean, False by default
+            If False, return a :class:`xarray.DataArray` with robustness
+            If True, return the input :class:`xarray.DataSet` with robustness added as a new :class:`xarray.DataArray`
+
+        Returns
+        -------
+        :class:`xarray.DataArray`
+            Robustness of the classification
+
+        __author__: gmaze@ifremer.fr
+    """
+    maxpost = ds[name].max(dim=classdimname)
+    K = len(ds[classdimname])
+    robust = (maxpost - 1. / K) * K / (K - 1.)
+
+    id = dict()
+    id[classdimname] = 0
+    da = ds[name][id].rename(outname)
+    da.values = robust
+    da.attrs['long_name'] = 'PCM classification robustness'
+    da.attrs['units'] = ''
+    da.attrs['valid_min'] = 0
+    da.attrs['valid_max'] = 1
+    da.attrs['llh'] = ds[name].attrs['llh']
+
+    # Add labels to the dataset:
+    if inplace:
+        if outname in ds.data_vars:
+            warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
+        ds[outname] = da
+    else:
+        return da
+
+def robustness_digit(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outname='PCM_ROBUSTNESS_CAT'):
+    """ Digitize classification robustness
+
+        Parameters
+        ----------
+        ds: :class:`xarray.Dataset`
+            Input dataset
+
+        name: str, default is 'PCM_POST'
+            Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
+
+        classdimname: str, default is 'N_CLASS'
+            Name of the dimension holding classes
+
+        inplace: boolean, False by default
+            If False, return a :class:`xarray.DataArray` with robustness category
+            If True, return the input :class:`xarray.DataSet` with robustness category added as a new :class:`xarray.DataArray`
+
+        Returns
+        -------
+        :class:`xarray.DataArray`
+            Robustness category of the classification
+
+        __author__: gmaze@ifremer.fr
+    """
+    maxpost = ds[name].max(dim=classdimname)
+    K = len(ds[classdimname])
+    robust = (maxpost - 1. / K) * K / (K - 1.)
+    Plist = [0, 0.33, 0.66, 0.9, .99, 1]
+    rowl0 = ('Unlikely', 'As likely as not', 'Likely', 'Very Likely', 'Virtually certain')
+    robust_id = np.digitize(robust, Plist) - 1
+
+    id = dict()
+    id[classdimname] = 0
+    da = ds[name][id].rename(outname)
+    da.values = robust_id
+    da.attrs['long_name'] = 'PCM classification robustness category'
+    da.attrs['units'] = ''
+    da.attrs['valid_min'] = 0
+    da.attrs['valid_max'] = 4
+    da.attrs['llh'] = ds[name].attrs['llh']
+    da.attrs['bins'] = Plist
+    da.attrs['legend'] = rowl0
+
+    # Add labels to the dataset:
+    if inplace:
+        if outname in ds.data_vars:
+            warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
+        ds[outname] = da
+    else:
+        return da

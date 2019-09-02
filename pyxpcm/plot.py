@@ -13,24 +13,47 @@ import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 from sklearn.utils import validation
 
-def cmap_discretize(cmap, N):
-    """Return a discrete colormap from a continuous colormap cmap.
+def cmap_robustess():
+    """ Return a categorical colormap for robustness """
+    return mpl.colors.ListedColormap(['#FF0000', '#CC00FF', '#0066FF', '#CCFF00', '#00FF66'])
 
-        cmap: colormap instance, eg. cm.jet.
-        N: number of colors.
+def cmap_discretize(name, K):
+    """Return a discrete colormap from a quantitative or continuous colormap name
+
+        name: name of the colormap, eg 'Paired' or 'jet'
+        K: number of colors in the final discrete colormap
     """
-    # source: https://stackoverflow.com/questions/18704353/correcting-matplotlib-colorbar-ticks
-    if type(cmap) == str:
-        cmap = plt.get_cmap(cmap)
-    colors_i = np.concatenate((np.linspace(0, 1., N), (0., 0., 0., 0.)))
-    colors_rgba = cmap(colors_i)
-    indices = np.linspace(0, 1., N + 1)
-    cdict = {}
-    for ki, key in enumerate(('red', 'green', 'blue')):
-        cdict[key] = [(indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki])
-                      for i in np.arange(N + 1)]
-    # Return colormap object.
-    return mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
+    if name in ['Set1','Set2','Set3','Pastel1','Pastel2','Paired','Dark2','Accent']:
+        # Segmented (or quantitative) colormap:
+        N_ref = {'Set1':9,'Set2':8,'Set3':12,'Pastel1':9,'Pastel2':8,'Paired':12,'Dark2':8,'Accent':8}
+        N = N_ref[name]
+        cmap = plt.get_cmap(name=name)
+        colors_i = np.concatenate((np.linspace(0, 1., N), (0., 0., 0., 0.)), axis=0)
+        cmap = cmap(colors_i) # N x 4
+        n = np.arange(0, N)
+        new_n = n.copy()
+        if K>N:
+            for k in range(N,K):
+                r = np.roll(n,-k)[0][np.newaxis]
+                r[3] = 0.5
+                new_n = np.concatenate((new_n, r), axis=0)
+        new_cmap = cmap.copy()
+        new_cmap = cmap[new_n,:]
+        new_cmap = mcolors.LinearSegmentedColormap.from_list(name + "_%d" % K, colors = new_cmap, N=K)
+    else:
+        # Continuous colormap:
+        N = K
+        cmap = plt.get_cmap(name=name)
+        colors_i = np.concatenate((np.linspace(0, 1., N), (0., 0., 0., 0.)))
+        colors_rgba = cmap(colors_i) # N x 4
+        indices = np.linspace(0, 1., N + 1)
+        cdict = {}
+        for ki, key in enumerate(('red', 'green', 'blue')):
+            cdict[key] = [(indices[i], colors_rgba[i - 1, ki], colors_rgba[i, ki])
+                          for i in np.arange(N + 1)]
+        # Return colormap object.
+        new_cmap = mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
+    return new_cmap
 
 def colorbar_index(ncolors, cmap, **kwargs):
     """Adjust colorbar ticks with discrete colors"""
@@ -51,8 +74,8 @@ def plot(m, type=None, ax=None, subplot_kws=None, **kwargs):
 
 class _PlotMethods(object):
     """
-    Enables use of pyxpcm.plot functions as attributes on a PCM object.
-    For example: m.plot(), m.plot.scaler(), m.plot.cmap('Jet')
+        Enables use of pyxpcm.plot functions as attributes on a PCM object.
+        For example: m.plot(), m.plot.scaler(), m.plot.cmap('Jet'), m.plot.colorbar()
     """
 
     def __init__(self, m):
@@ -62,10 +85,9 @@ class _PlotMethods(object):
     def __call__(self, **kwargs):
         return plot(self._pcm, **kwargs)
 
-    def cmap(self, name='Paired'):
+    def cmap(self, name='Set2'):
         """Return categorical colormap for this PCM"""
-        # Register this map:
-        self._cmap = cmap_discretize(plt.cm.get_cmap(name=name), self._pcm.K)
+        self._cmap = cmap_discretize(name, self._pcm.K)
         return self._cmap
 
     def colorbar(self, cmap=None, **kwargs):
@@ -90,22 +112,26 @@ def scaler(m, ax=None, subplot_kws=None, **kwargs):
     # Check if the PCM is trained:
     validation.check_is_fitted(m, 'fitted')
 
-    X_ave = m._scaler.mean_
-    X_std = m._scaler.scale_
-    X_unit = m._scaler_props['units']
-    feature_axis = m._props['feature_axis']
-    feature_name = m._props['feature_name']
+    fig, ax = plt.subplots(nrows=m.F, ncols=2, sharey='row', figsize=(10, 5), dpi=80, facecolor='w', edgecolor='k')
+    if m.F==1:
+        ax = ax[np.newaxis,:]
 
-    fig, ax = plt.subplots(nrows=1, ncols=2, sharey='row', figsize=(10, 5), dpi=80, facecolor='w', edgecolor='k')
-    ax[0].plot(X_ave, feature_axis, '-', linewidth=2, label='Sample Mean')
-    ax[1].plot(X_std, feature_axis, '-', linewidth=2, label='Sample Std')
-    # tidy up the figure
-    ax[0].set_ylabel('Feature axis')
-    for ix in range(0, 2):
-        ax[ix].legend(loc='lower right')
-        ax[ix].grid(True)
-        ax[ix].set_xlabel("[%s]" % X_unit)
-    fig.suptitle("Feature: %s" % feature_name, fontsize=12)
+    for (feature, irow) in zip(m._props['features'], np.arange(0, m.F)):
+        X_ave = m._scaler[feature].mean_
+        X_std = m._scaler[feature].scale_
+        X_unit = m._scaler_props[feature]['units']
+        feature_axis = m._props['features'][feature]
+        feature_name = [feature]
+
+        ax[irow, 0].plot(X_ave, feature_axis, '-', linewidth=2, label='Sample Mean')
+        ax[irow, 1].plot(X_std, feature_axis, '-', linewidth=2, label='Sample Std')
+        # tidy up the figure
+        ax[irow, 0].set_ylabel('Feature axis')
+        for ix in range(0, 2):
+            ax[irow, ix].legend(loc='lower right')
+            ax[irow, ix].grid(True)
+            ax[irow, ix].set_xlabel("[%s]" % X_unit)
+            ax[irow, ix].set_title("%s scaler" % feature, fontsize=10)
     plt.show()
 
 def quant(m, da, xlim=None, classdimname='N_CLASS'):
