@@ -56,12 +56,11 @@ from sklearn.mixture import GaussianMixture
 from sklearn.exceptions import NotFittedError
 
 # Core PCM classes:
-
 class PCMFeatureError(Exception):
     """Exception raised when features not found."""
 
 @xr.register_dataset_accessor('pyxpcm')
-class xarray_accessor_pyXpcm:
+class ds_xarray_accessor_pyXpcm:
     """
         Nothing happens in place here, so it should always goes like:
 
@@ -70,6 +69,43 @@ class xarray_accessor_pyXpcm:
      """
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
+
+    def __id_feature_name(self, pcm, feature):
+        """Identify the dataset variable name to be used for a given feature name
+
+            feature must be a dictionary or None for automatic discovery
+        """
+        feature_name_found = False
+
+        for feature_in_pcm in feature:
+            if feature_in_pcm not in pcm._props['features']:
+                msg = ("Feature '%s' not set in this PCM")%(feature_in_pcm)
+                raise PCMFeatureError(msg)
+
+            feature_in_ds = feature[feature_in_pcm]
+            if pcm._debug:
+                print(("Idying %s as %s in this dataset") % (feature_in_pcm, feature_in_ds))
+
+            if feature_in_ds:
+                feature_name_found = feature_in_ds in self._obj.data_vars
+
+            if not feature_name_found:
+                feature_name_found = feature_in_pcm in self._obj.data_vars
+                feature_in_ds = feature_in_pcm
+
+            if not feature_name_found:
+                # Look for the feature in the dataset data variables attributes
+                for v in self._obj.data_vars:
+                    if ('feature_name' in self._obj[v].attrs) and (self._obj[v].attrs['feature_name'] is feature_in_pcm):
+                        feature_in_ds = v
+                        feature_name_found = True
+                        continue
+
+            if not feature_name_found:
+                msg = ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
+                                  "attribute to the variable you'd like to use or provide a dictionnary")%(feature_in_pcm)
+                raise PCMFeatureError(msg)
+        return feature_in_ds
 
     def add_inplace(self, da):
         """ Add a new xr.DataArray to the xr.DataSet """
@@ -91,6 +127,159 @@ class xarray_accessor_pyXpcm:
                 and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
                 self._obj = self._obj.drop(vname)
         return self._obj
+
+    def feature_dict(self, pcm, features=None):
+        # Build the features dictionary for this dataset and PCM
+        if features:
+            features_dict = dict()
+            for feature_in_pcm in features:
+                feature_in_ds = features[feature_in_pcm]
+                if not feature_in_ds:
+                    feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
+                features_dict[feature_in_pcm] = feature_in_ds
+        else:
+            features_dict = dict()
+            for feature_in_pcm in pcm._props['features']:
+                feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
+                features_dict[feature_in_pcm] = feature_in_ds
+
+        # Re-order the dictionary to match the PCM set order:
+        for key in pcm._props['features']:
+            features_dict[key] = features_dict.pop(key)
+
+        return features_dict
+
+    def sampling_dim(self, pcm, dim=None, features=None):
+        """ Return the list of dimensions to be aggregated in sampling, for a given feature"""
+
+        feature_dict = self.feature_dict(pcm, features=features)
+        SD = dict()
+
+        for feature_name_in_pcm in feature_dict:
+            feature_name_in_ds = feature_dict[feature_name_in_pcm]
+            da = self._obj[feature_name_in_ds]
+            SD[feature_name_in_ds] = dict()
+
+            # Is this a thick array or a slice ?
+            is_slice = np.all(pcm._props['features'][feature_name_in_pcm] == None)
+
+            if is_slice:
+                # No vertical dimension to use, simple stacking
+                sampling_dims = list(da.dims)
+                SD[feature_name_in_ds]['DIM_SAMPLING'] = sampling_dims
+                SD[feature_name_in_ds]['DIM_VERTICAL'] = None
+            else:
+                if not dim:
+                    # Try to infer the vertical dimension name looking for the CF 'axis' attribute in all dimensions
+                    dim_found = False
+                    for this_dim in da.dims:
+                        if ('axis' in da[this_dim].attrs) and (da[this_dim].attrs['axis'] == 'Z'):
+                            dim = this_dim
+                            dim_found = True
+                    if not dim_found:
+                        raise PCMFeatureError("You must specify a vertical dimension name: "\
+                                              "use argument 'dim' or "\
+                                              "specify DataSet dimension the attribute 'axis' to 'Z' (CF1.6)")
+                elif dim not in da.dims:
+                    raise ValueError("Vertical dimension %s not found in this DataArray" % dim)
+
+                sampling_dims = list(da.dims)
+                sampling_dims.remove(dim)
+                SD[feature_name_in_ds]['DIM_SAMPLING'] = sampling_dims
+                SD[feature_name_in_ds]['DIM_VERTICAL'] = dim
+
+        return SD
+
+
+class NoTransform(BaseEstimator):
+    def __init__(self):
+        self.fitted = False
+        # args, _, _, values = inspect.getargvalues(inspect.currentframe())
+        # values.pop("self")
+        # for arg, val in values.items():
+        #     setattr(self, arg, val)
+
+    def fit(self, *args):
+        self.fitted = True
+        return self
+
+    def transform(self, x, *args):
+        return x
+
+    def score(self, x):
+        return 1
+
+
+class Vertical_Interpolator:
+    """ Internal machinery for the interpolation of vertical profiles
+
+        This class is called once at PCM instance initialisation
+        and
+        whenever data to be classified are not on the PCM feature axis.
+
+        Here we consume numpy arrays
+    """
+
+    def __init__(self, axis=None, debug=False):
+        self.axis = axis
+        self._debug = debug
+        # self.doINTERPz = False
+
+    def issimilar(self, Caxis):
+        """Check if the output and input axis are similar"""
+        test = np.array_equiv(self.axis, Caxis)
+        return test
+
+    def isintersect(self, Caxis):
+        """Check if output axis can be spot sampled from the input axis"""
+        in1 = np.in1d(Caxis, self.axis)
+        test = self.axis.shape[0] == np.count_nonzero(in1)
+        return test
+
+    def mix(self, x):
+        """ 
+            Homogeneize the upper water column: 
+            Set 1st nan values to the first non-NaN value
+        """
+        # izmixed = np.argwhere(np.isnan(x))
+        izok = np.where(~np.isnan(x))[0][0]
+        # x[izmixed] = x[izok]
+        x[0] = x[izok]
+        return x
+
+    def transform(self, C, Caxis):
+        """
+            Interpolate data on the PCM vertical axis
+        """
+        if not np.all(self.axis == None):
+            if np.any(Caxis > 0):
+                raise ValueError("Feature axis (depth) must be <=0")
+            if (self.isintersect(Caxis)):
+                # Output axis is in the input axis, not need to interpolate:
+                if self._debug: print(
+                    "Output axis is in the input axis, not need to interpolate, simple intersection")
+                in1 = np.in1d(Caxis, self.axis)
+                C = C[:, in1]
+            elif (not self.issimilar(Caxis)):
+                if self._debug: print("Output axis is new, will use interpolation")
+                [Np, Nz] = C.shape
+                # Possibly Create a mixed layer for the interpolation to work
+                # smoothly at the surface
+                if ((Caxis[0] < 0.) & (self.axis[0] == 0.)):
+                    Caxis = np.concatenate((np.zeros(1), Caxis))
+                    x = np.empty((Np, 1))
+                    x.fill(np.nan)
+                    C = np.concatenate((x, C), axis=1)
+                    np.apply_along_axis(self.mix, 1, C)
+                # Linear interpolation of profiles onto the model grid:
+                f = interpolate.interp2d(Caxis, np.arange(Np), C, kind='linear')
+                C = f(self.axis, np.arange(Np))
+            else:
+                raise ValueError("I dont know how to vertically interpolate this array !")
+        else:
+            if self._debug: print("This is a slice array, no vertical interpolation")
+            C = C  # No change
+        return C
 
 
 class pcm:
@@ -188,24 +377,20 @@ class pcm:
 
             is_slice = np.all(feature_axis == None)
             if not is_slice:
-                self._interpoler[feature_name] = self.__Interp(axis=feature_axis, debug=self._debug)
+                self._interpoler[feature_name] = Vertical_Interpolator(axis=feature_axis, debug=self._debug)
                 if np.prod(feature_axis.shape) == 1:
                     # Single level, not need to reduce
                     if self._debug: print('Single level, not need to reduce', np.prod(feature_axis.ndim))
-                    self._reducer[feature_name] = self.__EmptyTransform()
+                    self._reducer[feature_name] = NoTransform()
                 else:
-                    # Multi-levels, set reducer:
+                    # Multi-vertical-levels, set reducer:
                     if with_reducer:
                         self._reducer[feature_name] = PCA(n_components=self._props['maxvar'], svd_solver='full')
-                        # estimators = [('reduce_dim', PCA(n_components=self._props['maxvar'], svd_solver='full')),
-                        #               ('scale', preprocessing.StandardScaler(with_mean=with_mean,
-                        #                                 with_std=with_std))]
-                        # self._reducer[feature_name] = Pipeline(estimators)
                     else:
-                        self._reducer[feature_name] = self.__EmptyTransform()
+                        self._reducer[feature_name] = NoTransform()
             else:
-                self._interpoler[feature_name] = self.__EmptyTransform()
-                self._reducer[feature_name] = self.__EmptyTransform()
+                self._interpoler[feature_name] = NoTransform()
+                self._reducer[feature_name] = NoTransform()
             self._homogeniser[feature_name] = {'mean': 0, 'std': 1}
 
         self._classifier = GaussianMixture(n_components=self._props['K'],
@@ -269,45 +454,9 @@ class pcm:
     def __repr__(self):
         return self.display(deep=self._verb)
 
-    def __id_feature_name(self, ds, feature):
-        """Identify the dataset variable name to be used for a given feature name
-
-            feature must be a dictionary or None for automatic discovery
-        """
-        feature_name_found = False
-
-        for feature_in_pcm in feature:
-            if feature_in_pcm not in self._props['features']:
-                msg = ("Feature '%s' not set in this PCM")%(feature_in_pcm)
-                raise PCMFeatureError(msg)
-
-            feature_in_ds = feature[feature_in_pcm]
-            if self._debug:
-                print(("Idying %s as %s in this dataset") % (feature_in_pcm, feature_in_ds))
-
-            if feature_in_ds:
-                feature_name_found = feature_in_ds in ds.data_vars
-
-            if not feature_name_found:
-                feature_name_found = feature_in_pcm in ds.data_vars
-                feature_in_ds = feature_in_pcm
-
-            if not feature_name_found:
-                # Look for the feature in the dataset data variables attributes
-                for v in ds.data_vars:
-                    if ('feature_name' in ds[v].attrs) and (ds[v].attrs['feature_name'] is feature_in_pcm):
-                        feature_in_ds = v
-                        feature_name_found = True
-                        continue
-
-            if not feature_name_found:
-                msg = ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
-                                  "attribute to the variable you'd like to use or provide a dictionnary")%(feature_in_pcm)
-                raise PCMFeatureError(msg)
-        return feature_in_ds
 
     def __ravel(self, da, dim=None, feature_name=str()):
-        """ Extract from N-d array the X(feature,sample) 2-d and vertical dimension z"""
+        """ Extract from N-d array a X(feature,sample) 2-d array and vertical dimension z"""
 
         # Is this a thick array or a slice ?
         is_slice = np.all(self._props['features'][feature_name] == None)
@@ -335,7 +484,6 @@ class pcm:
 
             sampling_dims = list(da.dims)
             sampling_dims.remove(dim)
-            # sampling_dims = list(set(da.dims) - set([dim]))
             X = da.stack({'sampling': sampling_dims}).transpose().values
             z = da[dim].values
         return X, z, sampling_dims
@@ -352,90 +500,6 @@ class pcm:
         da.values = X
         da = da.unstack('sampling')
         return da
-
-    class __EmptyTransform(BaseEstimator):
-        def __init__(self):
-            self.fitted = False
-            # args, _, _, values = inspect.getargvalues(inspect.currentframe())
-            # values.pop("self")
-            # for arg, val in values.items():
-            #     setattr(self, arg, val)
-        def fit(self, *args):
-            self.fitted = True
-            return self
-        def transform(self, x, *args):
-            return x
-        def score(self, x):
-            return 1
-
-    class __Interp:
-        """ Internal machinery for the interpolation of vertical profiles
-            
-            This class is called once at PCM instance initialisation
-            and
-            whenever data to be classified are not on the PCM feature axis.
-
-            Here we consume numpy arrays
-        """
-        def __init__(self, axis=None, debug=False):
-            self.axis = axis
-            self._debug = debug
-            # self.doINTERPz = False
-        
-        def issimilar(self, Caxis):
-            """Check if the output and input axis are similar"""
-            test = np.array_equiv(self.axis, Caxis)
-            return test
-
-        def isintersect(self, Caxis):
-            """Check if output axis can be spot sampled from the input axis"""
-            in1 = np.in1d(Caxis, self.axis)
-            test = self.axis.shape[0] == np.count_nonzero(in1)
-            return test
-
-        def mix(self, x):
-            """ 
-                Homogeneize the upper water column: 
-                Set 1st nan values to the first non-NaN value
-            """
-            #izmixed = np.argwhere(np.isnan(x))
-            izok = np.where(~np.isnan(x))[0][0]
-            #x[izmixed] = x[izok]
-            x[0] = x[izok]
-            return x
-        
-        def transform(self, C, Caxis):
-            """
-                Interpolate data on the PCM vertical axis
-            """
-            if not np.all(self.axis==None):
-                if np.any(Caxis>0):
-                    raise ValueError("Feature axis (depth) must be <=0")
-                if (self.isintersect(Caxis)):
-                    # Output axis is in the input axis, not need to interpolate:
-                    if self._debug: print( "Output axis is in the input axis, not need to interpolate, simple intersection" )
-                    in1 = np.in1d(Caxis, self.axis)
-                    C = C[:,in1]
-                elif (not self.issimilar(Caxis)):
-                    if self._debug: print( "Output axis is new, will use interpolation" )
-                    [Np, Nz] = C.shape
-                    # Possibly Create a mixed layer for the interpolation to work
-                    # smoothly at the surface
-                    if ((Caxis[0]<0.) & (self.axis[0] == 0.)):
-                        Caxis = np.concatenate((np.zeros(1), Caxis))
-                        x = np.empty((Np,1))
-                        x.fill(np.nan)
-                        C = np.concatenate((x,C), axis=1)
-                        np.apply_along_axis(self.mix, 1, C)
-                    # Linear interpolation of profiles onto the model grid:
-                    f = interpolate.interp2d(Caxis, np.arange(Np), C, kind='linear')
-                    C = f(self.axis, np.arange(Np))
-                else:
-                    raise ValueError( "I dont know how to verticaly interpolate this array !" )
-            else:
-                if self._debug: print("This is a slice array, no vertical interpolation")
-                C = C # No change
-            return C
 
     @property
     def K(self):
@@ -560,8 +624,6 @@ class pcm:
             df = pd.Series([np.sum(times[key]) for key in times], index=index)
 
         return df
-
-
 
     def display(self, deep=False):
         """Display detailed parameters of the PCM
@@ -737,27 +799,10 @@ class pcm:
             if self._debug:
                 print('> Start preprocessing for %s' % action)
 
-            with self._context(this_context + '.dictionary', self._context_args):
-                # Build the features dictionary for this dataset:
-                if features:
-                    features_dict = dict()
-                    for feature_in_pcm in features:
-                        feature_in_ds = features[feature_in_pcm]
-                        if not feature_in_ds:
-                            feature_in_ds = self.__id_feature_name(ds, {feature_in_pcm: None})
-                        features_dict[feature_in_pcm] = feature_in_ds
-                else:
-                    features_dict = dict()
-                    for feature_in_pcm in self._props['features']:
-                        feature_in_ds = self.__id_feature_name(ds, {feature_in_pcm: None})
-                        features_dict[feature_in_pcm] = feature_in_ds
-                # Re-order the dictionary to match the PCM set order:
-                for key in self._props['features']:
-                    features_dict[key] = features_dict.pop(key)
-                if self._debug:
-                    print('features_dict:', features_dict)
+            # How to we find feature variable in this dataset ?
+            features_dict = ds.pyxpcm.feature_dict(self, features=features)
 
-            # Preprocess all features and build the X array
+            # Pre-process all features and build the X array
             X = np.empty(())
             Xlabel = list() # Construct a list of string labels for each feature dimension (useful for plots)
             F = self.F # Nb of features
@@ -790,6 +835,7 @@ class pcm:
                             print(("Homogenisation of %s using fit data") % (feature_in_pcm))
                     elif self._debug:
                         print(("No need for homogenisation of %s") % (feature_in_pcm))
+
                 if np.prod(X.shape) == 1:
                     X = x
                     Xlabel = xlabel
@@ -799,7 +845,8 @@ class pcm:
 
             with self._context(this_context + '.xarray', self._context_args):
                 self._xlabel = Xlabel
-                X = xr.DataArray(X, dims=['n_samples', 'n_features'], coords={'n_samples': range(0, X.shape[0]), 'n_features': Xlabel})
+                X = xr.DataArray(X, dims=['n_samples', 'n_features'],
+                                 coords={'n_samples': range(0, X.shape[0]), 'n_features': Xlabel})
 
             if self._debug:
                 print("> Preprocessing finished, working with final X array of shape:", X.shape,

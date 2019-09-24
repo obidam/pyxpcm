@@ -13,7 +13,7 @@ import numpy as np
 import dask.array
 import warnings
 
-from .pcmodel import xarray_accessor_pyXpcm
+from .pcmodel import ds_xarray_accessor_pyXpcm
 
 def quant(ds,
           of=None,

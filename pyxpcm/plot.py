@@ -12,9 +12,11 @@ import matplotlib as mpl
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
 from sklearn.utils import validation
+import sklearn
 import pandas as pd
 import seaborn as sns
 sns.set_context("paper")
+from . import pcmodel
 
 def cmap_robustess():
     """ Return a categorical colormap for robustness """
@@ -68,11 +70,13 @@ def colorbar_index(ncolors, cmap, **kwargs):
     colorbar.set_ticklabels(range(ncolors))
     return colorbar
 
-def plot(m, type=None, ax=None, subplot_kws=None, **kwargs):
-    if type == 'scaler':
-        return scaler(m, ax=ax, subplot_kws=subplot_kws, **kwargs)
-    else:
-        print('You can plot the scaler properties using pcm.plot.scaler()')
+# def plot(m, type=None, ax=None, subplot_kw=None, **kwargs):
+#     if type == 'scaler':
+#         return scaler(m, subplot_kw=subplot_kw, **kwargs)
+#     elif type == 'reducer':
+#         return reducer(m, subplot_kw=subplot_kw, **kwargs)
+#     else:
+#         print('You can plot the scaler properties using pcm.plot.scaler()')
 
 class _PlotMethods(object):
     """
@@ -85,7 +89,8 @@ class _PlotMethods(object):
         self._cmap = self.cmap()
 
     def __call__(self, **kwargs):
-        return plot(self._pcm, **kwargs)
+        raise ValueError("Please use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
+        # return plot(self._pcm, **kwargs)
 
     def cmap(self, name='Set2', palette=False):
         """Return a categorical colormap for this PCM
@@ -119,7 +124,11 @@ class _PlotMethods(object):
 
     def scaler(self, **kwargs):
         """Plot PCM scaler properties"""
-        return plot(self._pcm, type='scaler', **kwargs)
+        return scaler(self._pcm, **kwargs)
+
+    def reducer(self, **kwargs):
+        """Plot PCM reducer properties"""
+        return reducer(self._pcm,  **kwargs)
 
     def subplots(self, maxcols=3, **kwargs):
         """ Return (figure, axis) with one subplot per cluster
@@ -265,7 +274,7 @@ class _PlotMethods(object):
             g = g.add_legend()
         return g
 
-def scaler(m, ax=None, subplot_kws=None, **kwargs):
+def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
     """Plot the scaler properties
 
     Parameters
@@ -276,27 +285,90 @@ def scaler(m, ax=None, subplot_kws=None, **kwargs):
     # Check if the PCM is trained:
     validation.check_is_fitted(m, 'fitted')
 
-    fig, ax = plt.subplots(nrows=m.F, ncols=2, sharey='row', figsize=(10, 5), dpi=80, facecolor='w', edgecolor='k')
-    if m.F==1:
-        ax = ax[np.newaxis,:]
+    # Plot
+    with sns.axes_style(style):
+        defaults = {'sharey':'row', 'figsize':(10, 10), 'dpi':80, 'facecolor':'w', 'edgecolor':'k'}
+        if not subplot_kw:
+            fig, ax = plt.subplots(ncols=2, nrows=m.F, **{**defaults, **kwargs})
+        else:
+            fig, ax = plt.subplots(ncols=2, nrows=m.F, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
 
-    for (feature, irow) in zip(m._props['features'], np.arange(0, m.F)):
-        X_ave = m._scaler[feature].mean_
-        X_std = m._scaler[feature].scale_
-        X_unit = m._scaler_props[feature]['units']
-        feature_axis = m._props['features'][feature]
-        feature_name = [feature]
+        if m.F == 1:
+            ax = ax[np.newaxis,:]
 
-        ax[irow, 0].plot(X_ave, feature_axis, '-', linewidth=2, label='Sample Mean')
-        ax[irow, 1].plot(X_std, feature_axis, '-', linewidth=2, label='Sample Std')
-        # tidy up the figure
-        ax[irow, 0].set_ylabel('Feature axis')
-        for ix in range(0, 2):
-            ax[irow, ix].legend(loc='lower right')
-            ax[irow, ix].grid(True)
-            ax[irow, ix].set_xlabel("[%s]" % X_unit)
-            ax[irow, ix].set_title("%s scaler" % feature, fontsize=10)
-    plt.show()
+        for (feature, irow) in zip(m._props['features'], np.arange(0, m.F)):
+            X_ave = m._scaler[feature].mean_
+            X_std = m._scaler[feature].scale_
+            X_unit = m._scaler_props[feature]['units']
+            feature_axis = m._props['features'][feature]
+            feature_name = [feature]
+
+            defaults_mean = {'linewidth': 2, 'label': 'Sample Mean'}
+            defaults_std = {'linewidth': 2, 'label': 'Sample Std'}
+            if not plot_kw:
+                ax[irow, 0].plot(X_ave, feature_axis,  **defaults_mean)
+                ax[irow, 1].plot(X_std, feature_axis, **defaults_std)
+
+            else:
+                ax[irow, 0].plot(X_ave, feature_axis,  **{**defaults_mean, **plot_kw})
+                ax[irow, 1].plot(X_std, feature_axis, **{**defaults_std, **plot_kw})
+
+            # tidy up the figure
+            ax[irow, 0].set_ylabel('Vertical feature axis')
+            for ix in range(0, 2):
+                ax[irow, ix].legend(loc='lower right')
+                ax[irow, ix].set_xlabel("[%s]" % X_unit)
+                ax[irow, ix].set_title("%s scaler" % feature, fontsize=10)
+    return fig, ax
+
+def reducer(m, pcalist=None, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
+    """ Plot PCM reducer properties """
+
+    # Check if the PCM is trained:
+    validation.check_is_fitted(m, 'fitted')
+
+    # Plot
+    with sns.axes_style(style):
+        defaults = {'sharey': 'row', 'figsize': (10, 5), 'dpi': 80, 'facecolor': 'w', 'edgecolor': 'k'}
+        if not subplot_kw:
+            fig, ax = plt.subplots(nrows=1, ncols=m.F, **{**defaults, **kwargs})
+        else:
+            fig, ax = plt.subplots(nrows=1, ncols=m.F, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
+
+        ax = ax.flatten()
+        if m.F == 1:
+            ax = ax[np.newaxis, :]
+
+        for (feature, icol) in zip(m._props['features'], np.arange(0, m.F)):
+            ax[icol].set_title(feature, fontsize=10)
+
+            if isinstance(m._reducer[feature], sklearn.decomposition.pca.PCA):
+                X_eof = m._reducer[feature].components_
+                if pcalist is None:
+                    pcalist = range(0, X_eof.shape[0])
+                if np.max(pcalist) > X_eof.shape[0]:
+                    raise ValueError("PCA number %i is not available in reduced %s" % (np.max(pcalist),feature))
+                feature_axis = m._props['features'][feature]
+                feature_axis_name = 'Vertical feature axis'
+                feature_name = [feature]
+                for ic in pcalist:
+                    defaults = {'linewidth': 1, 'label': 'EOF #%i' % ic}
+                    if not plot_kw:
+                        ax[icol].plot(X_eof[ic, :], feature_axis, **defaults)
+                    else:
+                        ax[icol].plot(X_eof[ic, :], feature_axis, **{**defaults, **plot_kw})
+
+                # tidy up the figure
+                ax[icol].axvline(x=0, color='k')
+                ax[icol].legend(loc='lower right')
+                if icol == 0:
+                    ax[icol].set_ylabel(feature_axis_name)
+            elif isinstance(m._reducer[feature], pcmodel.NoTransform):
+                ax[icol].set_title('No reducer for %s' % feature, fontsize=10)
+            else:
+                ax[icol].set_title('Unknown reducer for %s !' % feature, fontsize=10)
+
+    return fig, ax
 
 def quant(m, da, xlim=None,
           classdimname='N_CLASS',
