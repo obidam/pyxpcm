@@ -107,21 +107,20 @@ class ds_xarray_accessor_pyXpcm:
                 raise PCMFeatureError(msg)
         return feature_in_ds
 
-    def add_inplace(self, da):
+    def add(self, da):
         """ Add a new xr.DataArray to the xr.DataSet """
-        # "inplace" here stands for the pcm class instance call.
 
-        # Add tracking clues:
+        # Add pyXpcm tracking clues:
         da.attrs['comment'] = "Automatically added by pyXpcm"
 
         #
-        vname = da.name
-        self._obj[vname] = da
+        # vname = da.name
+        self._obj[da.name] = da
         return self._obj
 
     def clean(self):
         """ Remove from xr.dataset all variables created with pyXpcm """
-        # See pcm.__add_inplace() method to identify these variables.
+        # See add() method to identify these variables.
         for vname in self._obj.data_vars:
             if ("comment" in self._obj[vname].attrs) \
                 and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
@@ -189,6 +188,31 @@ class ds_xarray_accessor_pyXpcm:
                 SD[feature_name_in_ds]['DIM_VERTICAL'] = dim
 
         return SD
+
+    def mask(self, pcm, dim=None, features=None):
+        """ Create a mask where PCM features are defined """
+        feature_dict = self._obj.pyxpcm.feature_dict(pcm, features=features)
+        M = list()
+        for feature_name_in_pcm in feature_dict:
+            feature_name_in_ds = feature_dict[feature_name_in_pcm]
+            da = self._obj[feature_name_in_ds]
+
+            # Is this a thick array or a slice ?
+            is_slice = np.all(pcm._props['features'][feature_name_in_pcm] == None)
+
+            if not is_slice:
+                # z_top = np.max(pcm._props['features'][feature_name_in_pcm])
+                z_bto = np.min(pcm._props['features'][feature_name_in_pcm])
+                mask = self._obj[feature_name_in_ds].where(
+                    self._obj[dim]>=z_bto).notnull().sum(dim=dim) == len(np.where(self._obj[dim]>=z_bto)[0])
+            else:
+                mask = self._obj[feature_name_in_ds].notnull()
+            mask = mask.rename('PCM_MASK')
+            M.append(mask)
+        mask = xr.concat(M, dim='n_features')
+        mask = mask.sum(dim='n_features')
+        mask = mask==pcm.F
+        return mask
 
 
 class NoTransform(BaseEstimator):
@@ -455,7 +479,7 @@ class pcm:
         return self.display(deep=self._verb)
 
 
-    def __ravel(self, da, dim=None, feature_name=str()):
+    def ravel(self, da, dim=None, feature_name=str()):
         """ Extract from N-d array a X(feature,sample) 2-d array and vertical dimension z"""
 
         # Is this a thick array or a slice ?
@@ -488,8 +512,8 @@ class pcm:
             z = da[dim].values
         return X, z, sampling_dims
 
-    def __unravel(self, ds, sampling_dims, X):
-        """ Create an DataArray from a numpy array and sampling dimensions """
+    def unravel(self, ds, sampling_dims, X):
+        """ Create a DataArray from a numpy array and sampling dimensions """
         coords = list()
         size = list()
         for dim in sampling_dims:
@@ -728,8 +752,9 @@ class pcm:
         this_context = str(action)+'.preprocess.feature_'+feature_name
         with self._context(this_context + '.total', self._context_args):
 
+            # MAKE THE ND-ARRAY A 2D-ARRAY
             with self._context(this_context + '.ravel', self._context_args):
-                X, z, sampling_dims = self.__ravel(da, dim=dim, feature_name=feature_name)
+                X, z, sampling_dims = self.ravel(da, dim=dim, feature_name=feature_name)
                 if self._debug:
                     print('Input working arrays X and z with shapes:', X.shape, z.shape)
 
@@ -947,7 +972,7 @@ class pcm:
 
             # Create a xarray with labels output:
             with self._context('predict.xarray', self._context_args):
-                da = self.__unravel(ds, sampling_dims, labels).rename(name)
+                da = self.unravel(ds, sampling_dims, labels).rename(name)
                 da.attrs['long_name'] = 'PCM labels'
                 da.attrs['units'] = ''
                 da.attrs['valid_min'] = 0
@@ -958,7 +983,7 @@ class pcm:
             if inplace:
                 if name in ds.data_vars:
                     warnings.warn( ("%s variable already in the dataset: overwriting")%(name) )
-                return ds.pyxpcm.add_inplace(da)
+                return ds.pyxpcm.add(da)
             else:
                 return da
 
@@ -1021,7 +1046,7 @@ class pcm:
 
             # Create a xarray with labels output:
             with self._context('fit_predict.xarray', self._context_args):
-                da = self.__unravel(ds, sampling_dims, labels).rename(name)
+                da = self.unravel(ds, sampling_dims, labels).rename(name)
                 da.attrs['long_name'] = 'PCM labels'
                 da.attrs['units'] = ''
                 da.attrs['valid_min'] = 0
@@ -1032,7 +1057,7 @@ class pcm:
             if inplace:
                 if name in ds.data_vars:
                     warnings.warn( ("%s variable already in the dataset: overwriting")%(name) )
-                return ds.pyxpcm.add_inplace(da)
+                return ds.pyxpcm.add(da)
             else:
                 return da
 
@@ -1098,7 +1123,7 @@ class pcm:
                 P = list()
                 for k in range(self.K):
                     X = post_values[:, k]
-                    x = self.__unravel(ds, sampling_dims, X)
+                    x = self.unravel(ds, sampling_dims, X)
                     P.append(x)
                 da = xr.concat(P, dim=classdimname).rename(name)
                 da.attrs['long_name'] = 'PCM posteriors'
@@ -1111,7 +1136,7 @@ class pcm:
             if inplace:
                 if name in ds.data_vars:
                     warnings.warn(("%s variable already in the dataset: overwriting") % (name))
-                return ds.pyxpcm.add_inplace(da)
+                return ds.pyxpcm.add(da)
             else:
                 return da
 
