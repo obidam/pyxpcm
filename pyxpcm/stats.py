@@ -13,6 +13,8 @@ import numpy as np
 import dask.array
 import warnings
 
+from .pcmodel import xarray_accessor_pyXpcm
+
 def quant(ds,
           of=None,
           using='LABEL',
@@ -82,14 +84,15 @@ def quant(ds,
         dim_class = ("N_CLASS_%s")%(name)
 
     if inplace:
-        ds[name] = xr.concat(qlist, dim=dim_class)
+        da = xr.concat(qlist, dim=dim_class).rename(name)
+        return ds.pyxpcm.add_inplace(da)
+        # ds[name] = da
+
     else:
         if found_class:
             qlist = xr.concat(qlist, dim=ds[dim_class])
         else:
             qlist = xr.concat(qlist, dim=dim_class)
-        # qlist = xr.concat(qlist, dim=("N_CLASS"))
-        # qlist = xr.concat(qlist, dim=("N_CLASS_%s)"%(qname)))
         return qlist
 
 def robustness(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outname='PCM_ROBUSTNESS'):
@@ -135,7 +138,9 @@ def robustness(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outna
     if inplace:
         if outname in ds.data_vars:
             warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-        ds[outname] = da
+        return ds.pyxpcm.add_inplace(da)
+        # ds[outname] = da
+        # ds[outname].attrs['pyxpcm'] = "Automatically added by pyXpcm"
     else:
         return da
 
@@ -187,6 +192,9 @@ def robustness_digit(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False,
     if inplace:
         if outname in ds.data_vars:
             warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-        ds[outname] = da
+        return ds.pyxpcm.add_inplace(da)
+        # ds[outname] = da
+        # ds[outname].attrs['pyxpcm'] = "Automatically added by pyXpcm"
+
     else:
         return da

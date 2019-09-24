@@ -7,8 +7,13 @@ import xarray as xr
 def load_argo():
     """Load and return a sample of Argo profiles on standard depth levels"""
     module_path = dirname(__file__)
-    ncfile = 'argo_sample_test.nc'
-    return xr.open_mfdataset(join(module_path, "data", ncfile))
+    ncfile = 'argo_sample.nc'
+    ds = xr.open_mfdataset(join(module_path, "data", ncfile))
+    ds.attrs = dict()
+    ds.attrs['Author'] = "G. Maze"
+    ds.attrs['Institution'] = "Ifremer/LOPS"
+    ds.attrs['Data DOI'] = "10.17882/42182"
+    return ds
 
 def load_isas15():
     """Load and return a sample of ISAS15 data"""
