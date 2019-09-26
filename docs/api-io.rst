@@ -23,7 +23,10 @@ Attributes
    :toctree: generated/
 
    pcmodel.pcm.K
-   pcmodel.pcm.feature_axis
+   pcmodel.pcm.F
+   pcmodel.pcm.features
+   pcmodel.pcm.scaler
+   pcmodel.pcm.timeit
 
 Methods
 -------
@@ -49,13 +52,6 @@ Plot
    pcmodel.pcm.plot.colorbar
 
 
-Statistic module
-================
-
-.. autosummary::
-   :toctree: generated/
-
-   stats.quant
 
 Plotting module
 ===============

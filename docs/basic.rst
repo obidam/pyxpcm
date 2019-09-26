@@ -17,23 +17,20 @@ A Profile Classification Model (PCM) can be created independently of any dataset
 
 .. ipython:: python
 
-    m = pcm(K=3, feature_axis=np.arange(-80,0,2), feature_name='temperature')
+    m = pcm(K=3, features={'temperature': np.arange(0,-700.,-10.)})
     m
 
-The PCM class constructor takes at least 3 arguments:
+The PCM class constructor takes at least 2 arguments:
 
 - ``K``: the number of class (integer) in the classification model,
-- ``feature_axis``: the vertical axis (numpy array) that the PCM will work with (to train the classifier or to classify new data),
-- ``feature_name``: the name (string) to be used when searching for the feature variable in an :class:`xarray.Dataset`.
+- ``features``: a dictionnary where keys are feature name and values the corresponding vertical axis (numpy array) that the PCM will work with.
 
-In the above instantiation, we created a PCM with 3 classes that will work with *temperature* on a vertical axis with a
-2m resolution from -80m to the surface. By default, the :class:`pyxpcm.pcm` class instance is set to use interpolation (if necessary), normalisation, dimensionality reduction with
-Principal Component Analysis and a Gaussian Mixture Model (GMM) as a classifier.
+In the above instantiation, we created a PCM with 3 classes that will work with *temperature* on a vertical axis with a 10m resolution from -700m to the surface. By default, the :class:`pyxpcm.pcm` class instance is set to use vertical interpolation if necessary. Other class parameters allows to set normalisation, dimensionality reduction and classifier parameters.
 
 Load a dataset
 --------------
 
-To get you started, you can load a dummy sample dataset of Argo_ profiles interpolated on standard depth levels.
+To get you started, you can load a sample dataset with Argo_ profiles interpolated on standard depth levels.
 
 .. ipython:: python
     :okwarning:
@@ -42,27 +39,28 @@ To get you started, you can load a dummy sample dataset of Argo_ profiles interp
     ds = pcmdata.load_argo()
     ds
 
-This is an :class:`xarray.Dataset` with 100 profiles with 21 depth levels between the surface and -100m. Each profile has physical variables such as temperature
+This is an :class:`xarray.Dataset` with 7560 profiles with 282 depth levels between the surface and -1405m. Each profile has physical variables such as temperature
 (``TEMP``), salinity (``PSAL``), potentiel density (``SIG0``) and stratification (``BRV2``), along with geolocalisation information:
-latitude (``LATITUDE``), longitude (``LONGITUDE``) and time (``TIME``).
+latitude (``LATITUDE``), longitude (``LONGITUDE``) and time (``TIME``). Note that this is a collection of profiles, the collection dimension being ``N_PROF``.
 
-To check a single profile, you can simply use the Xarray_ plot method:
+To visualise a single profile, you can simply use the Xarray_ plot method:
 
 .. ipython:: python
 
     @savefig examples_profile_sample.png width=5in height=6in
     ds['TEMP'].isel(N_PROF=0).plot(y='DEPTH')
 
-**Remember** that this is a dummy sample of Argo_ profiles, so don't pay attention to the qualitative results shown below.
 
 Fit the PCM on the dataset
 --------------------------
 
-Now that we have a collection of profiles and a PCM, we can simply *fit* the classifier:
+Now that we have a collection of profiles and a PCM, we can simply use a :class:`xarray.Dataset` to *fit* the classifier parameters:
 
 .. ipython:: python
 
-    m.fit(ds, feature={'temperature': 'TEMP'})
+    ds.pyxpcm.fit(m, features={'temperature': 'TEMP'}, dim='DEPTH')
+    # or equivalently:
+    m.fit(ds, features={'temperature': 'TEMP'})
 
 where the :func:`pyxpcm.pcm.fit` method requires:
 
@@ -89,7 +87,7 @@ Once the PCM is trained, i.e. fitted with a training dataset, we can predict cla
 
 .. ipython:: python
 
-    LABELS = m.predict(ds, feature={'temperature': 'TEMP'})
+    LABELS = ds.pyxpcm.predict(m, features={'temperature': 'TEMP'})
     LABELS
 
 Each profiles is labelled with one of the possible cluster index from 0 to K-1. Note that prediction can be ran on another collection of profiles, as long as they have temperature.
@@ -101,7 +99,7 @@ Since the PCM classifier we used (GMM) is fuzzy, we can also predict the probabi
 
 .. ipython:: python
 
-    POSTERIORS = m.predict_proba(ds, feature={'temperature': 'TEMP'})
+    POSTERIORS = ds.pyxpcm.predict_proba(m, features={'temperature': 'TEMP'})
     POSTERIORS
 
 In this case, a new dimension appears: ``pcm_class``. The sum over `pcm_class`` of the posterior probabilities is necessarily 1. We'll note that ``LABELS`` are the ``pcm_class`` index for which the posterior is maximum.
@@ -113,8 +111,8 @@ Note that since we're working with Xarray_, one can add these new variables dire
 
 .. ipython:: python
 
-    m.predict(ds, feature={'temperature': 'TEMP'}, inplace=True)
-    m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
+    ds = ds.pyxpcm.predict(m, features={'temperature': 'TEMP'}, inplace=True)
+    ds = ds.pyxpcm.predict_proba(m, features={'temperature': 'TEMP'}, inplace=True)
     ds
 
 We see that the ``ds`` object has two new variables added by each of these methods, the ``PCM_LABELS`` and ``PCM_POST``.

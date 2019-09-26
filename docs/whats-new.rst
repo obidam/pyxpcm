@@ -3,6 +3,23 @@
 What's New
 ==========
 
+v0.4 (1 Oct. 2019)
+------------------
+
+Break backward compatibility
+
+Three main new capabilities:
+
+    - Multi-features classification now possible
+
+    - Behind the scene full management of ND-Array classification (so that you can classify directly profiles on a latitude/longitude/time grid, not only a collection)
+
+    - Implemented a ``pyxpcm`` xr.DataSet accessor to execute pyXpcm methods directly onto a dataset
+
+
+
+
+
 v0.3 (5 Apr. 2019)
 ------------------
 

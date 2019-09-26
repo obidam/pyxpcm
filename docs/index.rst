@@ -26,11 +26,8 @@ Documentation
 
 * :doc:`install`
 * :doc:`overview`
-* :doc:`basic`
-* :doc:`gridded_product`
-* :doc:`statistics`
-* :doc:`plotting`
-* :doc:`summary`
+* :doc:`basic_new.ipynb`
+
 
 .. toctree::
     :maxdepth: 1
@@ -39,16 +36,11 @@ Documentation
 
     install
     overview
-    basic
-    gridded_product
-    statistics
-    plotting
-    summary
+    basic_new.ipynb
 
 **Help & reference**
 
 * :doc:`whats-new`
-* :doc:`api`
 
 .. toctree::
     :maxdepth: 1
@@ -56,7 +48,6 @@ Documentation
     :caption: Help & reference
 
     whats-new
-    api
 
 .. _Xarray: http://xarray.pydata.org
 .. _netCDF: http://www.unidata.ucar.edu/software/netcdf

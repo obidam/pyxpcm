@@ -23,7 +23,10 @@ Attributes
    :toctree: generated/
 
    pcm.K
-   pcm.feature_axis
+   pcm.F
+   pcm.features
+   pcm.scaler
+   pcm.timeit
 
 Methods
 -------
