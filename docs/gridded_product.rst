@@ -145,7 +145,7 @@ which can then be map like:
 .. ipython:: python
     :okwarning:
 
-    g = POSTERIORS.plot(x='longitude', y='latitude', col='N_CLASS', col_wrap=2, \
+    g = POSTERIORS.plot(x='longitude', y='latitude', col='pcm_class', col_wrap=2, \
                                  aspect=2, size=3)
     @savefig examples_isas15_posteriors.png
     for i, ax in enumerate(g.axes.flat):

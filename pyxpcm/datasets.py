@@ -11,27 +11,31 @@ def load_argo():
     ncfile = 'argo_sample.nc'
     ds = xr.open_mfdataset(join(module_path, "data", ncfile))
     ds.attrs = dict()
-    ds.attrs['Author'] = "G. Maze"
+    ds.attrs['Prepared by'] = "G. Maze"
     ds.attrs['Institution'] = "Ifremer/LOPS"
     ds.attrs['Data DOI'] = "10.17882/42182"
     return ds
 
 def load_isas15():
     """Load and return a sample of ISAS15 data"""
-    # This was generated with:
-
-    # ds = xr.open_dataset(
-    #     '/home/datawork-lops-oh/ISAS/ISAS_USERS/ANA_ISAS15_DM/field/2005/ISAS15_DM_20051115_fld_TEMP.nc')
-    # ds = ds.where(ds.longitude >= -70, drop=True)\
-    #     .where(ds.longitude <= -40, drop=True)\
-    #     .where(ds.latitude >= 30, drop=True)\
-    #     .where(ds.latitude <= 50, drop=True)
-    # ds = ds.isel(time=0)
-    # ds = ds.drop('time')
-    # ds.to_netcdf('isas15_sample_test.nc')
-
     module_path = dirname(__file__)
     ncfile = 'isas15_sample_test.nc'
     ds = xr.open_mfdataset(join(module_path, "data", ncfile), chunks={'latitude': 5, 'longitude': 5})
     ds['depth'] = -np.abs(ds['depth'])
+    ds['SST'] = ds['TEMP'].isel(depth=0)
+    # Data small enough to fit in memory on any computer
+    ds = ds.chunk({'latitude': None, 'longitude': None})
+    ds = ds.compute()
+    return ds
+
+def load_isas15series():
+    """Load and return a sample of ISAS15 data timeseries"""
+    module_path = dirname(__file__)
+    ncfile = 'isas15series_sample_test.nc'
+    ds = xr.open_dataset(join(module_path, "data", ncfile), chunks={'time':5, 'latitude': 5, 'longitude': 5})
+    ds['depth'] = -np.abs(ds['depth'])
+    ds['SST'] = ds['TEMP'].isel(depth=0)
+    # Data small enough to fit in memory on any computer
+    ds = ds.chunk({'latitude': None, 'longitude': None, 'time': None})
+    ds = ds.compute()
     return ds

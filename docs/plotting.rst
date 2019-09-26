@@ -69,7 +69,7 @@ The spread of each class can then be computed and plotted like:
     spread = ds['TEMP_Q'].sel(quantile=[0.05, 0.95]).diff('quantile')
 
     @savefig examples_quantiles_xr2.png
-    spread.plot(y='DEPTH', hue='N_CLASS')
+    spread.plot(y='DEPTH', hue='pcm_class')
 
 Profiles of a class
 -------------------
@@ -121,7 +121,7 @@ One can also simply use the Xarray_ plotting capabilities:
     :okwarning:
 
     @savefig examples_quantiles_xr1.png width=100%
-    g = ds['TEMP_Q'].plot(y='DEPTH', hue='quantile', col='N_CLASS', col_wrap=3)
+    g = ds['TEMP_Q'].plot(y='DEPTH', hue='quantile', col='pcm_class', col_wrap=3)
     for i, ax in enumerate(g.axes.flat): ax.grid(True)
 
 

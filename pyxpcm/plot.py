@@ -15,8 +15,13 @@ from sklearn.utils import validation
 import sklearn
 import pandas as pd
 import seaborn as sns
+import cartopy
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.ticker as mticker
 sns.set_context("paper")
 from . import pcmodel
+from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 
 def cmap_robustess():
     """ Return a categorical colormap for robustness """
@@ -69,6 +74,22 @@ def colorbar_index(ncolors, cmap, **kwargs):
     colorbar.set_ticks(np.linspace(0, ncolors, ncolors))
     colorbar.set_ticklabels(range(ncolors))
     return colorbar
+
+def latlongrid(ax, dx=5., dy=5., fontsize=6, **kwargs):
+    """ Add latitude/longitude grid to a cartopy geoaxes  """
+    if not isinstance(ax, cartopy.mpl.geoaxes.GeoAxesSubplot):
+        raise ValueError("Please provide a cartopy.mpl.geoaxes.GeoAxesSubplot instance")
+    defaults = {'linewidth':.5, 'color':'gray', 'alpha':0.5, 'linestyle':'--'}
+    gl=ax.gridlines(crs=ax.projection, draw_labels=True, **{**defaults, **kwargs})
+    gl.xlocator = mticker.FixedLocator(np.arange(-180, 180+1, dx))
+    gl.ylocator = mticker.FixedLocator(np.arange(-90, 90+1, dy))
+    gl.xformatter = LONGITUDE_FORMATTER
+    gl.yformatter = LATITUDE_FORMATTER
+    gl.xlabels_top = False
+    gl.xlabel_style = {'fontsize':fontsize}
+    gl.ylabels_right = False
+    gl.ylabel_style = {'fontsize':fontsize}
+    return gl
 
 # def plot(m, type=None, ax=None, subplot_kw=None, **kwargs):
 #     if type == 'scaler':
@@ -169,7 +190,7 @@ class _PlotMethods(object):
             fig.delaxes(ax[i])
         return fig, ax
 
-    def timeit(self, group='Method', split='Sub-method', **kargs):
+    def timeit(self, group='Method', split='Sub-method', subplot_kw=None, style='white', **kwargs):
         """ Plot registered timing of operations
 
             Parameters
@@ -194,39 +215,44 @@ class _PlotMethods(object):
         [dpt.append(len(key.split("."))) for key in self._pcm._timeit]
         max_dpt = np.max(dpt)
 
-        fig, ax = plt.subplots(figsize=(10, 6), dpi=90)
-        if max_dpt == 1: # 1 Level:
-            df.plot(kind='barh', ax=ax)
-            ylabel = 'Method'
+        with sns.axes_style(style):
+            defaults = {'figsize': (5, 3), 'dpi': 90}
+            if not subplot_kw:
+                fig, ax = plt.subplots(**{**defaults, **kwargs})
+            else:
+                fig, ax = plt.subplots(**{**defaults, **kwargs}, subplot_kw=subplot_kw)
 
-        if max_dpt == 2: # 2 Levels:
-            # df = df.T
-            df.plot(kind='barh', stacked=1, legend=1, subplots=0, ax=ax)
-            ylabel = 'Method'
+            if max_dpt == 1: # 1 Level:
+                df.plot(kind='barh', ax=ax)
+                # ylabel = 'Method'
 
-        if max_dpt > 2:
-            # Select 2 dimensions to plot:
-            df = df.groupby([group, split]).sum()
-            df = df.unstack(0)
-            if 'total' in df.index:
-                df.drop('total', inplace=True)
-            if 'total' in df.keys():
-                df.drop('total', axis=1, inplace=True)
-            if '' in df.index:
-                df.drop('', inplace=True)
-            df = df.T
-            df = df[df.sum(axis=1)!=0]
-            df.plot(kind='barh', stacked=1, legend=1, subplots=0, ax=ax)
-            ylabel = group
+            if max_dpt == 2: # 2 Levels:
+                # df = df.T
+                df.plot(kind='barh', stacked=1, legend=1, subplots=0, ax=ax)
+                # ylabel = 'Method'
 
-        ax.grid(True)
-        ax.set_xlabel('Time [ms]')
-        ax.set_ylabel(ylabel)
+            if max_dpt > 2:
+                # Select 2 dimensions to plot:
+                df = df.groupby([group, split]).sum()
+                df = df.unstack(0)
+                if 'total' in df.index:
+                    df.drop('total', inplace=True)
+                if 'total' in df.keys():
+                    df.drop('total', axis=1, inplace=True)
+                if '' in df.index:
+                    df.drop('', inplace=True)
+                df = df.T
+                df = df[df.sum(axis=1)!=0]
+                df.plot(kind='barh', stacked=1, legend=0, subplots=0, ax=ax)
+                plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+
+            sns.despine()
+            ax.grid(True)
+            ax.set_xlabel('Time [ms]')
+            ax.set_ylabel(group)
         return fig, ax, df
 
-        return plot_df(self._pcm._timeit, **kargs)
-
-    def preprocessed(self, ds, features=None, n=1000, kde=False, style='darkgrid', **kargs):
+    def preprocessed(self, ds, features=None, dim=None, n=1000, kde=False, style='darkgrid', **kargs):
         """ Pairwise scatter plot of pre-processed features
 
             Parameters
@@ -250,7 +276,7 @@ class _PlotMethods(object):
         """
 
         # Get preprocessed features (the [n_samples, n_features] numpy array seen by the classifier)
-        X, sampling_dims = self._pcm.preprocessing(ds, features=features)
+        X, sampling_dims = self._pcm.preprocessing(ds, features=features, dim=dim)
 
         # Create a dataframe for seaborn plotting machinery:
         df = X.to_dataframe('features').unstack(0)
@@ -294,31 +320,40 @@ def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
             fig, ax = plt.subplots(ncols=2, nrows=m.F, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
 
         if m.F == 1:
-            ax = ax[np.newaxis,:]
+            ax = ax[np.newaxis, :]
 
         for (feature, irow) in zip(m._props['features'], np.arange(0, m.F)):
+
             X_ave = m._scaler[feature].mean_
             X_std = m._scaler[feature].scale_
             X_unit = m._scaler_props[feature]['units']
             feature_axis = m._props['features'][feature]
             feature_name = [feature]
 
-            defaults_mean = {'linewidth': 2, 'label': 'Sample Mean'}
-            defaults_std = {'linewidth': 2, 'label': 'Sample Std'}
-            if not plot_kw:
-                ax[irow, 0].plot(X_ave, feature_axis,  **defaults_mean)
-                ax[irow, 1].plot(X_std, feature_axis, **defaults_std)
+            # Is this a thick array or a slice ?
+            is_slice = np.all(m._props['features'][feature] == None)
 
+            if not is_slice:
+                defaults_mean = {'linewidth': 2, 'label': 'Sample Mean'}
+                defaults_std = {'linewidth': 2, 'label': 'Sample Std'}
+                if not plot_kw:
+                    ax[irow, 0].plot(X_ave, feature_axis,  **defaults_mean)
+                    ax[irow, 1].plot(X_std, feature_axis, **defaults_std)
+
+                else:
+                    ax[irow, 0].plot(X_ave, feature_axis,  **{**defaults_mean, **plot_kw})
+                    ax[irow, 1].plot(X_std, feature_axis, **{**defaults_std, **plot_kw})
+
+                # tidy up the figure
+                ax[irow, 0].set_ylabel('Vertical feature axis')
+                for ix in range(0, 2):
+                    ax[irow, ix].legend(loc='lower right')
+                    ax[irow, ix].set_xlabel("[%s]" % X_unit)
+                    ax[irow, ix].set_title("%s scaler" % feature, fontsize=10)
             else:
-                ax[irow, 0].plot(X_ave, feature_axis,  **{**defaults_mean, **plot_kw})
-                ax[irow, 1].plot(X_std, feature_axis, **{**defaults_std, **plot_kw})
+                ax[irow, 0].set_title("%s scaler mean=%f" % (feature, X_ave), fontsize=10)
+                ax[irow, 1].set_title("%s scaler std=%f" % (feature, X_std), fontsize=10)
 
-            # tidy up the figure
-            ax[irow, 0].set_ylabel('Vertical feature axis')
-            for ix in range(0, 2):
-                ax[irow, ix].legend(loc='lower right')
-                ax[irow, ix].set_xlabel("[%s]" % X_unit)
-                ax[irow, ix].set_title("%s scaler" % feature, fontsize=10)
     return fig, ax
 
 def reducer(m, pcalist=None, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
@@ -371,7 +406,7 @@ def reducer(m, pcalist=None, style="whitegrid", plot_kw=None, subplot_kw=None, *
     return fig, ax
 
 def quant(m, da, xlim=None,
-          classdimname='N_CLASS',
+          classdimname='pcm_class',
           quantdimname = 'quantile',
           maxcols=3, cmap=None, **kwargs):
     """Plot the q-th quantiles of a dataArray for each PCM component

@@ -104,7 +104,7 @@ Since the PCM classifier we used (GMM) is fuzzy, we can also predict the probabi
     POSTERIORS = m.predict_proba(ds, feature={'temperature': 'TEMP'})
     POSTERIORS
 
-In this case, a new dimension appears: ``N_CLASS``. The sum over `N_CLASS`` of the posterior probabilities is necessarily 1. We'll note that ``LABELS`` are the ``N_CLASS`` index for which the posterior is maximum.
+In this case, a new dimension appears: ``pcm_class``. The sum over `pcm_class`` of the posterior probabilities is necessarily 1. We'll note that ``LABELS`` are the ``pcm_class`` index for which the posterior is maximum.
 
 Add PCM results to the dataset
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

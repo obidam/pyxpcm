@@ -1,7 +1,9 @@
 #!/bin/env python
 # -*coding: UTF-8 -*-
 #
-# Provide some basic methods to compute statistic of classes
+# These methods are no longer needed here !
+# Statistics of PCM for a dataset are now accessed through the xarray.dataset accessor like:
+#   ds.pyxpcm.robustness(...
 #
 # Created by gmaze on 2017/12/05
 __author__ = 'gmaze@ifremer.fr'
@@ -13,15 +15,13 @@ import numpy as np
 import dask.array
 import warnings
 
-from .pcmodel import ds_xarray_accessor_pyXpcm
+from .pcmodel import PCMFeatureError
 
 def quant(ds,
           of=None,
-          using='LABEL',
+          using='PCM_LABELS',
           q=[0.05, 0.5, 0.95],
-          inplace=False,
-          dim=None,
-          name='QUANT'):
+          outname='PCM_QUANT'):
     """Compute q-th quantiles of a dataArray for each PCM component
 
     Parameters
@@ -34,8 +34,6 @@ def quant(ds,
         Name of the :class:`xarray.DataArray` with classification labels to use.
     q: float in the range of [0,1] (or sequence of floats)
         Quantiles to compute, which must be between 0 and 1 inclusive.
-    dim : str, optional
-        Sampling Dimension over which to compute quantiles. Set to the first dimension by default.
 
     Returns
     -------
@@ -62,18 +60,18 @@ def quant(ds,
                         "arrays. Load the data via .compute() or .load() "
                         "prior to calling this method.")
 
-    if not dim:
-        # Assume the first dimension is the sampling dimension:
-        dim = str(ds[of].dims[0])
-
+    # ID sampling dimensions (all dimensions but those of LABELS)
+    sampling_dims = ds[using].dims
+    ds = ds.stack({'sampling': sampling_dims})
     qlist = [] # list of quantiles to compute
     for label, group in ds.groupby(using):
-        v = group[of].quantile(q, dim=dim)
+        v = group[of].quantile(q, dim='sampling', keep_attrs=True)
         qlist.append(v)
 
     # Try to infer the dimension of the class components:
-    # The dimension probably has the unique value of the labels:
-    uniquelabels = np.unique(ds[using])
+    # The dimension surely has the unique value in labels:
+    l = ds[using].where(ds[using].notnull(), drop=True).values.flatten()
+    uniquelabels = np.unique(l[~np.isnan(l)])
     found_class = False
     for thisdim in ds.dims:
         if len(ds[thisdim].values) == len(uniquelabels) and\
@@ -81,21 +79,19 @@ def quant(ds,
             dim_class = thisdim
             found_class = True
     if not found_class:
-        dim_class = ("N_CLASS_%s")%(name)
+        dim_class = ("pcm_class_%s")%(outname)
 
-    if inplace:
-        da = xr.concat(qlist, dim=dim_class).rename(name)
-        return ds.pyxpcm.add_inplace(da)
-        # ds[name] = da
-
+    # Create xarray with all quantiles:
+    if found_class:
+        da = xr.concat(qlist, dim=ds[dim_class])
     else:
-        if found_class:
-            qlist = xr.concat(qlist, dim=ds[dim_class])
-        else:
-            qlist = xr.concat(qlist, dim=dim_class)
-        return qlist
+        da = xr.concat(qlist, dim=dim_class)
+    da = da.rename(outname)
+    da = da.unstack()
 
-def robustness(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outname='PCM_ROBUSTNESS'):
+    return da
+
+def robustness(ds, name='PCM_POST', classdimname='pcm_class', inplace=False, outname='PCM_ROBUSTNESS'):
     """ Compute classification robustness
 
         Parameters
@@ -106,7 +102,7 @@ def robustness(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outna
         name: str, default is 'PCM_POST'
             Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
 
-        classdimname: str, default is 'N_CLASS'
+        classdimname: str, default is 'pcm_class'
             Name of the dimension holding classes
 
         inplace: boolean, False by default
@@ -138,13 +134,11 @@ def robustness(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outna
     if inplace:
         if outname in ds.data_vars:
             warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-        return ds.pyxpcm.add_inplace(da)
-        # ds[outname] = da
-        # ds[outname].attrs['pyxpcm'] = "Automatically added by pyXpcm"
+        return ds.pyxpcm.add(da)
     else:
         return da
 
-def robustness_digit(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False, outname='PCM_ROBUSTNESS_CAT'):
+def robustness_digit(ds, name='PCM_POST', classdimname='pcm_class', inplace=False, outname='PCM_ROBUSTNESS_CAT'):
     """ Digitize classification robustness
 
         Parameters
@@ -155,7 +149,7 @@ def robustness_digit(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False,
         name: str, default is 'PCM_POST'
             Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
 
-        classdimname: str, default is 'N_CLASS'
+        classdimname: str, default is 'pcm_class'
             Name of the dimension holding classes
 
         inplace: boolean, False by default
@@ -192,9 +186,7 @@ def robustness_digit(ds, name='PCM_POST', classdimname='N_CLASS', inplace=False,
     if inplace:
         if outname in ds.data_vars:
             warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-        return ds.pyxpcm.add_inplace(da)
-        # ds[outname] = da
-        # ds[outname].attrs['pyxpcm'] = "Automatically added by pyXpcm"
+        return ds.pyxpcm.add(da)
 
     else:
         return da

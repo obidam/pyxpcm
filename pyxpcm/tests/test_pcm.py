@@ -229,7 +229,7 @@ def test_pcm_predict_proba():
     m.fit(ds, feature={'temperature': 'TEMP'})
 
     # Classifying
-    # def predict_proba(self, ds, feature=None, inplace=False, name='PCM_POST', classdimname='N_CLASS'):
+    # def predict_proba(self, ds, feature=None, inplace=False, name='PCM_POST', classdimname='pcm_class'):
 
     def assert_output_value_type(post):
         assert isinstance(post, xr.DataArray) == True, "Output must be a xarray.DataArray"
