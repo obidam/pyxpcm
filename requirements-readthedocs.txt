@@ -10,6 +10,6 @@ toolz>=0.8.2
 seaborn>=0.9.0
 ipykernel>=5.1
 nbsphinx>=0.4
-pyproj
-geos>=3.7
+pyproj>=2.4
+geos>=0.2
 cartopy>=0.17
