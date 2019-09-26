@@ -11,4 +11,4 @@ seaborn>=0.9.0
 ipykernel>=5.1
 nbsphinx>=0.4
 cartopy>=0.17
-geos>=3.7
+geos
