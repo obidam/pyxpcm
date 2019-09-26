@@ -10,3 +10,4 @@ toolz>=0.8.2
 seaborn>=0.9.0
 ipykernel
 nbsphinx
+cartopy
