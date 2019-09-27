@@ -58,6 +58,11 @@ from sklearn.mixture import GaussianMixture
 class PCMFeatureError(Exception):
     """Exception raised when features not found."""
 
+# Decorators
+def pcm_method(func):
+    # I'd like to return pcm.<func>(self._obj, **kwargs)
+    return func
+
 @xr.register_dataset_accessor('pyxpcm')
 class ds_xarray_accessor_pyXpcm:
     """
@@ -373,8 +378,29 @@ class ds_xarray_accessor_pyXpcm:
         else:
             return da
 
+    @pcm_method
+    def fit(self, pcm, **kwargs):
+        return pcm.fit(self._obj, **kwargs)
+
+    @pcm_method
     def predict(self, pcm, **kwargs):
         return pcm.predict(self._obj, **kwargs)
+
+    @pcm_method
+    def fit_predict(self, pcm, **kwargs):
+        return pcm.fit_predict(self._obj, **kwargs)
+
+    @pcm_method
+    def predict_proba(self, pcm, **kwargs):
+        return pcm.predict_proba(self._obj, **kwargs)
+
+    @pcm_method
+    def score(self, pcm, **kwargs):
+        return pcm.score(self._obj, **kwargs)
+
+    @pcm_method
+    def bic(self, pcm, **kwargs):
+        return pcm.bic(self._obj, **kwargs)
 
 class NoTransform(BaseEstimator):
     """ An estimator that does nothing in fit and transform """
@@ -751,7 +777,7 @@ class pcm:
 
     @property
     def features(self):
-        """Return the list feature names"""
+        """Return the dictionnary of features"""
         return [feature for feature in self._props['features']]
 
     @property

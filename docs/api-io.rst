@@ -50,7 +50,11 @@ Plot
    pcmodel.pcm.plot
    pcmodel.pcm.plot.cmap
    pcmodel.pcm.plot.colorbar
-
+   pcmodel.pcm.plot.subplots
+   pcmodel.pcm.plot.scaler
+   pcmodel.pcm.plot.reducer
+   pcmodel.pcm.plot.timeit
+   pcmodel.pcm.plot.preprocessed
 
 Plotting module
 ===============
@@ -58,7 +62,10 @@ Plotting module
 .. autosummary::
    :toctree: generated/
 
+   plot.cmap_robustness
+   plot.latlongrid
    plot.scaler
+   plot.reducer
    plot.quant
 
 Dummy datasets
@@ -67,5 +74,5 @@ Dummy datasets
 .. autosummary::
    :toctree: generated/
 
-   datasets.load_argo
-   datasets.load_isas15
+   datasets.argo
+   datasets.isas

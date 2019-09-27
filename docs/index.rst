@@ -26,7 +26,7 @@ Documentation
 
 * :doc:`install`
 * :doc:`overview`
-* :doc:`basic_new.ipynb`
+* :doc:`basic.ipynb`
 
 
 .. toctree::
@@ -35,16 +35,21 @@ Documentation
     :caption: Getting Started
 
     overview
-    basic_new.ipynb
     install
+    basic.ipynb
 
 **User guide**
+
+* :doc:`pcm_prop.ipynb`
+* :doc:`debug_perf.ipynb`
 
 .. toctree::
     :maxdepth: 1
     :hidden:
     :caption: User guide
 
+    pcm_prop
+    debug_perf
 
 
 **Help & reference**

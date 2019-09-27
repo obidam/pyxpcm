@@ -39,6 +39,7 @@ Methods
    pcm.predict
    pcm.predict_proba
    pcm.score
+   pcm.bic
 
 Plot
 ----
@@ -49,7 +50,11 @@ Plot
    pcm.plot
    pcm.plot.cmap
    pcm.plot.colorbar
-
+   pcm.plot.subplots
+   pcm.plot.scaler
+   pcm.plot.reducer
+   pcm.plot.timeit
+   pcm.plot.preprocessed
 
 Plotting module
 ===============
@@ -57,7 +62,10 @@ Plotting module
 .. autosummary::
    :toctree: generated/
 
+   plot.cmap_robustness
+   plot.latlongrid
    plot.scaler
+   plot.reducer
    plot.quant
 
 Dummy datasets
@@ -66,5 +74,5 @@ Dummy datasets
 .. autosummary::
    :toctree: generated/
 
-   datasets.load_argo
-   datasets.load_isas15
+   datasets.argo
+   datasets.isas

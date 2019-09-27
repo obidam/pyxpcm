@@ -2,6 +2,11 @@
 # -*coding: UTF-8 -*-
 #
 # Provide some basic methods for plotting
+# plot.cmap_robustness
+# plot.latlongrid
+# plot.scaler
+# plot.reducer
+# plot.quant
 #
 # Created by gmaze on 2017/12/11
 __author__ = 'gmaze@ifremer.fr'
@@ -151,7 +156,7 @@ class _PlotMethods(object):
         """Plot PCM reducer properties"""
         return reducer(self._pcm,  **kwargs)
 
-    def subplots(self, maxcols=3, **kwargs):
+    def subplots(self, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
         """ Return (figure, axis) with one subplot per cluster
 
             Parameters
@@ -178,15 +183,22 @@ class _PlotMethods(object):
             __author__: gmaze@ifremer.fr
         """
         nrows = 1
-        ncols = self._pcm.K
-        if self._pcm.K > maxcols:
-            nrows = 1 + np.int(self._pcm.K / maxcols)
+        if K == np.Inf:
+            K = self._pcm.K
+        ncols = K
+
+        if K > maxcols:
+            nrows = 1 + np.int(K / maxcols)
             ncols = maxcols
         if ncols == 1:
-            nrows = self._pcm.K
-        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, **kwargs)
+            nrows = K
+        if not subplot_kw:
+            fig, ax = plt.subplots(nrows=nrows, ncols=ncols, **kwargs)
+        else:
+            fig, ax = plt.subplots(nrows=nrows, ncols=ncols, subplot_kw=subplot_kw, **kwargs)
+
         ax = np.array(ax).flatten()
-        for i in range(self._pcm.K, nrows * ncols):
+        for i in range(K, nrows * ncols):
             fig.delaxes(ax[i])
         return fig, ax
 
@@ -313,7 +325,7 @@ def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
 
     # Plot
     with sns.axes_style(style):
-        defaults = {'sharey':'row', 'figsize':(10, 10), 'dpi':80, 'facecolor':'w', 'edgecolor':'k'}
+        defaults = {'sharey':'row', 'figsize':(10, 5*m.F), 'dpi':80, 'facecolor':'w', 'edgecolor':'k'}
         if not subplot_kw:
             fig, ax = plt.subplots(ncols=2, nrows=m.F, **{**defaults, **kwargs})
         else:
@@ -356,7 +368,7 @@ def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
 
     return fig, ax
 
-def reducer(m, pcalist=None, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
+def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, subplot_kw=None, **kwargs):
     """ Plot PCM reducer properties """
 
     # Check if the PCM is trained:
@@ -364,15 +376,18 @@ def reducer(m, pcalist=None, style="whitegrid", plot_kw=None, subplot_kw=None, *
 
     # Plot
     with sns.axes_style(style):
-        defaults = {'sharey': 'row', 'figsize': (10, 5), 'dpi': 80, 'facecolor': 'w', 'edgecolor': 'k'}
+        defaults = {'sharey': 'row', 'figsize': (5*m.F, 5), 'dpi': 80, 'facecolor': 'w', 'edgecolor': 'k'}
         if not subplot_kw:
-            fig, ax = plt.subplots(nrows=1, ncols=m.F, **{**defaults, **kwargs})
+            if maxcols == np.Inf:
+                fig, ax = m.plot.subplots(K=m.F, maxcols=m.F, **{**defaults, **kwargs})
+            else:
+                fig, ax = m.plot.subplots(K=m.F, maxcols=maxcols, **{**defaults, **kwargs})
         else:
-            fig, ax = plt.subplots(nrows=1, ncols=m.F, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
+            if maxcols == np.Inf:
+                fig, ax = m.plot.subplots(K=m.F, maxcols=m.F, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
+            else:
+                fig, ax = m.plot.subplots(K=m.F, maxcols=maxcols, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
 
-        ax = ax.flatten()
-        if m.F == 1:
-            ax = ax[np.newaxis, :]
 
         for (feature, icol) in zip(m._props['features'], np.arange(0, m.F)):
             ax[icol].set_title(feature, fontsize=10)
