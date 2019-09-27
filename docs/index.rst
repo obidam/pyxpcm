@@ -34,9 +34,18 @@ Documentation
     :hidden:
     :caption: Getting Started
 
-    install
     overview
     basic_new.ipynb
+    install
+
+**User guide**
+
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+    :caption: User guide
+
+
 
 **Help & reference**
 
@@ -48,6 +57,7 @@ Documentation
     :caption: Help & reference
 
     whats-new
+    api
 
 .. _Xarray: http://xarray.pydata.org
 .. _netCDF: http://www.unidata.ucar.edu/software/netcdf
