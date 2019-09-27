@@ -10,8 +10,12 @@ version: 2
 #  configuration: docs/conf.py
 
 # Optionally build your docs in additional formats such as PDF and ePub
-formats: []
+formats:
+  - htmlzip
 
 # Optionally set the version of Python and requirements required to build your docs
 conda:
   environment: docs/environment.yml
+
+python:
+  system_packages: true
