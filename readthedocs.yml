@@ -14,8 +14,11 @@ formats:
   - htmlzip
 
 # Optionally set the version of Python and requirements required to build your docs
-conda:
-  environment: docs/environment.yml
-
 python:
+  version: 3.6
   system_packages: true
+  install:
+    - requirements: requirements.txt
+    - requirements: docs/requirements.txt
+    - method: pip
+      path: .
