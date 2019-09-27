@@ -2,5 +2,4 @@ name: pyxpcm-docs
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
   - cartopy=0.17.0
