@@ -19,6 +19,7 @@
 import os
 import subprocess
 import sys
+import xarray
 
 from contextlib import suppress
 allowed_failures = set()
@@ -29,6 +30,8 @@ if 'conda' in sys.executable:
 else:
     print('pip environment:')
     subprocess.run(['pip', 'list'])
+
+print("xarray: %s, %s" % (xarray.__version__, xarray.__file__))
 
 with suppress(ImportError):
     import matplotlib

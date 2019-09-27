@@ -6,6 +6,7 @@ dependencies:
   - numpy=1.16.0
   - pandas=0.23.3
   - scipy=1.2.0
+  - xarray=0.12.1
   - matplotlib=3.0.2
   - seaborn=0.9.0
   - dask=1.1.0
@@ -24,3 +25,4 @@ dependencies:
   - pillow=5.4.1
   - sphinx_rtd_theme=0.4.2
   - mock=2.0.0
+  - pip
