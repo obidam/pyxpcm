@@ -3,3 +3,4 @@ channels:
   - conda-forge
 dependencies:
   - cartopy=0.17.0
+  - seaborn=0.9.0

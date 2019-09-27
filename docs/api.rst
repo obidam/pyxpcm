@@ -50,13 +50,6 @@ Plot
    pcm.plot.cmap
    pcm.plot.colorbar
 
-Statistic module
-================
-
-.. autosummary::
-   :toctree: generated/
-
-   stats.quant
 
 Plotting module
 ===============

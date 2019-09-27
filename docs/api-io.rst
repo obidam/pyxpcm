@@ -52,7 +52,6 @@ Plot
    pcmodel.pcm.plot.colorbar
 
 
-
 Plotting module
 ===============
 

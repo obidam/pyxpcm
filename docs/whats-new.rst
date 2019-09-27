@@ -10,11 +10,11 @@ Break backward compatibility
 
 Three main new capabilities:
 
-    - Multi-features classification now possible
+    - Multi-features classification
 
-    - Behind the scene full management of ND-Array classification (so that you can classify directly profiles on a latitude/longitude/time grid, not only a collection)
+    - Behind the scene full management of ND-Array classification (so that you can classify directly profiles on a latitude/longitude/time grid, not only a collection of profiles already in 2D array)
 
-    - Implemented a ``pyxpcm`` xr.DataSet accessor to execute pyXpcm methods directly onto a dataset
+    - pyXpcm methods are directly accessible through the :class:`xarray.DataSet` accessor namespace ``pyxpcm``
 
 
 
