@@ -23,6 +23,6 @@ python:
     - requirements: requirements.txt
     - requirements: docs/requirements.txt
     - method: pip
-        path: .
+      path: .
     - method: setuptools
-        path: cartopy
+      path: cartopy
