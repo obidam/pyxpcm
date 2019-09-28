@@ -25,7 +25,6 @@ Attributes
    pcm.K
    pcm.F
    pcm.features
-   pcm.scaler
    pcm.timeit
 
 Methods
@@ -41,38 +40,51 @@ Methods
    pcm.score
    pcm.bic
 
-Plot
-----
+
+Plotting
+========
 
 .. autosummary::
-   :toctree: generated/
+    :toctree: generated/
 
-   pcm.plot
-   pcm.plot.cmap
-   pcm.plot.colorbar
-   pcm.plot.subplots
-   pcm.plot.scaler
-   pcm.plot.reducer
-   pcm.plot.timeit
-   pcm.plot.preprocessed
+    pcm.plot
+    plot.cmap
+    plot.colorbar
+    plot.subplots
+    plot.latlongrid
 
-Plotting module
+    plot.scaler
+    plot.reducer
+    plot.timeit
+    plot.preprocessed
+    plot.quantile
+
+Datasets module
 ===============
-
-.. autosummary::
-   :toctree: generated/
-
-   plot.cmap_robustness
-   plot.latlongrid
-   plot.scaler
-   plot.reducer
-   plot.quant
-
-Dummy datasets
-==============
 
 .. autosummary::
    :toctree: generated/
 
    datasets.argo
    datasets.isas
+
+Xarray dataset accessor
+=======================
+
+.. autosummary::
+    :toctree: generated/
+
+    ds_pyxpcm.add
+    ds_pyxpcm.clean
+    ds_pyxpcm.feature_dict
+    ds_pyxpcm.sampling_dim
+    ds_pyxpcm.mask
+    ds_pyxpcm.quantile
+    ds_pyxpcm.robustness
+    ds_pyxpcm.robustness_digit
+    ds_pyxpcm.fit
+    ds_pyxpcm.fit_predict
+    ds_pyxpcm.predict
+    ds_pyxpcm.predict_proba
+    ds_pyxpcm.score
+    ds_pyxpcm.bic

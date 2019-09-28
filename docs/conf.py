@@ -245,4 +245,5 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/', None),
     'xarray': ('http://xarray.pydata.org/en/stable/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
+    'seaborn': ('https://seaborn.pydata.org/generated/', None),
 }

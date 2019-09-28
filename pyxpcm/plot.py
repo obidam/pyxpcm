@@ -80,6 +80,56 @@ def colorbar_index(ncolors, cmap, **kwargs):
     colorbar.set_ticklabels(range(ncolors))
     return colorbar
 
+class _PlotMethods(object):
+    """
+        Enables use of pyxpcm.plot functions as attributes on a PCM object.
+        For example: m.plot(), m.plot.scaler(), m.plot.cmap('Set2'), m.plot.colorbar()
+    """
+
+    def __init__(self, m):
+        self._pcm = m
+        self._cmap = self.cmap()
+
+    def __call__(self, **kwargs):
+        raise ValueError("pyxpcm.plot cannot be called directly. Use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
+
+    def cmap(self, **kwargs):
+        """Return a categorical colormap for this PCM"""
+        return cmap(self._pcm, **kwargs)
+
+    def colorbar(self, **kwargs):
+        """Add a colorbar to the current plot with centered ticks on discrete colors"""
+        return colorbar(self._pcm, **kwargs)
+
+    def subplots(self, **kwargs):
+        """Return (figure, axis) with one subplot per cluster"""
+        return subplots(self._pcm, **kwargs)
+
+    def latlongrid(self, ax, **kwargs):
+        """Add latitude/longitude grid to a cartopy geoaxes """
+        return latlongrid(ax, **kwargs)
+
+    def scaler(self, **kwargs):
+        """Plot PCM scaler properties"""
+        return scaler(self._pcm, **kwargs)
+
+    def reducer(self, **kwargs):
+        """Plot PCM reducer properties"""
+        return reducer(self._pcm,  **kwargs)
+
+    def timeit(self, **kwargs):
+        """Plot registered timing of operations"""
+        return timeit(self._pcm, **kwargs)
+
+    def preprocessed(self, ds, **kwargs):
+        """Plot preprocessed features as pairwise scatter plots"""
+        return preprocessed(self._pcm, ds, **kwargs)
+
+    def quantile(self, da, **kwargs):
+        """Plot the q-th quantiles of a dataArray for each PCM component"""
+        return quantile(self._pcm, da, **kwargs)
+
+
 def latlongrid(ax, dx=5., dy=5., fontsize=6, **kwargs):
     """ Add latitude/longitude grid to a cartopy geoaxes  """
     if not isinstance(ax, cartopy.mpl.geoaxes.GeoAxesSubplot):
@@ -96,224 +146,215 @@ def latlongrid(ax, dx=5., dy=5., fontsize=6, **kwargs):
     gl.ylabel_style = {'fontsize':fontsize}
     return gl
 
-# def plot(m, type=None, ax=None, subplot_kw=None, **kwargs):
-#     if type == 'scaler':
-#         return scaler(m, subplot_kw=subplot_kw, **kwargs)
-#     elif type == 'reducer':
-#         return reducer(m, subplot_kw=subplot_kw, **kwargs)
-#     else:
-#         print('You can plot the scaler properties using pcm.plot.scaler()')
+def cmap(m, name='Set2', palette=False, usage='class'):
+    """Return categorical colormaps
 
-class _PlotMethods(object):
+        Parameters
+        ----------
+        name : str
+
+            Name of the colormap, ex: 'Set2'
+
+        palette : bool
+
+            Whether to return a Seaborn color palette or not (default is False).
+
+            - False: function returns a :class:``matplotlib.colors.LinearSegmentedColormap``
+            - True: function returns a :func:``seaborn.color_palette``
+
+        usage : str
+
+            The intended usage of the colormap, this can be:
+                - 'class' (default): one color per class
+                - 'robustness' : a 5-colors for probability ranges
+
+        Returns
+        -------
+        :class:``matplotlib.colors.LinearSegmentedColormap`` or :func:``seaborn.color_palette``
+
     """
-        Enables use of pyxpcm.plot functions as attributes on a PCM object.
-        For example: m.plot(), m.plot.scaler(), m.plot.cmap('Set2'), m.plot.colorbar()
-    """
-
-    def __init__(self, m):
-        self._pcm = m
-        self._cmap = self.cmap()
-
-    def __call__(self, **kwargs):
-        raise ValueError("Please use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
-        # return plot(self._pcm, **kwargs)
-
-    def cmap(self, name='Set2', palette=False):
-        """Return a categorical colormap for this PCM
-
-            Parameters
-            ----------
-            name : str
-                Name of the colormap
-
-            palette : bool
-                If False (default), return a :class:``matplotlib.colors.LinearSegmentedColormap``
-                If True, return a Seaborn color_palette
-
-            Returns
-            -------
-            A colormap for classification label
-
-        """
+    if usage == 'class':
         if not palette:
-            self._cmap = cmap_discretize(name, self._pcm.K)
+            c = cmap_discretize(name, m.K)
         else:
-            self._cmap = sns.color_palette(name, self._pcm.K)
-        return self._cmap
+            c = sns.color_palette(name, m.K)
+    elif usage == 'robustness':
+        c = mpl.colors.ListedColormap(['#FF0000', '#CC00FF', '#0066FF', '#CCFF00', '#00FF66'])
+    else:
+        raise ValueError("Unknown 'usage' value (%s) " % usage)
+    return c
 
-    def colorbar(self, cmap=None, **kwargs):
-        """Add a colorbar to current plot with centered ticks on discrete colors"""
-        if cmap==None:
-            cmap=self._cmap
-        z = { **{'fraction':0.03, 'label':'Class'}, **kwargs}
-        return colorbar_index(ncolors=self._pcm.K, cmap=cmap, **z)
+def colorbar(m, cmap=None, **kwargs):
+    """Add a colorbar to the current plot with centered ticks on discrete colors"""
+    if cmap==None:
+        cmap = m.plot.cmap()
+    z = { **{'fraction':0.03, 'label':'Class'}, **kwargs}
+    return colorbar_index(ncolors=m.K, cmap=cmap, **z)
 
-    def scaler(self, **kwargs):
-        """Plot PCM scaler properties"""
-        return scaler(self._pcm, **kwargs)
+def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
+    """ Return (figure, axis) with one subplot per cluster
 
-    def reducer(self, **kwargs):
-        """Plot PCM reducer properties"""
-        return reducer(self._pcm,  **kwargs)
+        Parameters
+        ----------
+        :class:`pyxpcm.pcmodel.pcm`
+            A PCM instance
 
-    def subplots(self, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
-        """ Return (figure, axis) with one subplot per cluster
+        maxcols : int
+            Maximum number of columns to use
 
-            Parameters
-            ----------
-            maxcols : int
-                Maximum number of columns to use
+        K : int
+            The number of subplot required (:func:`pyxpcm.pcmodel.pcm.K` by default)
 
-            **kwargs to pyplot.subplots
+        subplot_kw : dict()
+            Arguments to be submitted to the :class:`matplotlib.pyplot.subplots` subplot_kw options.
 
-            Returns
-            -------
-            fig : :class:`matplotlib.pyplot.figure.Figure`
+        All other **kwargs are forwarded to :class:`matplotlib.pyplot.subplots`
 
-            ax : :class:`matplotlib.axes.Axes` object or array of Axes objects.
-                *ax* can be either a single :class:`matplotlib.axes.Axes` object or an
-                array of Axes objects if more than one subplot was created.  The
-                dimensions of the resulting array can be controlled with the squeeze
-                keyword, see above.
+        Returns
+        -------
+        fig : :class:`matplotlib.pyplot.figure.Figure`
 
-            Example
-            -------
-            fig, ax = m.plot.subplots(maxcols=4, sharey=True, figsize=(12,6))
+        ax : :class:`matplotlib.axes.Axes` object or array of Axes objects.
+            *ax* can be either a single :class:`matplotlib.axes.Axes` object or an
+            array of Axes objects if more than one subplot was created.  The
+            dimensions of the resulting array can be controlled with the squeeze
+            keyword, see above.
 
-            __author__: gmaze@ifremer.fr
-        """
-        nrows = 1
-        if K == np.Inf:
-            K = self._pcm.K
-        ncols = K
+        Example
+        -------
+        fig, ax = m.plot.subplots(maxcols=4, sharey=True, figsize=(12,6))
 
-        if K > maxcols:
-            nrows = 1 + np.int(K / maxcols)
-            ncols = maxcols
-        if ncols == 1:
-            nrows = K
+        __author__: gmaze@ifremer.fr
+    """
+    nrows = 1
+    if K == np.Inf:
+        K = m.K
+    ncols = K
+
+    if K > maxcols:
+        nrows = 1 + np.int(K / maxcols)
+        ncols = maxcols
+    if ncols == 1:
+        nrows = K
+    if not subplot_kw:
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, **kwargs)
+    else:
+        fig, ax = plt.subplots(nrows=nrows, ncols=ncols, subplot_kw=subplot_kw, **kwargs)
+
+    ax = np.array(ax).flatten()
+    for i in range(K, nrows * ncols):
+        fig.delaxes(ax[i])
+    return fig, ax
+
+def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white', **kwargs):
+    """ Plot PCM registered timing of operations
+
+        Parameters
+        ----------
+        Param : ParamType
+            DescriptionParam
+
+        Returns
+        -------
+
+        __author__: gmaze@ifremer.fr
+    """
+
+    # Read timings:
+    df = m.timeit
+
+    # Get max levels:
+    dpt = list()
+    [dpt.append(len(key.split("."))) for key in m._timeit]
+    max_dpt = np.max(dpt)
+
+    with sns.axes_style(style):
+        defaults = {'figsize': (5, 3), 'dpi': 90}
         if not subplot_kw:
-            fig, ax = plt.subplots(nrows=nrows, ncols=ncols, **kwargs)
+            fig, ax = plt.subplots(**{**defaults, **kwargs})
         else:
-            fig, ax = plt.subplots(nrows=nrows, ncols=ncols, subplot_kw=subplot_kw, **kwargs)
+            fig, ax = plt.subplots(**{**defaults, **kwargs}, subplot_kw=subplot_kw)
 
-        ax = np.array(ax).flatten()
-        for i in range(K, nrows * ncols):
-            fig.delaxes(ax[i])
-        return fig, ax
+        if max_dpt == 1: # 1 Level:
+            df.plot(kind='barh', ax=ax)
+            # ylabel = 'Method'
 
-    def timeit(self, group='Method', split='Sub-method', subplot_kw=None, style='white', **kwargs):
-        """ Plot registered timing of operations
+        if max_dpt == 2: # 2 Levels:
+            # df = df.T
+            df.plot(kind='barh', stacked=1, legend=1, subplots=0, ax=ax)
+            # ylabel = 'Method'
 
-            Parameters
-            ----------
-            Param : ParamType
-                DescriptionParam
+        if max_dpt > 2:
+            # Select 2 dimensions to plot:
+            df = df.groupby([group, split]).sum()
+            df = df.unstack(0)
+            if 'total' in df.index:
+                df.drop('total', inplace=True)
+            if 'total' in df.keys():
+                df.drop('total', axis=1, inplace=True)
+            if '' in df.index:
+                df.drop('', inplace=True)
+            df = df.T
+            df = df[df.sum(axis=1)!=0]
+            df.plot(kind='barh', stacked=1, legend=0, subplots=0, ax=ax)
+            plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 
-            Returns
-            -------
+        sns.despine()
+        ax.grid(True)
+        ax.set_xlabel('Time [ms]')
+        ax.set_ylabel(group)
+    return fig, ax, df
 
-            Example
-            -------
+def preprocessed(m, ds, features=None, dim=None, n=1000, kde=False, style='darkgrid', **kargs):
+    """ Plot preprocessed features as pairwise scatter plots
 
-            __author__: gmaze@ifremer.fr
-        """
+        Parameters
+        ----------
+        ds: :class:`xarray.DataSet`
+            The dataset to work with
 
-        # Read timings:
-        df = self._pcm.timeit
+        features: dict()
+            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
-        # Get max levels:
-        dpt = list()
-        [dpt.append(len(key.split("."))) for key in self._pcm._timeit]
-        max_dpt = np.max(dpt)
+        n : int
+            Number of samples to use in scatter plots
 
-        with sns.axes_style(style):
-            defaults = {'figsize': (5, 3), 'dpi': 90}
-            if not subplot_kw:
-                fig, ax = plt.subplots(**{**defaults, **kwargs})
-            else:
-                fig, ax = plt.subplots(**{**defaults, **kwargs}, subplot_kw=subplot_kw)
+        Returns
+        -------
+        g : :class:`seaborn.axisgrid.PairGrid`
+            Seaborn Pairgrid instance
 
-            if max_dpt == 1: # 1 Level:
-                df.plot(kind='barh', ax=ax)
-                # ylabel = 'Method'
+        __author__: gmaze@ifremer.fr
+    """
 
-            if max_dpt == 2: # 2 Levels:
-                # df = df.T
-                df.plot(kind='barh', stacked=1, legend=1, subplots=0, ax=ax)
-                # ylabel = 'Method'
+    # Get preprocessed features (the [n_samples, n_features] numpy array seen by the classifier)
+    X, sampling_dims = m.preprocessing(ds, features=features, dim=dim)
 
-            if max_dpt > 2:
-                # Select 2 dimensions to plot:
-                df = df.groupby([group, split]).sum()
-                df = df.unstack(0)
-                if 'total' in df.index:
-                    df.drop('total', inplace=True)
-                if 'total' in df.keys():
-                    df.drop('total', axis=1, inplace=True)
-                if '' in df.index:
-                    df.drop('', inplace=True)
-                df = df.T
-                df = df[df.sum(axis=1)!=0]
-                df.plot(kind='barh', stacked=1, legend=0, subplots=0, ax=ax)
-                plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
+    # Create a dataframe for seaborn plotting machinery:
+    df = X.to_dataframe('features').unstack(0)
+    df.loc['labels'] = m._classifier.predict(X)
+    df = df.T
 
-            sns.despine()
-            ax.grid(True)
-            ax.set_xlabel('Time [ms]')
-            ax.set_ylabel(group)
-        return fig, ax, df
-
-    def preprocessed(self, ds, features=None, dim=None, n=1000, kde=False, style='darkgrid', **kargs):
-        """ Pairwise scatter plot of pre-processed features
-
-            Parameters
-            ----------
-            ds: :class:`xarray.DataSet`
-                The dataset to work with
-
-            features: dict()
-                Definitions of PCM features in the input :class:`xarray.DataSet`.
-                If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
-
-            n : int
-                Number of samples to use in scatter plots
-
-            Returns
-            -------
-            g : :class:`seaborn.axisgrid.PairGrid`
-                Seaborn Pairgrid instance
-
-            __author__: gmaze@ifremer.fr
-        """
-
-        # Get preprocessed features (the [n_samples, n_features] numpy array seen by the classifier)
-        X, sampling_dims = self._pcm.preprocessing(ds, features=features, dim=dim)
-
-        # Create a dataframe for seaborn plotting machinery:
-        df = X.to_dataframe('features').unstack(0)
-        df.loc['labels'] = self._pcm._classifier.predict(X)
-        df = df.T
-
-        # Seaborn PairGrid plot:
-        random_rows = np.random.choice(range(X.shape[0]), np.min((n, X.shape[0])), replace=False)
-        with sns.axes_style(style):
-            defaults = {'height':2.5, 'aspect':1, 'hue':'labels', 'palette': self.cmap(palette=True),
-                        'vars':self._pcm._xlabel, 'despine':False}
-            g = sns.PairGrid(df.iloc[random_rows], **{**defaults, **kargs})
-            if not kde:
-                # g = g.map_offdiag(plt.scatter, s=3)
-                g = g.map_upper(plt.scatter, s=3)
-                g = g.map_diag(plt.hist, edgecolor=None, alpha=0.75)
-            else:
-                g = g.map_upper(plt.scatter, s=3)
-                g = g.map_lower(sns.kdeplot, linewidths=1)
-                g = g.map_diag(sns.kdeplot, lw=2, legend=False)
-            g = g.add_legend()
-        return g
+    # Seaborn PairGrid plot:
+    random_rows = np.random.choice(range(X.shape[0]), np.min((n, X.shape[0])), replace=False)
+    with sns.axes_style(style):
+        defaults = {'height':2.5, 'aspect':1, 'hue':'labels', 'palette': m.plot.cmap(palette=True),
+                    'vars':m._xlabel, 'despine':False}
+        g = sns.PairGrid(df.iloc[random_rows], **{**defaults, **kargs})
+        if not kde:
+            # g = g.map_offdiag(plt.scatter, s=3)
+            g = g.map_upper(plt.scatter, s=3)
+            g = g.map_diag(plt.hist, edgecolor=None, alpha=0.75)
+        else:
+            g = g.map_upper(plt.scatter, s=3)
+            g = g.map_lower(sns.kdeplot, linewidths=1)
+            g = g.map_diag(sns.kdeplot, lw=2, legend=False)
+        g = g.add_legend()
+    return g
 
 def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
-    """Plot the scaler properties
+    """Plot PCM scalers properties
 
     Parameters
     ----------
@@ -369,7 +410,7 @@ def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
     return fig, ax
 
 def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, subplot_kw=None, **kwargs):
-    """ Plot PCM reducer properties """
+    """ Plot PCM reducers properties """
 
     # Check if the PCM is trained:
     validation.check_is_fitted(m, 'fitted')
@@ -420,11 +461,11 @@ def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, su
 
     return fig, ax
 
-def quant(m, da, xlim=None,
+def quantile(m, da, xlim=None,
           classdimname='pcm_class',
           quantdimname = 'quantile',
           maxcols=3, cmap=None, **kwargs):
-    """Plot the q-th quantiles of a dataArray for each PCM component
+    """Plot q-th quantiles of a dataArray for each PCM components
 
     Parameters
     ----------

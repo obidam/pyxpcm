@@ -6,6 +6,7 @@ pyXpcm: Ocean Profile Classification Model
 An ocean **Profile Classification Model** allows to automatically assemble ocean profiles in clusters according to their vertical structure similarities.
 The geospatial properties of these clusters can be used to address a large variety of oceanographic problems: front detection, water mass identification, natural region contouring (gyres, eddies), reference profile selection for QC validation, etc... The vertical structure of these clusters furthermore provides a highly synthetic representation of large ocean areas that can be used for dimensionality reduction and coherent intercomparisons of ocean data (re)-analysis or simulations.
 
+
 References
 ----------
 
@@ -24,9 +25,9 @@ Documentation
 
 **Getting Started**
 
-* :doc:`install`
 * :doc:`overview`
-* :doc:`basic.ipynb`
+* :doc:`install`
+* :doc:`basic`
 
 
 .. toctree::
@@ -40,16 +41,20 @@ Documentation
 
 **User guide**
 
-* :doc:`pcm_prop.ipynb`
-* :doc:`debug_perf.ipynb`
+* :doc:`preprocessing`
+* :doc:`pcm_prop`
+* :doc:`debug_perf`
+* :doc:`basic_gridded`
 
 .. toctree::
     :maxdepth: 1
     :hidden:
     :caption: User guide
 
-    pcm_prop
-    debug_perf
+    basic_gridded.ipynb
+    preprocessing.ipynb
+    pcm_prop.ipynb
+    debug_perf.ipynb
 
 
 **Help & reference**

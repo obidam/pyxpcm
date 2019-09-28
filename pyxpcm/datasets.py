@@ -50,6 +50,7 @@ class isas():
             # Data small enough to fit in memory on any computer
             ds = ds.chunk({'latitude': None, 'longitude': None})
             ds = ds.compute()
+
         elif self.category == 'sample_series':
             ncfile = 'isas15series_sample_test.nc'
             ds = xr.open_mfdataset(join(self.data_root, ncfile))
@@ -67,24 +68,10 @@ def load_argo():
 
 def load_isas15():
     """Load and return a sample of ISAS15 data"""
-    module_path = dirname(__file__)
-    ncfile = 'isas15_sample_test.nc'
-    ds = xr.open_mfdataset(join(module_path, "data", ncfile), chunks={'latitude': 5, 'longitude': 5})
-    ds['depth'] = -np.abs(ds['depth'])
-    ds['SST'] = ds['TEMP'].isel(depth=0)
-    # Data small enough to fit in memory on any computer
-    ds = ds.chunk({'latitude': None, 'longitude': None})
-    ds = ds.compute()
-    return ds
+    raise ValueError('This function is deprecated, please use: pyxpcm.datasets.isas class')
+
 
 def load_isas15series():
     """Load and return a sample of ISAS15 data timeseries"""
-    module_path = dirname(__file__)
-    ncfile = 'isas15series_sample_test.nc'
-    ds = xr.open_dataset(join(module_path, "data", ncfile), chunks={'time':5, 'latitude': 5, 'longitude': 5})
-    ds['depth'] = -np.abs(ds['depth'])
-    ds['SST'] = ds['TEMP'].isel(depth=0)
-    # Data small enough to fit in memory on any computer
-    ds = ds.chunk({'latitude': None, 'longitude': None, 'time': None})
-    ds = ds.compute()
-    return ds
+    raise ValueError('This function is deprecated, please use: pyxpcm.datasets.isas class')
+

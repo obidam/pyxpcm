@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 """
 
-.. module:: pcmodel
+.. module:: pyxpcm
    :synopsis: Profile Classification Model
 
 .. moduleauthor:: Guillaume Maze <gmaze@ifremer.fr>
@@ -505,7 +505,8 @@ class Vertical_Interpolator:
 class pcm:
     """Base class for a Profile Classification Model
 
-    Consume and return :module:`xarray` objects
+    Consume and return :mod:`xarray` objects
+
     """
     def __init__(self,
                  K=1,
@@ -676,7 +677,6 @@ class pcm:
     def __repr__(self):
         return self.display(deep=self._verb)
 
-
     def ravel(self, da, dim=None, feature_name=str()):
         """ Extract from N-d array a X(feature,sample) 2-d array and vertical dimension z
 
@@ -781,11 +781,6 @@ class pcm:
         return [feature for feature in self._props['features']]
 
     @property
-    def scaler(self):
-        """Return the scaler method"""
-        return self._scaler
-
-    @property
     def plot(self):
         """Access plotting functions
         """
@@ -793,7 +788,7 @@ class pcm:
 
     @property
     def timeit(self):
-        """ Return a pandas dataframe with method times """
+        """ Return a :class:`pandas.DataFrame` with method times """
 
         def get_multindex(times):
             """ Create multi-index pandas """
