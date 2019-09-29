@@ -41,10 +41,10 @@ Documentation
 
 **User guide**
 
+* :doc:`basic_gridded`
 * :doc:`preprocessing`
 * :doc:`pcm_prop`
 * :doc:`debug_perf`
-* :doc:`basic_gridded`
 
 .. toctree::
     :maxdepth: 1

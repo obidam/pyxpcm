@@ -2,61 +2,83 @@ from pyxpcm.pcmodel import pcm
 from pyxpcm.pcmodel import PCMFeatureError
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
-from pyxpcm import datasets as pcmdata
+import pyxpcm
 import numpy as np
 import xarray as xr
 import pytest
 
 def new_m():
-    return pcm(K=8, feature_axis=np.arange(-500, 0, 2), feature_name='temperature')
+    return pcm(K=8, features={'temperature': np.arange(0, -500, 2.)})
 
 def test_data_loader():
     """Test dummy dataset loader"""
-    ds = pcmdata.load_argo()
+    ds = pyxpcm.tutorial.open_dataset('argo').load()
     assert isinstance(ds, xr.Dataset) == True
-    assert 'DEPTH' in ds.dims
-    assert 'N_PROF' in ds.dims
-    assert 'TEMP' in ds.data_vars
+    # assert 'DEPTH' in ds.dims
+    # assert 'N_PROF' in ds.dims
+    # assert 'TEMP' in ds.data_vars
 
 def test_pcm_init():
     """Test the different PCM instantiation methods
         This is not where we validate arguments.
     """
-
+    pcm_features = {'temperature': np.arange(0, -500, 2.)}
+    
     m = pcm()
-    assert isinstance(m,pcm) == True
+    assert isinstance(m, pcm) == True
 
     m = pcm(K=12)
-    assert isinstance(m,pcm) == True
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2))
-    assert isinstance(m,pcm) == True
+    m = pcm(K=12, features=pcm_features)
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature')
-    assert isinstance(m,pcm) == True
+    m = pcm(K=12, features=pcm_features, scaling=1)
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature', scaling=1)
-    assert isinstance(m,pcm) == True
-
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature', scaling=1,
+    m = pcm(K=12, features=pcm_features, scaling=1,
             reduction=True)
-    assert isinstance(m,pcm) == True
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature', scaling=1,
+    m = pcm(K=12, features=pcm_features, scaling=1,
             reduction=True, maxvar=90.)
-    assert isinstance(m,pcm) == True
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature', scaling=1,
-            reduction=True, maxvar=90., classif='gmm')
-    assert isinstance(m,pcm) == True
+    m = pcm(K=12, features=pcm_features, scaling=1,
+            reduction=True, maxvar=90.,
+            classif='gmm')
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature', scaling=1,
-            reduction=True, maxvar=90., classif='gmm', covariance_type='full')
-    assert isinstance(m,pcm) == True
+    m = pcm(K=12, features=pcm_features, scaling=1,
+            reduction=True, maxvar=90.,
+            classif='gmm', covariance_type='full')
+    assert isinstance(m, pcm) == True
 
-    m = pcm(K=12, feature_axis=np.arange(-500, 0, 2), feature_name='temperature', scaling=1,
-            reduction=True, maxvar=90., classif='gmm', covariance_type='full', verb=False)
-    assert isinstance(m,pcm) == True
+    m = pcm(K=12, features=pcm_features, scaling=1,
+            reduction=True, maxvar=90.,
+            classif='gmm', covariance_type='full',
+            verb=False)
+    assert isinstance(m, pcm) == True
+
+    m = pcm(K=12, features=pcm_features, scaling=1,
+            reduction=True, maxvar=90.,
+            classif='gmm', covariance_type='full',
+            verb=False, debug=True)
+    assert isinstance(m, pcm) == True
+
+    m = pcm(K=12, features=pcm_features, scaling=1,
+            reduction=True, maxvar=90.,
+            classif='gmm', covariance_type='full',
+            verb=False, debug=True,
+            timeit=True)
+    assert isinstance(m, pcm) == True
+
+    m = pcm(K=12, features=pcm_features, scaling=1,
+            reduction=True, maxvar=90.,
+            classif='gmm', covariance_type='full',
+            verb=False, debug=True,
+            timeit=True, timeit_verb=True)
+    assert isinstance(m, pcm) == True
 
     # Must not bet trained yet:
     with pytest.raises(NotFittedError):
@@ -68,7 +90,7 @@ def test_pcm_init():
 def test_pcm_preprocessing():
     """Test PCM Data preprocessing method"""
     # Load dummy data to work with:
-    ds = pcmdata.load_argo()
+    ds = pyxpcm.tutorial.open_dataset('argo').load()
 
     # Create model:
     m = new_m()
@@ -80,22 +102,15 @@ def test_pcm_preprocessing():
         # This must raise an error because 'temperature' is not in 'ds'
 
     with pytest.raises(PCMFeatureError):
-        X = m.preprocessing(ds, feature={'john':'doe'})
+        X = m.preprocessing(ds, features={'john': 'doe'})
         # This must raise an error because 'john' is not 'temperature'
 
     with pytest.raises(PCMFeatureError):
-        X = m.preprocessing(ds, feature={'temperature':'john'})
+        X = m.preprocessing(ds, features={'temperature':'john'})
         # This must raise an error because 'john' is not a variable in 'ds'
 
-    X = m.preprocessing(ds, feature={'temperature': 'TEMP'}) # This must work
+    X = m.preprocessing(ds, features={'temperature': 'TEMP'}) # This must work
     assert len(X.shape) == 2, "Working array must be 2-dimensional"
-
-    # Training
-    # m.fit(ds, feature={'temperature': 'TEMP'})
-
-    # Classifying
-    # m.predict(ds, feature={'temperature': 'TEMP'}, inplace=True)
-    # m.predict_proba(ds, feature={'temperature': 'TEMP'}, inplace=True)
 
 def test_pcm_fit():
     """Test PCM Data fit method"""

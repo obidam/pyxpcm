@@ -1,9 +1,47 @@
 # -*coding: UTF-8 -*-
+"""
+
+    Useful for documentation and to play with pyXpcm
+
+"""
 __author__ = 'gmaze@ifremer.fr'
 
+# import os
 from os.path import dirname, join
 import numpy as np
 import xarray as xr
+
+#todo Re-factor tutorial dataset loading process following ideas from Xarray/Seaborn
+# https://github.com/pydata/xarray/blob/master/xarray/tutorial.py
+
+def open_dataset(name):
+    """ Open a dataset from the pyXpcm distrib
+
+        Parameters
+        ----------
+        name : str
+            Name of the dataset to load, could be: 'argo', 'isas_snapshot', 'isas_series'
+
+        Returns
+        -------
+        :class:`xarray.DataSet`
+
+    """
+
+    if name == 'argo':
+        acc = argo(what='sample')
+
+    elif name == 'isas_snapshot':
+        acc = isas(what='sample_snapshot')
+
+    elif name == 'isas_series':
+        acc = isas(what='sample_series')
+
+    else:
+        raise ValueError("Don't know this tutorial dataset")
+
+    return acc
+
 
 class argo():
     def __init__(self, what='sample'):
@@ -64,14 +102,14 @@ class isas():
 
 def load_argo():
     """Load and return a sample of Argo profiles on standard depth levels"""
-    raise ValueError('This function is deprecated, please use: pyxpcm.datasets.argo class')
+    raise ValueError('This function is deprecated, please use: pyxpcm.tutorial.open_dataset')
 
 def load_isas15():
     """Load and return a sample of ISAS15 data"""
-    raise ValueError('This function is deprecated, please use: pyxpcm.datasets.isas class')
+    raise ValueError('This function is deprecated, please use: pyxpcm.tutorial.open_dataset')
 
 
 def load_isas15series():
     """Load and return a sample of ISAS15 data timeseries"""
-    raise ValueError('This function is deprecated, please use: pyxpcm.datasets.isas class')
+    raise ValueError('This function is deprecated, please use: pyxpcm.tutorial.open_dataset')
 

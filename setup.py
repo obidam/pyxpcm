@@ -17,7 +17,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="pyxpcm",
-    version="0.3.1",
+    version="0.4",
     description='pyxpcm: Ocean Profile Classification Model',
     url='http://github.com/obidam/pyxpcm',
     author='Guillaume Maze',

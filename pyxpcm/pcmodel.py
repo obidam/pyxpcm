@@ -21,20 +21,19 @@ import collections
 import inspect
 import dask
 
-from scipy import interpolate
-import copy
 import warnings
 import time
 from contextlib import contextmanager
 
 # Internal:
 from .plot import _PlotMethods
-# from .stats import quant as pcmstats_quant
+from .utils import Vertical_Interpolator, NoTransform
 
 # Scikit-learn usefull methods:
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import validation
+from sklearn.utils import assert_all_finite
 from sklearn.exceptions import NotFittedError
 
 ####### Scikit-learn statistic backend:
@@ -53,8 +52,6 @@ from sklearn.mixture import GaussianMixture
 # from dask_ml.decomposition import PCA
 
 
-
-# Core PCM classes:
 class PCMFeatureError(Exception):
     """Exception raised when features not found."""
 
@@ -108,7 +105,7 @@ class ds_xarray_accessor_pyXpcm:
                                   "attribute to the variable you'd like to use or provide a dictionnary")%(feature_in_pcm)
                 raise PCMFeatureError(msg)
             elif pcm._debug:
-                print(("Idying '%s' as '%s' in this dataset") % (feature_in_pcm, feature_in_ds))
+                print(("\tIdying '%s' as '%s' in this dataset") % (feature_in_pcm, feature_in_ds))
 
         return feature_in_ds
 
@@ -133,19 +130,39 @@ class ds_xarray_accessor_pyXpcm:
         return self._obj
 
     def feature_dict(self, pcm, features=None):
-        # Build the features dictionary for this dataset and PCM
-        if features:
-            features_dict = dict()
-            for feature_in_pcm in features:
-                feature_in_ds = features[feature_in_pcm]
-                if not feature_in_ds:
-                    feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
-                features_dict[feature_in_pcm] = feature_in_ds
-        else:
-            features_dict = dict()
-            for feature_in_pcm in pcm._props['features']:
+        """ Return features dictionary for this dataset and this PCM
+
+            Parameters
+            ----------
+            pcm : :class:`pyxpcm.pcmmodel.pcm`
+
+            features : dict
+                Keys are PCM feature name, Values are corresponding :class:`xarray.DataSet` variable names
+        """
+        features_dict = dict()
+        for feature_in_pcm in pcm._props['features']:
+            if features == None:
                 feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
-                features_dict[feature_in_pcm] = feature_in_ds
+            elif feature_in_pcm not in features:
+                raise PCMFeatureError("%s feature not defined" % feature_in_pcm)
+            else:
+                feature_in_ds = features[feature_in_pcm]
+                if feature_in_ds not in self._obj.data_vars:
+                    raise PCMFeatureError("Feature %s not in this dataset as %s" % (feature_in_pcm, feature_in_ds))
+            features_dict[feature_in_pcm] = feature_in_ds
+
+        # if features:
+        #     features_dict = dict()
+        #     for feature_in_pcm in features:
+        #         feature_in_ds = features[feature_in_pcm]
+        #         if not feature_in_ds:
+        #             feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
+        #         features_dict[feature_in_pcm] = feature_in_ds
+        # else:
+        #     features_dict = dict()
+        #     for feature_in_pcm in pcm._props['features']:
+        #         feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
+        #         features_dict[feature_in_pcm] = feature_in_ds
 
         # Re-order the dictionary to match the PCM set order:
         for key in pcm._props['features']:
@@ -194,9 +211,28 @@ class ds_xarray_accessor_pyXpcm:
 
         return SD
 
-    def mask(self, pcm, dim=None, features=None):
-        """ Create a mask where PCM features are defined """
-        feature_dict = self._obj.pyxpcm.feature_dict(pcm, features=features)
+    def mask(self, pcm, features=None, dim=None):
+        """ Create a mask where PCM features are defined (i.e. no nans)
+
+            Create a mask where all feature profiles are not null
+            over the PCM feature axis.
+
+            Parameters
+            ----------
+            :class:`pyxpcm.pcmmodel.pcm`
+
+            features: dict()
+                Definitions of PCM features in the :class:`xarray.DataSet`.
+                If not specified or set to None, features are identified
+                using :class:`xarray.DataArray` attributes 'feature_name'.
+
+            dim: str
+                Name of the vertical dimension in the :class:`xarray.DataSet`.
+                If not specified or set to None, dim is identified as the
+                :class:`xarray.DataArray` variables with attributes 'axis' set to 'z'.
+
+        """
+        feature_dict = self.feature_dict(pcm, features=features)
         SD = self.sampling_dim(pcm, dim=dim, features=features)
         M = list()
         for feature_name_in_pcm in feature_dict:
@@ -208,17 +244,24 @@ class ds_xarray_accessor_pyXpcm:
 
             if not is_slice:
                 dim = SD[feature_name_in_ds]['DIM_VERTICAL']
-                # z_top = np.max(pcm._props['features'][feature_name_in_pcm])
+                z_top = np.max(pcm._props['features'][feature_name_in_pcm])
                 z_bto = np.min(pcm._props['features'][feature_name_in_pcm])
-                mask = self._obj[feature_name_in_ds].where(
-                    self._obj[dim]>=z_bto).notnull().sum(dim=dim) == len(np.where(self._obj[dim]>=z_bto)[0])
+
+                Nz = len((self._obj[dim].where(self._obj[dim] >= z_bto, drop=True)\
+                                        .where(self._obj[dim] <= z_top, drop=True)).notnull())
+                mask = self._obj[feature_name_in_ds]\
+                            .where(self._obj[dim] >= z_bto)\
+                            .where(self._obj[dim] <= z_top).notnull().sum(dim=dim) == Nz
+
+                # mask = self._obj[feature_name_in_ds].where(
+                #     self._obj[dim]>=z_bto).notnull().sum(dim=dim) == len(np.where(self._obj[dim]>=z_bto)[0])
             else:
                 mask = self._obj[feature_name_in_ds].notnull()
             mask = mask.rename('PCM_MASK')
             M.append(mask)
         mask = xr.concat(M, dim='n_features')
         mask = mask.sum(dim='n_features')
-        mask = mask==pcm.F
+        mask = mask == pcm.F
         return mask
 
     def quantile(self,
@@ -402,105 +445,6 @@ class ds_xarray_accessor_pyXpcm:
     def bic(self, pcm, **kwargs):
         return pcm.bic(self._obj, **kwargs)
 
-class NoTransform(BaseEstimator):
-    """ An estimator that does nothing in fit and transform """
-    def __init__(self):
-        self.fitted = False
-
-    def fit(self, *args):
-        self.fitted = True
-        return self
-
-    def transform(self, x, *args):
-        return x
-
-    def score(self, x):
-        return 1
-
-
-class Vertical_Interpolator:
-    """ Internal machinery for the interpolation of vertical profiles
-
-        This class is called once at PCM instance initialisation
-        and
-        whenever data to be classified are not on the PCM feature axis.
-
-        Here we consume numpy arrays
-    """
-
-    def __init__(self, axis=None, debug=False):
-        self.axis = axis
-        self._debug = debug
-        # self.doINTERPz = False
-
-    def issimilar(self, Caxis):
-        """Check if the output and input axis are similar"""
-        test = np.array_equiv(self.axis, Caxis)
-        return test
-
-    def isintersect(self, Caxis):
-        """Check if output axis can be spot sampled from the input axis"""
-        in1 = np.in1d(Caxis, self.axis)
-        test = self.axis.shape[0] == np.count_nonzero(in1)
-        return test
-
-    def mix(self, x):
-        """ 
-            Homogeneize the upper water column: 
-            Set 1st nan values to the first non-NaN value
-        """
-        # izmixed = np.argwhere(np.isnan(x))
-        izok = np.where(~np.isnan(x))[0][0]
-        # x[izmixed] = x[izok]
-        x[0] = x[izok]
-        return x
-
-    def transform(self, C, Caxis):
-        """
-            Interpolate data on the PCM vertical axis
-
-            C[n_samples, n_levels]
-
-            Caxis[n_levels]
-
-        """
-        if not np.all(self.axis == None):
-            if np.any(Caxis > 0):
-                raise ValueError("Feature axis (depth) must be <=0 and oriented downward")
-            if (self.isintersect(Caxis)):
-                # Output axis is in the input axis, not need to interpolate:
-                if self._debug: print(
-                    "\tOutput axis is in the input axis, not need to interpolate, simple intersection")
-                in1 = np.in1d(Caxis, self.axis)
-                C = C[:, in1]
-            elif (not self.issimilar(Caxis)):
-                if self._debug: print("\tOutput axis is new, will use interpolation")
-                [Np, Nz] = C.shape
-                # Possibly Create a mixed layer for the interpolation to work
-                # smoothly at the surface
-                if ((Caxis[0] < 0.) & (self.axis[0] == 0.)):
-                    Caxis = np.concatenate((np.zeros(1), Caxis))
-                    x = np.empty((Np, 1))
-                    x.fill(np.nan)
-                    C = np.concatenate((x, C), axis=1)
-                    np.apply_along_axis(self.mix, 1, C)
-                    if self._debug: print("Data verticaly mixed to reached the surface")
-                # Linear interpolation of profiles onto the model grid:
-                f = interpolate.interp2d(Caxis, np.arange(Np), C, kind='linear')
-                C = f(self.axis, np.arange(Np))
-
-                # I don't understand why, but the interp2d return an array corresponding to a sorted Caxis.
-                # Because our convention is to use a negative Caxis, oriented downward, i.e. not sorted, we
-                # need to flip the interpolation results so that it oriented along Caxis and not sort(Caxis).
-                if self.axis[0] > self.axis[-1]:
-                    C = np.flip(C, axis=1)
-            else:
-                raise ValueError("I dont know how to vertically interpolate this array !")
-        else:
-            if self._debug: print("This is a slice array, no vertical interpolation")
-            C = C  # No change
-        return C
-
 
 class pcm:
     """Base class for a Profile Classification Model
@@ -630,8 +574,6 @@ class pcm:
             self._context_args = {'maxlevel': 3, 'verb':timeit_verb}
             self._timeit = dict()
 
-        self._version = '0.6'
-
     @contextmanager
     def __timeit_context(self, name, opts=dict()):
         default_opts = {'maxlevel': np.inf, 'verb':False}
@@ -677,7 +619,7 @@ class pcm:
     def __repr__(self):
         return self.display(deep=self._verb)
 
-    def ravel(self, da, dim=None, feature_name=str()):
+    def ravel(self, da, dim=None, feature_name=str):
         """ Extract from N-d array a X(feature,sample) 2-d array and vertical dimension z
 
             Parameters
@@ -717,8 +659,6 @@ class pcm:
         if is_slice:
             # No vertical dimension to use, simple stacking
             sampling_dims = list(da.dims)
-            # X = da.stack({'sampling': sampling_dims}).values
-            # X = X[:, np.newaxis]
             # Apply all-features mask:
             X = da.stack({'sampling': sampling_dims})
             X = X.where(mask_stacked == 1, drop=True).expand_dims('dummy').transpose()#.values
@@ -777,7 +717,7 @@ class pcm:
 
     @property
     def features(self):
-        """Return the dictionnary of features"""
+        """Return the list of feature names"""
         return [feature for feature in self._props['features']]
 
     @property
@@ -951,9 +891,6 @@ class pcm:
         # Done
         return '\n'.join(summary)
 
-    def copy(self):
-        """Return a deep copy of the PCM instance"""
-        return copy.deepcopy(self)
 
     def preprocessing_this(self, da, dim=None, feature_name=str(), action='?'):
         """Pre-process data before anything
@@ -991,11 +928,14 @@ class pcm:
             with self._context(this_context + '.1-ravel', self._context_args):
                 X, z, sampling_dims = self.ravel(da, dim=dim, feature_name=feature_name)
                 if self._debug:
-                    print("\tInput working arrays X (%s) and z with shapes:" % type(X), X.shape, z.shape)
+                    print("\tAfter ravel, working arrays X (%s) and z are shapes:" % type(X), X.shape, z.shape)
 
             # INTERPOLATION STEP:
             with self._context(this_context + '.2-interp', self._context_args):
                 X = self._interpoler[feature_name].transform(X, z)
+                if self._debug:
+                    print("\tArray X (%s) interpolated with success, new shape:" % type(X), X.shape)
+                    assert_all_finite(X, allow_nan=False)
 
             # FIT STEPS:
             # Based on scikit-lean methods
@@ -1010,7 +950,9 @@ class pcm:
                         self._scaler_props[feature_name]['units'] = da.attrs['units']
 
             with self._context(this_context + '.4-scale_transform', self._context_args):
-                X.data = self._scaler[feature_name].transform(X.data, copy=True) # Scaling
+                X.data = self._scaler[feature_name].transform(X.data, copy=False) # Scaling
+                if self._debug:
+                    print("\tArray X (%s) scaled with success, shape:" % type(X), X.shape)
 
             # REDUCTION:
             with self._context(this_context + '.5-reduce_fit', self._context_args):
@@ -1018,10 +960,16 @@ class pcm:
                     self._reducer[feature_name].fit(X)
 
             with self._context(this_context + '.6-reduce_transform', self._context_args):
-                X = self._reducer[feature_name].transform(X) # Reduction
+                X = self._reducer[feature_name].transform(X) # Reduction, return np.array
+                # After reduction the new array is [ sampling, reduced_dim ]
+                X = xr.DataArray(X, dims=['sampling', 'n_features'],
+                                 coords={'sampling': range(0, X.shape[0]), 'n_features': np.arange(0,X.shape[1])})
+
+                if self._debug:
+                    print("\tArray X (%s) reduced with success, new shape:" % type(X), X.shape)
 
             if self._debug:
-                print("\tPreprocessed array X (%s) with shapes:" % type(X), X.shape)
+                print("\tArray X (%s) preprocessed with success, final shape:" % type(X), X.shape)
 
         # Output:
         return X, sampling_dims
@@ -1061,10 +1009,10 @@ class pcm:
             if self._debug:
                 print("> Start preprocessing for action '%s'" % action)
 
-            # How to we find feature variable in this dataset ?
+            # How do we find feature variable in this dataset ?
             features_dict = ds.pyxpcm.feature_dict(self, features=features)
 
-            # Determine the mask where all features are defined for this PCM:
+            # Determine mask where all features are defined for this PCM:
             with self._context(this_context + '.1-mask', self._context_args):
                 if not mask:
                     mask = ds.pyxpcm.mask(self, features=features, dim=dim)
@@ -1099,6 +1047,7 @@ class pcm:
                     if (action == 'fit') or (action == 'fit_predict'):
                         self._homogeniser[feature_in_pcm]['mean'] = np.mean(x[:])
                         self._homogeniser[feature_in_pcm]['std'] = np.std(x[:])
+                        #todo _homogeniser should be a proper standard scaler
                     if F>1:
                         # For more than 1 feature, we need to make them comparable,
                         # so we normalise each features by their global stats:
@@ -1123,7 +1072,7 @@ class pcm:
                                  coords={'n_samples': range(0, X.shape[0]), 'n_features': Xlabel})
 
             if self._debug:
-                print("> Preprocessing finished, working with final X (%s) array of shape:" % type(X), X.shape,
+                print("> Preprocessing done, working with final X (%s) array of shape:" % type(X), X.shape,
                       " and sampling dimensions:", sampling_dims)
         return X, sampling_dims
 
@@ -1161,6 +1110,7 @@ class pcm:
             # CLASSIFICATION-MODEL TRAINING:
             with self._context('fit.2-fit', self._context_args):
                 self._classifier.fit(X)
+
             with self._context('fit.3-score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
                 # self._props['bic'] = self._classifier.bic(X)
@@ -1291,11 +1241,12 @@ class pcm:
             # CLASSIFICATION PREDICTION:
             with self._context('fit_predict.4-predict', self._context_args):
                 labels = self._classifier.predict(X)
-            with self._context('fit_predict.score', self._context_args):
+
+            with self._context('fit_predict.5-score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
 
             # Create a xarray with labels output:
-            with self._context('fit_predict.5-xarray', self._context_args):
+            with self._context('fit_predict.6-xarray', self._context_args):
                 da = self.unravel(ds, sampling_dims, labels).rename(name)
                 da.attrs['long_name'] = 'PCM labels'
                 da.attrs['units'] = ''

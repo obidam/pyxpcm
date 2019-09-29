@@ -6,8 +6,8 @@ API reference
 
 This page provides an auto-generated summary of pyXpcm's API. For more details and examples, refer to the relevant chapters in the main part of the documentation.
 
-Profile Classification Model
-============================
+Top-level functions
+===================
 
 Creating a PCM
 --------------
@@ -24,11 +24,18 @@ Attributes
 
    pcm.K
    pcm.F
+
+Contents
+--------
+
+.. autosummary::
+   :toctree: generated/
+
    pcm.features
    pcm.timeit
 
-Methods
--------
+Computation
+-----------
 
 .. autosummary::
    :toctree: generated/
@@ -48,10 +55,21 @@ Plotting
     :toctree: generated/
 
     pcm.plot
+
+Tools
+-----
+.. autosummary::
+    :toctree: generated/
+
     plot.cmap
     plot.colorbar
     plot.subplots
     plot.latlongrid
+
+PCM content
+-----------
+.. autosummary::
+    :toctree: generated/
 
     plot.scaler
     plot.reducer
@@ -59,14 +77,13 @@ Plotting
     plot.preprocessed
     plot.quantile
 
-Datasets module
-===============
+Helper
+======
 
 .. autosummary::
    :toctree: generated/
 
-   datasets.argo
-   datasets.isas
+    tutorial.open_dataset
 
 Xarray dataset accessor
 =======================

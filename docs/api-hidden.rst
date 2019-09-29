@@ -36,8 +36,7 @@
     plot.reducer
     plot.quantile
 
-    datasets.argo
-    datasets.isas
+    tutorial.open_dataset
 
     ds_pyxpcm.add
     ds_pyxpcm.clean
