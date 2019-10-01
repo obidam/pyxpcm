@@ -782,6 +782,13 @@ class pcm:
         da = da.where(mask_stacked == 1, drop=True).transpose()
         da.values = X
         da = da.unstack('sampling')
+
+        if (np.prod(da.shape) != mask_stacked.shape[0]):
+            if self._debug:
+                print("\tUnravelled data not matching mask dimension, re-indexing")
+            mask = mask_stacked.unstack()
+            da = da.reindex_like(mask)
+
         return da
 
     @property
