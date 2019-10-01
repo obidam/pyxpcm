@@ -87,7 +87,7 @@ class isas():
             ds['SST'] = ds['TEMP'].isel(depth=0)
             # Data small enough to fit in memory on any computer
             ds = ds.chunk({'latitude': None, 'longitude': None})
-            ds = ds.compute()
+            # ds = ds.compute()
 
         elif self.category == 'sample_series':
             ncfile = 'isas15series_sample_test.nc'
@@ -97,7 +97,7 @@ class isas():
             ds['SST'] = ds['TEMP'].isel(depth=0)
             # Data small enough to fit in memory on any computer
             ds = ds.chunk({'latitude': None, 'longitude': None, 'time': None})
-            ds = ds.compute()
+            # ds = ds.compute()
         return ds
 
 def load_argo():

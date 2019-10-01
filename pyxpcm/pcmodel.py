@@ -460,7 +460,7 @@ class pcm:
                  classif='gmm', covariance_type='full',
                  verb=False,
                  debug=False,
-                 timeit=False, timeit_verb=True):
+                 timeit=False, timeit_verb=True, chunk_size=1000):
         """Create the PCM instance
 
         Parameters
@@ -523,7 +523,8 @@ class pcm:
                         'with_reducer': with_reducer,
                         'with_classifier': with_classifier,
                         'maxvar': maxvar,
-                        'features': collections.OrderedDict(features)}
+                        'features': collections.OrderedDict(features),
+                        'chunk_size': chunk_size}
         self._xmask = None # xarray mask for nd-array used at pre-processing steps
 
         self._verb = verb #todo _verb is a property, should be set/get with a decorator
@@ -684,6 +685,8 @@ class pcm:
             # Apply all-features mask:
             X = X.where(mask_stacked == 1, drop=True).transpose()
             z = da[dim].values
+
+        X = X.chunk(chunks={'sampling': self._props['chunk_size']})
         return X, z, sampling_dims
 
     def unravel(self, ds, sampling_dims, X):
@@ -928,13 +931,17 @@ class pcm:
             with self._context(this_context + '.1-ravel', self._context_args):
                 X, z, sampling_dims = self.ravel(da, dim=dim, feature_name=feature_name)
                 if self._debug:
-                    print("\tAfter ravel, working arrays X (%s) and z are shapes:" % type(X), X.shape, z.shape)
+                    print("\tX RAVELED with success, now shape and type:",
+                          type(X), X.shape, type(X.data))
 
             # INTERPOLATION STEP:
             with self._context(this_context + '.2-interp', self._context_args):
                 X = self._interpoler[feature_name].transform(X, z)
                 if self._debug:
-                    print("\tArray X (%s) interpolated with success, new shape:" % type(X), X.shape)
+                    print("\tX INTERPOLATED with success, now shape and type:",
+                          type(X), X.shape, type(X.data))
+                    print(X.values.flags['WRITEABLE'])
+                    # After the interpolation step, we must not have nan in the 2d array:
                     assert_all_finite(X, allow_nan=False)
 
             # FIT STEPS:
@@ -950,9 +957,10 @@ class pcm:
                         self._scaler_props[feature_name]['units'] = da.attrs['units']
 
             with self._context(this_context + '.4-scale_transform', self._context_args):
-                X.data = self._scaler[feature_name].transform(X.data, copy=False) # Scaling
+                X.data = self._scaler[feature_name].transform(X.data, copy=False)
                 if self._debug:
-                    print("\tArray X (%s) scaled with success, shape:" % type(X), X.shape)
+                    print("\tX SCALED with success, now shape and type:",
+                          type(X), X.shape, type(X.data))
 
             # REDUCTION:
             with self._context(this_context + '.5-reduce_fit', self._context_args):
@@ -961,15 +969,13 @@ class pcm:
 
             with self._context(this_context + '.6-reduce_transform', self._context_args):
                 X = self._reducer[feature_name].transform(X) # Reduction, return np.array
+
                 # After reduction the new array is [ sampling, reduced_dim ]
                 X = xr.DataArray(X, dims=['sampling', 'n_features'],
                                  coords={'sampling': range(0, X.shape[0]), 'n_features': np.arange(0,X.shape[1])})
-
                 if self._debug:
-                    print("\tArray X (%s) reduced with success, new shape:" % type(X), X.shape)
-
-            if self._debug:
-                print("\tArray X (%s) preprocessed with success, final shape:" % type(X), X.shape)
+                    print("\tX REDUCED with success, now shape and type:",
+                          type(X), X.shape, type(X.data))
 
         # Output:
         return X, sampling_dims

@@ -9,6 +9,7 @@ import os
 import sys
 import numpy as np
 import xarray as xr
+import dask
 from sklearn.base import BaseEstimator
 # from scipy import interpolate
 
@@ -212,29 +213,60 @@ class Vertical_Interpolator:
                 if self._debug: print("\tOutput axis is new, will use interpolation")
                 [Np, Nz] = C.shape
 
+                ##########################
                 # Possibly Create a mixed layer for the interpolation to work
                 # smoothly at the surface
                 if ((Caxis[0] < 0.) & (self.axis[0] == 0.)):
+
+                    if self._debug and (isinstance(C.data, dask.array.core.Array)):
+                        print("\tData chunks before vertical mixing: ", C.data.chunks)
+
                     # If data starts below the surface and feature axis requested is at the surface,
-                    # we add one surface level to data, and mix it
+                    # we add one surface level to data, and "mix" it:
                     Caxis = np.concatenate((np.zeros(1), Caxis))
                     x = np.empty((Np, 1))
                     x.fill(np.nan)
                     x = xr.DataArray(x, dims=['sampling', vertical_dim],
                                      coords={'sampling': C['sampling'], vertical_dim: np.zeros((1,))})
                     C = xr.concat((x, C), dim=vertical_dim)
-                    # Fill in to the surface the 1st non-nan value (same as self.mix, but optmised):
-                    C = C.bfill(dim=vertical_dim)
+                    # Fill in to the surface the 1st non-nan value (same as self.mix, but optimized)
+
+                    # Need to compute(), otherwise bfill is not applied (bottleneck,
+                    # see https://github.com/pydata/xarray/core/missing.py#L278)
+                    C = C.compute()
+
+                    C = C.bfill(dim=vertical_dim) # backward filling, i.e. ocean upward
+                    Caxis = C[vertical_dim]
+
+                    if (isinstance(C.data, dask.array.core.Array)):
+                        # The concat operation above adds a chunk to the vertical dimension:
+                        # we go from:
+                        #   ((n_samples,), (n_levels,))
+                        # to:
+                        #   ((n_samples,), (1, n_levels))
+                        # so we need to fix the chunking scheme back to a
+                        # single vertical chunck, otherwise interpolation will fail:
+                        C = C.chunk(chunks={vertical_dim: len(C[vertical_dim])})
+
+                    if self._debug and (isinstance(C.data, dask.array.core.Array)):
+                        print("\tData chunks before after mixing: ", C.data.chunks)
 
                     if self._debug:
                         print("\tData (%s) vertically mixed to reached the surface" % type(C))
 
+                ##########################
                 # Linear interpolation of profiles onto the model grid:
-                # if self._debug: print("\tData type before interpolation: %s" % type(C))
+                if self._debug:
+                    print("\tX and X.data types before interpolation: %s, %s" % (type(C), type(C.data)) )
+                    if (isinstance(C.data, dask.array.core.Array)):
+                        print("\tData chunks before interpolation: ", C.data.chunks)
 
                 C = C.interp(coords={vertical_dim: self.axis})
 
-                # if self._debug: print("\tData type after interpolation: %s" % type(C))
+                if self._debug:
+                    print("\tX and X.data types after interpolation: %s, %s" % (type(C), type(C.data)) )
+                    if (isinstance(C.data, dask.array.core.Array)):
+                        print("\tData chunks after interpolation: ", C.data.chunks)
 
                 # I don't understand why, but the interp2d return an array corresponding to a sorted Caxis.
                 # Because our convention is to use a negative Caxis, oriented downward, i.e. not sorted, we
