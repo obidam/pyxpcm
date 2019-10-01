@@ -85,9 +85,8 @@ Helper
 
     tutorial.open_dataset
 
-Xarray dataset accessor: the **pyxpcm** name space
-==================================================
-
+Xarray dataset accessor: the *pyxpcm* name space
+================================================
 
 PCM Computation
 ---------------

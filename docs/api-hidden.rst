@@ -38,17 +38,17 @@
 
     tutorial.open_dataset
 
-    xr_pyxpcm.add
-    xr_pyxpcm.clean
-    xr_pyxpcm.feature_dict
-    xr_pyxpcm.sampling_dim
-    xr_pyxpcm.mask
-    xr_pyxpcm.quantile
-    xr_pyxpcm.robustness
-    xr_pyxpcm.robustness_digit
-    xr_pyxpcm.fit
-    xr_pyxpcm.fit_predict
-    xr_pyxpcm.predict
-    xr_pyxpcm.predict_proba
-    xr_pyxpcm.score
-    xr_pyxpcm.bic
+    pcmodel.xr_pyxpcm.add
+    pcmodel.xr_pyxpcm.clean
+    pcmodel.xr_pyxpcm.feature_dict
+    pcmodel.xr_pyxpcm.sampling_dim
+    pcmodel.xr_pyxpcm.mask
+    pcmodel.xr_pyxpcm.quantile
+    pcmodel.xr_pyxpcm.robustness
+    pcmodel.xr_pyxpcm.robustness_digit
+    pcmodel.xr_pyxpcm.fit
+    pcmodel.xr_pyxpcm.fit_predict
+    pcmodel.xr_pyxpcm.predict
+    pcmodel.xr_pyxpcm.predict_proba
+    pcmodel.xr_pyxpcm.score
+    pcmodel.xr_pyxpcm.bic

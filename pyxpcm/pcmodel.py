@@ -57,7 +57,8 @@ class PCMFeatureError(Exception):
 
 # Decorators
 def pcm_method(func):
-    # I'd like to return pcm.<func>(self._obj, **kwargs)
+    #todo Decorator that directly map PCM functions on xarray accessor
+    #todo Follow doctring from  PCM functions to xarray accessor
     return func
 
 @xr.register_dataset_accessor('pyxpcm')
@@ -66,8 +67,9 @@ class ds_xarray_accessor_pyXpcm:
 
         pyXpcm accessor for :class:`xarray.DataSet` objects
 
-        Nothing happens in place here, so it should always goes like:
+        Nothing happens in place here, so it should always goes like, even with inplace=True options:
             ds = ds.pyxpcm.<method>()
+        See: https://github.com/pydata/xarray/issues/3268
 
      """
     def __init__(self, xarray_obj):
@@ -112,7 +114,7 @@ class ds_xarray_accessor_pyXpcm:
         return feature_in_ds
 
     def add(self, da):
-        """ Add a new xr.DataArray to the xr.DataSet """
+        """ Add a new :class:`xarray.DataArray` to this :class:`xarray.DataSet` """
 
         # Add pyXpcm tracking clues:
         da.attrs['comment'] = "Automatically added by pyXpcm"
@@ -123,7 +125,7 @@ class ds_xarray_accessor_pyXpcm:
         return self._obj
 
     def clean(self):
-        """ Remove all :class:`xarray.DataSet` variables created with pyXpcm """
+        """ Remove all variables created with pyXpcm front this :class:`xarray.DataSet` """
         # See add() method to identify these variables.
         for vname in self._obj.data_vars:
             if ("comment" in self._obj[vname].attrs) \
@@ -132,7 +134,7 @@ class ds_xarray_accessor_pyXpcm:
         return self._obj
 
     def feature_dict(self, pcm, features=None):
-        """ Return dictionary of features for this dataset and this PCM
+        """ Return dictionary of features for this :class:`xarray.DataSet` and a PCM
 
             Parameters
             ----------
@@ -491,32 +493,32 @@ class ds_xarray_accessor_pyXpcm:
 
     @pcm_method
     def fit(self, pcm, **kwargs):
-        """ Map to :func:`pcm.fit` """
+        """ Map this :class:`xarray.DataSet` on :func:`pcm.fit` """
         return pcm.fit(self._obj, **kwargs)
 
     @pcm_method
     def predict(self, pcm, **kwargs):
-        """ Map to :func:`pyxpcm.pcm.predict` """
+        """ Map this :class:`xarray.DataSet` on :func:`pcm.predict` """
         return pcm.predict(self._obj, **kwargs)
 
     @pcm_method
     def fit_predict(self, pcm, **kwargs):
-        """ Map to :func:`pyxpcm.pcm.fit_predict` """
+        """ Map this :class:`xarray.DataSet` on :func:`pcm.fit_predict` """
         return pcm.fit_predict(self._obj, **kwargs)
 
     @pcm_method
     def predict_proba(self, pcm, **kwargs):
-        """ Map to :func:`pyxpcm.pcm.predict_proba` """
+        """ Map this :class:`xarray.DataSet` on :func:`pcm.predict_proba` """
         return pcm.predict_proba(self._obj, **kwargs)
 
     @pcm_method
     def score(self, pcm, **kwargs):
-        """ Map to :func:`pyxpcm.pcm.score` """
+        """ Map this :class:`xarray.DataSet` on :func:`pcm.score` """
         return pcm.score(self._obj, **kwargs)
 
     @pcm_method
     def bic(self, pcm, **kwargs):
-        """ Map to :func:`pyxpcm.pcm.bic` """
+        """ Map this :class:`xarray.DataSet` on :func:`pcm.bic` """
         return pcm.bic(self._obj, **kwargs)
 
 
