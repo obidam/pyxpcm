@@ -63,9 +63,11 @@ def pcm_method(func):
 @xr.register_dataset_accessor('pyxpcm')
 class ds_xarray_accessor_pyXpcm:
     """
-        Nothing happens in place here, so it should always goes like:
 
-        ds = ds.pyxpcm.method()
+        pyXpcm accessor for :class:`xarray.DataSet` objects
+
+        Nothing happens in place here, so it should always goes like:
+            ds = ds.pyxpcm.<method>()
 
      """
     def __init__(self, xarray_obj):
@@ -121,7 +123,7 @@ class ds_xarray_accessor_pyXpcm:
         return self._obj
 
     def clean(self):
-        """ Remove from xr.dataset all variables created with pyXpcm """
+        """ Remove all :class:`xarray.DataSet` variables created with pyXpcm """
         # See add() method to identify these variables.
         for vname in self._obj.data_vars:
             if ("comment" in self._obj[vname].attrs) \
@@ -130,7 +132,7 @@ class ds_xarray_accessor_pyXpcm:
         return self._obj
 
     def feature_dict(self, pcm, features=None):
-        """ Return features dictionary for this dataset and this PCM
+        """ Return dictionary of features for this dataset and this PCM
 
             Parameters
             ----------
@@ -138,6 +140,12 @@ class ds_xarray_accessor_pyXpcm:
 
             features : dict
                 Keys are PCM feature name, Values are corresponding :class:`xarray.DataSet` variable names
+
+            Returns
+            -------
+            dict()
+                Dictionary where keys are PCM feature names and values the corresponding :class:`xarray.DataSet` variables
+
         """
         features_dict = dict()
         for feature_in_pcm in pcm._props['features']:
@@ -170,8 +178,30 @@ class ds_xarray_accessor_pyXpcm:
 
         return features_dict
 
-    def sampling_dim(self, pcm, dim=None, features=None):
-        """ Return the list of dimensions to be aggregated in sampling, for a given feature"""
+    def sampling_dim(self, pcm, features=None, dim=None):
+        """ Return the list of dimensions to be stacked for sampling
+
+            Parameters
+            ----------
+            pcm : :class:`pyxpcm.pcmmodel.pcm`
+
+            features : None (default) or dict()
+                Keys are PCM feature name, Values are corresponding :class:`xarray.DataSet` variable names.
+                It set to None, all PCM features are used.
+
+            dim : None (default) or str()
+                The :class:`xarray.DataSet` dimension to use as vertical axis in all features.
+                If set to None, it is automatically set to the dimension with an atribute ``axis`` set to ``Z``.
+
+            Returns
+            -------
+            dict()
+                Dictionary where keys are :class:`xarray.DataSet` variable names of features and values are another
+                dictionary with the list of sampling dimension in DIM_SAMPLING key and the name of the vertical axis in
+                the DIM_VERTICAL key.
+
+
+        """
 
         feature_dict = self.feature_dict(pcm, features=features)
         SD = dict()
@@ -212,7 +242,7 @@ class ds_xarray_accessor_pyXpcm:
         return SD
 
     def mask(self, pcm, features=None, dim=None):
-        """ Create a mask where PCM features are defined (i.e. no nans)
+        """ Create a mask where all PCM features are defined
 
             Create a mask where all feature profiles are not null
             over the PCM feature axis.
@@ -230,6 +260,10 @@ class ds_xarray_accessor_pyXpcm:
                 Name of the vertical dimension in the :class:`xarray.DataSet`.
                 If not specified or set to None, dim is identified as the
                 :class:`xarray.DataArray` variables with attributes 'axis' set to 'z'.
+
+            Returns
+            -------
+            :class:`xarray.DataArray`
 
         """
         feature_dict = self.feature_dict(pcm, features=features)
@@ -271,6 +305,37 @@ class ds_xarray_accessor_pyXpcm:
                   outname='PCM_QUANT',
                   inplace=True,
                   keep_attrs=False):
+        """Compute q-th quantile of a dataArray for each PCM component
+
+            Parameters
+            ----------
+            float in the range of [0,1] (or sequence of floats)
+                Quantiles to compute, which must be between 0 and 1 inclusive.
+
+            of: str
+                Name of the :class:`xarray.DataSet` variable to compute quantiles for.
+
+            using: str
+                Name of the :class:`xarray.DataSet` variable with classification labels to use.
+                Use 'PCM_LABELS' by default.
+
+            outname: 'PCM_QUANT' or str
+                Name of the :class:`xarray.DataArray` with quantile
+
+            inplace: boolean, True by default
+                If True, return the input :class:`xarray.DataSet` with quantile variable added as a new :class:`xarray.DataArray`
+                If False, return a :class:`xarray.DataArray` with quantile
+
+            keep_attrs: boolean, False by default
+                Preserve ``of`` :class:`xarray.DataSet` attributes or not in the new quantile variable.
+
+            Returns
+            -------
+            :class:`xarray.DataSet` with shape (K, n_quantiles, N_z=n_features)
+            or
+            :class:`xarray.DataArray` with shape (K, n_quantiles, N_z=n_features)
+
+        """
 
         if using not in self._obj.data_vars:
             raise ValueError(("Variable '%s' not found in this dataset") % (using))
@@ -327,14 +392,14 @@ class ds_xarray_accessor_pyXpcm:
 
             Parameters
             ----------
-            ds: :class:`xarray.Dataset`
-                Input dataset
-
             name: str, default is 'PCM_POST'
                 Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
 
             classdimname: str, default is 'pcm_class'
                 Name of the dimension holding classes
+
+            outname: 'PCM_ROBUSTNESS' or str
+                Name of the :class:`xarray.DataArray` with robustness
 
             inplace: boolean, False by default
                 If False, return a :class:`xarray.DataArray` with robustness
@@ -342,10 +407,10 @@ class ds_xarray_accessor_pyXpcm:
 
             Returns
             -------
-            :class:`xarray.DataArray`
-                Robustness of the classification
+            :class:`xarray.DataSet` if inplace=True
+            or
+            :class:`xarray.DataArray` if inplace=False
 
-            __author__: gmaze@ifremer.fr
         """
         maxpost = self._obj[name].max(dim=classdimname)
         K = len(self._obj[classdimname])
@@ -383,16 +448,19 @@ class ds_xarray_accessor_pyXpcm:
             classdimname: str, default is 'pcm_class'
                 Name of the dimension holding classes
 
+            outname: 'PCM_ROBUSTNESS_CAT' or str
+                Name of the :class:`xarray.DataArray` with robustness categories
+
             inplace: boolean, False by default
-                If False, return a :class:`xarray.DataArray` with robustness category
-                If True, return the input :class:`xarray.DataSet` with robustness category added as a new :class:`xarray.DataArray`
+                If False, return a :class:`xarray.DataArray` with robustness
+                If True, return the input :class:`xarray.DataSet` with robustness categories
+                added as a new :class:`xarray.DataArray`
 
             Returns
             -------
-            :class:`xarray.DataArray`
-                Robustness category of the classification
-
-            __author__: gmaze@ifremer.fr
+            :class:`xarray.DataSet` if inplace=True
+            or
+            :class:`xarray.DataArray` if inplace=False
         """
         maxpost = self._obj[name].max(dim=classdimname)
         K = len(self._obj[classdimname])
@@ -423,26 +491,32 @@ class ds_xarray_accessor_pyXpcm:
 
     @pcm_method
     def fit(self, pcm, **kwargs):
+        """ Map to :func:`pcm.fit` """
         return pcm.fit(self._obj, **kwargs)
 
     @pcm_method
     def predict(self, pcm, **kwargs):
+        """ Map to :func:`pyxpcm.pcm.predict` """
         return pcm.predict(self._obj, **kwargs)
 
     @pcm_method
     def fit_predict(self, pcm, **kwargs):
+        """ Map to :func:`pyxpcm.pcm.fit_predict` """
         return pcm.fit_predict(self._obj, **kwargs)
 
     @pcm_method
     def predict_proba(self, pcm, **kwargs):
+        """ Map to :func:`pyxpcm.pcm.predict_proba` """
         return pcm.predict_proba(self._obj, **kwargs)
 
     @pcm_method
     def score(self, pcm, **kwargs):
+        """ Map to :func:`pyxpcm.pcm.score` """
         return pcm.score(self._obj, **kwargs)
 
     @pcm_method
     def bic(self, pcm, **kwargs):
+        """ Map to :func:`pyxpcm.pcm.bic` """
         return pcm.bic(self._obj, **kwargs)
 
 

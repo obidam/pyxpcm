@@ -16,8 +16,7 @@ v0.4 (1 Oct. 2019)
 
     - pyXpcm methods are directly accessible through the :class:`xarray.DataSet` accessor namespace ``pyxpcm``
 
-
-
+- pyXpcm now consumes xarray/dask objects all along, not only on the user front-end.
 
 
 v0.3 (5 Apr. 2019)

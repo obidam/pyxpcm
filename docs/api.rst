@@ -6,8 +6,8 @@ API reference
 
 This page provides an auto-generated summary of pyXpcm's API. For more details and examples, refer to the relevant chapters in the main part of the documentation.
 
-Top-level functions
-===================
+Top-level PCM functions
+=======================
 
 Creating a PCM
 --------------
@@ -17,7 +17,7 @@ Creating a PCM
    pcm
 
 Attributes
-----------
+--------------
 
 .. autosummary::
    :toctree: generated/
@@ -26,7 +26,7 @@ Attributes
    pcm.F
 
 Contents
---------
+------------
 
 .. autosummary::
    :toctree: generated/
@@ -35,7 +35,7 @@ Contents
    pcm.timeit
 
 Computation
------------
+---------------
 
 .. autosummary::
    :toctree: generated/
@@ -66,8 +66,8 @@ Tools
     plot.subplots
     plot.latlongrid
 
-PCM content
------------
+Plot PCM Contents
+-----------------
 .. autosummary::
     :toctree: generated/
 
@@ -85,23 +85,42 @@ Helper
 
     tutorial.open_dataset
 
-Xarray dataset accessor
-=======================
+Xarray dataset accessor: the **pyxpcm** name space
+==================================================
+
+
+PCM Computation
+---------------
 
 .. autosummary::
     :toctree: generated/
 
-    ds_pyxpcm.add
-    ds_pyxpcm.clean
-    ds_pyxpcm.feature_dict
-    ds_pyxpcm.sampling_dim
-    ds_pyxpcm.mask
-    ds_pyxpcm.quantile
-    ds_pyxpcm.robustness
-    ds_pyxpcm.robustness_digit
-    ds_pyxpcm.fit
-    ds_pyxpcm.fit_predict
-    ds_pyxpcm.predict
-    ds_pyxpcm.predict_proba
-    ds_pyxpcm.score
-    ds_pyxpcm.bic
+    xr_pyxpcm.fit
+    xr_pyxpcm.fit_predict
+    xr_pyxpcm.predict
+    xr_pyxpcm.predict_proba
+    xr_pyxpcm.score
+    xr_pyxpcm.bic
+
+Diagnostics
+-----------
+
+.. autosummary::
+    :toctree: generated/
+
+    xr_pyxpcm.quantile
+    xr_pyxpcm.robustness
+    xr_pyxpcm.robustness_digit
+
+
+Low-level functions
+-------------------
+
+.. autosummary::
+    :toctree: generated/
+
+    xr_pyxpcm.add
+    xr_pyxpcm.clean
+    xr_pyxpcm.feature_dict
+    xr_pyxpcm.sampling_dim
+    xr_pyxpcm.mask
