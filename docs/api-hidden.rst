@@ -11,7 +11,6 @@
     pcmodel.pcm.K
     pcmodel.pcm.F
     pcmodel.pcm.features
-    pcmodel.pcm.scaler
     pcmodel.pcm.timeit
     pcmodel.pcm.fit
     pcmodel.pcm.fit_predict
@@ -30,25 +29,10 @@
     pcmodel.pcm.plot.preprocessed
     pcmodel.pcm.plot.quantile
 
-    plot.cmap_robustness
+    plot.cmap
     plot.latlongrid
     plot.scaler
     plot.reducer
     plot.quantile
 
     tutorial.open_dataset
-
-    pcmodel.xr_pyxpcm.add
-    pcmodel.xr_pyxpcm.clean
-    pcmodel.xr_pyxpcm.feature_dict
-    pcmodel.xr_pyxpcm.sampling_dim
-    pcmodel.xr_pyxpcm.mask
-    pcmodel.xr_pyxpcm.quantile
-    pcmodel.xr_pyxpcm.robustness
-    pcmodel.xr_pyxpcm.robustness_digit
-    pcmodel.xr_pyxpcm.fit
-    pcmodel.xr_pyxpcm.fit_predict
-    pcmodel.xr_pyxpcm.predict
-    pcmodel.xr_pyxpcm.predict_proba
-    pcmodel.xr_pyxpcm.score
-    pcmodel.xr_pyxpcm.bic

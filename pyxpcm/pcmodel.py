@@ -27,9 +27,9 @@ from contextlib import contextmanager
 
 # Internal:
 from .plot import _PlotMethods
-from .utils import Vertical_Interpolator, NoTransform
+from .utils import LogDataType, Vertical_Interpolator, NoTransform, StatisticsBackend
 
-# Scikit-learn usefull methods:
+# Scikit-learn useful methods:
 from sklearn.base import BaseEstimator
 from sklearn.pipeline import Pipeline
 from sklearn.utils import validation
@@ -47,7 +47,7 @@ from sklearn.mixture import GaussianMixture
 
 ####### Dask-ml statistic backend:
 # https://ml.dask.org/modules/api.html#module-dask_ml.decomposition
-# from dask_ml import preprocessing
+from dask_ml import preprocessing
 # https://ml.dask.org/modules/generated/dask_ml.decomposition.PCA.html
 # from dask_ml.decomposition import PCA
 
@@ -55,488 +55,24 @@ from sklearn.mixture import GaussianMixture
 class PCMFeatureError(Exception):
     """Exception raised when features not found."""
 
-# Decorators
-def pcm_method(func):
-    #todo Decorator that directly map PCM functions on xarray accessor
-    #todo Follow doctring from  PCM functions to xarray accessor
-    return func
 
-@xr.register_dataset_accessor('pyxpcm')
-class ds_xarray_accessor_pyXpcm:
-    """
-
-        pyXpcm accessor for :class:`xarray.DataSet` objects
-
-        Nothing happens in place here, so it should always goes like, even with inplace=True options:
-            ds = ds.pyxpcm.<method>()
-        See: https://github.com/pydata/xarray/issues/3268
-
-     """
-    def __init__(self, xarray_obj):
-        self._obj = xarray_obj
-
-    def __id_feature_name(self, pcm, feature):
-        """Identify the dataset variable name to be used for a given feature name
-
-            feature must be a dictionary or None for automatic discovery
-        """
-        feature_name_found = False
-
-        for feature_in_pcm in feature:
-            if feature_in_pcm not in pcm._props['features']:
-                msg = ("Feature '%s' not set in this PCM")%(feature_in_pcm)
-                raise PCMFeatureError(msg)
-
-            feature_in_ds = feature[feature_in_pcm]
-
-            if feature_in_ds:
-                feature_name_found = feature_in_ds in self._obj.data_vars
-
-            if not feature_name_found:
-                feature_name_found = feature_in_pcm in self._obj.data_vars
-                feature_in_ds = feature_in_pcm
-
-            if not feature_name_found:
-                # Look for the feature in the dataset data variables attributes
-                for v in self._obj.data_vars:
-                    if ('feature_name' in self._obj[v].attrs) and (self._obj[v].attrs['feature_name'] is feature_in_pcm):
-                        feature_in_ds = v
-                        feature_name_found = True
-                        continue
-
-            if not feature_name_found:
-                msg = ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
-                                  "attribute to the variable you'd like to use or provide a dictionnary")%(feature_in_pcm)
-                raise PCMFeatureError(msg)
-            elif pcm._debug:
-                print(("\tIdying '%s' as '%s' in this dataset") % (feature_in_pcm, feature_in_ds))
-
-        return feature_in_ds
-
-    def add(self, da):
-        """ Add a new :class:`xarray.DataArray` to this :class:`xarray.DataSet` """
-
-        # Add pyXpcm tracking clues:
-        da.attrs['comment'] = "Automatically added by pyXpcm"
-
-        #
-        # vname = da.name
-        self._obj[da.name] = da
-        return self._obj
-
-    def clean(self):
-        """ Remove all variables created with pyXpcm front this :class:`xarray.DataSet` """
-        # See add() method to identify these variables.
-        for vname in self._obj.data_vars:
-            if ("comment" in self._obj[vname].attrs) \
-                and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
-                self._obj = self._obj.drop(vname)
-        return self._obj
-
-    def feature_dict(self, pcm, features=None):
-        """ Return dictionary of features for this :class:`xarray.DataSet` and a PCM
-
-            Parameters
-            ----------
-            pcm : :class:`pyxpcm.pcmmodel.pcm`
-
-            features : dict
-                Keys are PCM feature name, Values are corresponding :class:`xarray.DataSet` variable names
-
-            Returns
-            -------
-            dict()
-                Dictionary where keys are PCM feature names and values the corresponding :class:`xarray.DataSet` variables
-
-        """
-        features_dict = dict()
-        for feature_in_pcm in pcm._props['features']:
-            if features == None:
-                feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
-            elif feature_in_pcm not in features:
-                raise PCMFeatureError("%s feature not defined" % feature_in_pcm)
-            else:
-                feature_in_ds = features[feature_in_pcm]
-                if feature_in_ds not in self._obj.data_vars:
-                    raise PCMFeatureError("Feature %s not in this dataset as %s" % (feature_in_pcm, feature_in_ds))
-            features_dict[feature_in_pcm] = feature_in_ds
-
-        # if features:
-        #     features_dict = dict()
-        #     for feature_in_pcm in features:
-        #         feature_in_ds = features[feature_in_pcm]
-        #         if not feature_in_ds:
-        #             feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
-        #         features_dict[feature_in_pcm] = feature_in_ds
-        # else:
-        #     features_dict = dict()
-        #     for feature_in_pcm in pcm._props['features']:
-        #         feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
-        #         features_dict[feature_in_pcm] = feature_in_ds
-
-        # Re-order the dictionary to match the PCM set order:
-        for key in pcm._props['features']:
-            features_dict[key] = features_dict.pop(key)
-
-        return features_dict
-
-    def sampling_dim(self, pcm, features=None, dim=None):
-        """ Return the list of dimensions to be stacked for sampling
-
-            Parameters
-            ----------
-            pcm : :class:`pyxpcm.pcmmodel.pcm`
-
-            features : None (default) or dict()
-                Keys are PCM feature name, Values are corresponding :class:`xarray.DataSet` variable names.
-                It set to None, all PCM features are used.
-
-            dim : None (default) or str()
-                The :class:`xarray.DataSet` dimension to use as vertical axis in all features.
-                If set to None, it is automatically set to the dimension with an atribute ``axis`` set to ``Z``.
-
-            Returns
-            -------
-            dict()
-                Dictionary where keys are :class:`xarray.DataSet` variable names of features and values are another
-                dictionary with the list of sampling dimension in DIM_SAMPLING key and the name of the vertical axis in
-                the DIM_VERTICAL key.
-
-
-        """
-
-        feature_dict = self.feature_dict(pcm, features=features)
-        SD = dict()
-
-        for feature_name_in_pcm in feature_dict:
-            feature_name_in_ds = feature_dict[feature_name_in_pcm]
-            da = self._obj[feature_name_in_ds]
-            SD[feature_name_in_ds] = dict()
-
-            # Is this a thick array or a slice ?
-            is_slice = np.all(pcm._props['features'][feature_name_in_pcm] == None)
-
-            if is_slice:
-                # No vertical dimension to use, simple stacking
-                sampling_dims = list(da.dims)
-                SD[feature_name_in_ds]['DIM_SAMPLING'] = sampling_dims
-                SD[feature_name_in_ds]['DIM_VERTICAL'] = None
-            else:
-                if not dim:
-                    # Try to infer the vertical dimension name looking for the CF 'axis' attribute in all dimensions
-                    dim_found = False
-                    for this_dim in da.dims:
-                        if ('axis' in da[this_dim].attrs) and (da[this_dim].attrs['axis'] == 'Z'):
-                            dim = this_dim
-                            dim_found = True
-                    if not dim_found:
-                        raise PCMFeatureError("You must specify a vertical dimension name: "\
-                                              "use argument 'dim' or "\
-                                              "specify DataSet dimension the attribute 'axis' to 'Z' (CF1.6)")
-                elif dim not in da.dims:
-                    raise ValueError("Vertical dimension %s not found in this DataArray" % dim)
-
-                sampling_dims = list(da.dims)
-                sampling_dims.remove(dim)
-                SD[feature_name_in_ds]['DIM_SAMPLING'] = sampling_dims
-                SD[feature_name_in_ds]['DIM_VERTICAL'] = dim
-
-        return SD
-
-    def mask(self, pcm, features=None, dim=None):
-        """ Create a mask where all PCM features are defined
-
-            Create a mask where all feature profiles are not null
-            over the PCM feature axis.
-
-            Parameters
-            ----------
-            :class:`pyxpcm.pcmmodel.pcm`
-
-            features: dict()
-                Definitions of PCM features in the :class:`xarray.DataSet`.
-                If not specified or set to None, features are identified
-                using :class:`xarray.DataArray` attributes 'feature_name'.
-
-            dim: str
-                Name of the vertical dimension in the :class:`xarray.DataSet`.
-                If not specified or set to None, dim is identified as the
-                :class:`xarray.DataArray` variables with attributes 'axis' set to 'z'.
-
-            Returns
-            -------
-            :class:`xarray.DataArray`
-
-        """
-        feature_dict = self.feature_dict(pcm, features=features)
-        SD = self.sampling_dim(pcm, dim=dim, features=features)
-        M = list()
-        for feature_name_in_pcm in feature_dict:
-            feature_name_in_ds = feature_dict[feature_name_in_pcm]
-            da = self._obj[feature_name_in_ds]
-
-            # Is this a thick array or a slice ?
-            is_slice = np.all(pcm._props['features'][feature_name_in_pcm] == None)
-
-            if not is_slice:
-                dim = SD[feature_name_in_ds]['DIM_VERTICAL']
-                z_top = np.max(pcm._props['features'][feature_name_in_pcm])
-                z_bto = np.min(pcm._props['features'][feature_name_in_pcm])
-
-                Nz = len((self._obj[dim].where(self._obj[dim] >= z_bto, drop=True)\
-                                        .where(self._obj[dim] <= z_top, drop=True)).notnull())
-                mask = self._obj[feature_name_in_ds]\
-                            .where(self._obj[dim] >= z_bto)\
-                            .where(self._obj[dim] <= z_top).notnull().sum(dim=dim) == Nz
-
-                # mask = self._obj[feature_name_in_ds].where(
-                #     self._obj[dim]>=z_bto).notnull().sum(dim=dim) == len(np.where(self._obj[dim]>=z_bto)[0])
-            else:
-                mask = self._obj[feature_name_in_ds].notnull()
-            mask = mask.rename('PCM_MASK')
-            M.append(mask)
-        mask = xr.concat(M, dim='n_features')
-        mask = mask.sum(dim='n_features')
-        mask = mask == pcm.F
-        return mask
-
-    def quantile(self,
-                  q,
-                  of=None,
-                  using='PCM_LABELS',
-                  outname='PCM_QUANT',
-                  inplace=True,
-                  keep_attrs=False):
-        """Compute q-th quantile of a dataArray for each PCM component
-
-            Parameters
-            ----------
-            float in the range of [0,1] (or sequence of floats)
-                Quantiles to compute, which must be between 0 and 1 inclusive.
-
-            of: str
-                Name of the :class:`xarray.DataSet` variable to compute quantiles for.
-
-            using: str
-                Name of the :class:`xarray.DataSet` variable with classification labels to use.
-                Use 'PCM_LABELS' by default.
-
-            outname: 'PCM_QUANT' or str
-                Name of the :class:`xarray.DataArray` with quantile
-
-            inplace: boolean, True by default
-                If True, return the input :class:`xarray.DataSet` with quantile variable added as a new :class:`xarray.DataArray`
-                If False, return a :class:`xarray.DataArray` with quantile
-
-            keep_attrs: boolean, False by default
-                Preserve ``of`` :class:`xarray.DataSet` attributes or not in the new quantile variable.
-
-            Returns
-            -------
-            :class:`xarray.DataSet` with shape (K, n_quantiles, N_z=n_features)
-            or
-            :class:`xarray.DataArray` with shape (K, n_quantiles, N_z=n_features)
-
-        """
-
-        if using not in self._obj.data_vars:
-            raise ValueError(("Variable '%s' not found in this dataset") % (using))
-
-        if of not in self._obj.data_vars:
-            raise ValueError(("Variable '%s' not found in this dataset") % (of))
-
-        # Fill in the dataset, otherwise the xarray.quantile doesn't work
-        # ds = ds.compute()
-        if isinstance(self._obj[of].data, dask.array.Array):
-            raise TypeError("quant does not work for arrays stored as dask "
-                            "arrays. Load the data via .compute() or .load() "
-                            "prior to calling this method.")
-
-        # ID sampling dimensions for this array (all dimensions but those of LABELS)
-        sampling_dims = self._obj[using].dims
-        ds = self._obj.stack({'sampling': sampling_dims})
-        qlist = []  # list of quantiles to compute
-        for label, group in ds.groupby(using):
-            v = group[of].quantile(q, dim='sampling', keep_attrs=True)
-            qlist.append(v)
-
-        # Try to infer the dimension of the class components:
-        # The dimension surely has the unique value in labels:
-        l = self._obj[using].where(self._obj[using].notnull(), drop=True).values.flatten()
-        uniquelabels = np.unique(l[~np.isnan(l)])
-        found_class = False
-        for thisdim in ds.dims:
-            if len(ds[thisdim].values) == len(uniquelabels) and \
-                    np.array_equal(ds[thisdim].values, uniquelabels):
-                dim_class = thisdim
-                found_class = True
-        if not found_class:
-            dim_class = ("pcm_class_%s") % (outname)
-
-        # Create xarray with all quantiles:
-        if found_class:
-            da = xr.concat(qlist, dim=ds[dim_class])
-        else:
-            da = xr.concat(qlist, dim=dim_class)
-        da = da.rename(outname)
-        da = da.unstack()
-
-        # Output:
-        if keep_attrs:
-            da.attrs = ds[of].attrs
-        if inplace:
-            return self.add(da)
-        else:
-            return da
-
-    def robustness(self, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS', inplace=True):
-        """ Compute classification robustness
-
-            Parameters
-            ----------
-            name: str, default is 'PCM_POST'
-                Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
-
-            classdimname: str, default is 'pcm_class'
-                Name of the dimension holding classes
-
-            outname: 'PCM_ROBUSTNESS' or str
-                Name of the :class:`xarray.DataArray` with robustness
-
-            inplace: boolean, False by default
-                If False, return a :class:`xarray.DataArray` with robustness
-                If True, return the input :class:`xarray.DataSet` with robustness added as a new :class:`xarray.DataArray`
-
-            Returns
-            -------
-            :class:`xarray.DataSet` if inplace=True
-            or
-            :class:`xarray.DataArray` if inplace=False
-
-        """
-        maxpost = self._obj[name].max(dim=classdimname)
-        K = len(self._obj[classdimname])
-        robust = (maxpost - 1. / K) * K / (K - 1.)
-
-        id = dict()
-        id[classdimname] = 0
-        da = self._obj[name][id].rename(outname)
-        da.values = robust
-        da.attrs['long_name'] = 'PCM classification robustness'
-        da.attrs['units'] = ''
-        da.attrs['valid_min'] = 0
-        da.attrs['valid_max'] = 1
-        da.attrs['llh'] = self._obj[name].attrs['llh']
-
-        # Add labels to the dataset:
-        if inplace:
-            if outname in self._obj.data_vars:
-                warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-            return self.add(da)
-        else:
-            return da
-
-    def robustness_digit(self, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS_CAT', inplace=True):
-        """ Digitize classification robustness
-
-            Parameters
-            ----------
-            ds: :class:`xarray.Dataset`
-                Input dataset
-
-            name: str, default is 'PCM_POST'
-                Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
-
-            classdimname: str, default is 'pcm_class'
-                Name of the dimension holding classes
-
-            outname: 'PCM_ROBUSTNESS_CAT' or str
-                Name of the :class:`xarray.DataArray` with robustness categories
-
-            inplace: boolean, False by default
-                If False, return a :class:`xarray.DataArray` with robustness
-                If True, return the input :class:`xarray.DataSet` with robustness categories
-                added as a new :class:`xarray.DataArray`
-
-            Returns
-            -------
-            :class:`xarray.DataSet` if inplace=True
-            or
-            :class:`xarray.DataArray` if inplace=False
-        """
-        maxpost = self._obj[name].max(dim=classdimname)
-        K = len(self._obj[classdimname])
-        robust = (maxpost - 1. / K) * K / (K - 1.)
-        Plist = [0, 0.33, 0.66, 0.9, .99, 1]
-        rowl0 = ('Unlikely', 'As likely as not', 'Likely', 'Very Likely', 'Virtually certain')
-        robust_id = np.digitize(robust, Plist) - 1
-
-        id = dict()
-        id[classdimname] = 0
-        da = self._obj[name][id].rename(outname)
-        da.values = robust_id
-        da.attrs['long_name'] = 'PCM classification robustness category'
-        da.attrs['units'] = ''
-        da.attrs['valid_min'] = 0
-        da.attrs['valid_max'] = 4
-        da.attrs['llh'] = self._obj[name].attrs['llh']
-        da.attrs['bins'] = Plist
-        da.attrs['legend'] = rowl0
-
-        # Add labels to the dataset:
-        if inplace:
-            if outname in self._obj.data_vars:
-                warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-            return self.add(da)
-        else:
-            return da
-
-    @pcm_method
-    def fit(self, pcm, **kwargs):
-        """ Map this :class:`xarray.DataSet` on :func:`pcm.fit` """
-        return pcm.fit(self._obj, **kwargs)
-
-    @pcm_method
-    def predict(self, pcm, **kwargs):
-        """ Map this :class:`xarray.DataSet` on :func:`pcm.predict` """
-        return pcm.predict(self._obj, **kwargs)
-
-    @pcm_method
-    def fit_predict(self, pcm, **kwargs):
-        """ Map this :class:`xarray.DataSet` on :func:`pcm.fit_predict` """
-        return pcm.fit_predict(self._obj, **kwargs)
-
-    @pcm_method
-    def predict_proba(self, pcm, **kwargs):
-        """ Map this :class:`xarray.DataSet` on :func:`pcm.predict_proba` """
-        return pcm.predict_proba(self._obj, **kwargs)
-
-    @pcm_method
-    def score(self, pcm, **kwargs):
-        """ Map this :class:`xarray.DataSet` on :func:`pcm.score` """
-        return pcm.score(self._obj, **kwargs)
-
-    @pcm_method
-    def bic(self, pcm, **kwargs):
-        """ Map this :class:`xarray.DataSet` on :func:`pcm.bic` """
-        return pcm.bic(self._obj, **kwargs)
-
-
-class pcm:
+class pcm(object):
     """Base class for a Profile Classification Model
 
     Consume and return :mod:`xarray` objects
 
     """
     def __init__(self,
-                 K=1,
+                 K,
                  features=dict(),
                  scaling=1,
                  reduction=1, maxvar=15,
                  classif='gmm', covariance_type='full',
                  verb=False,
                  debug=False,
-                 timeit=False, timeit_verb=True, chunk_size=1000):
+                 timeit=False, timeit_verb=False,
+                 chunk_size='auto',
+                 backend='sklearn'):
         """Create the PCM instance
 
         Parameters
@@ -576,6 +112,18 @@ class pcm:
         verb: boolean (default: False)
             More verbose output
 
+        timeit: boolean (default: False)
+            Register time of operation for performance evaluation
+
+        timeit_verb: boolean (default: False)
+            Print time of operation during execution
+
+        chunk_size: 'auto' or int
+            Sampling chunk size, (array of features after pre-processing)
+
+        backend: str
+            Statistic library backend, 'sklearn' (default) or 'dask_ml'
+
         """
         if   scaling==0: with_scaler = 'none'; with_mean=False; with_std = False
         elif scaling==1: with_scaler = 'normal'; with_mean=True; with_std = True
@@ -600,7 +148,8 @@ class pcm:
                         'with_classifier': with_classifier,
                         'maxvar': maxvar,
                         'features': collections.OrderedDict(features),
-                        'chunk_size': chunk_size}
+                        'chunk_size': chunk_size,
+                        'backend': backend}
         self._xmask = None # xarray mask for nd-array used at pre-processing steps
 
         self._verb = verb #todo _verb is a property, should be set/get with a decorator
@@ -611,29 +160,37 @@ class pcm:
         self._scaler_props = collections.OrderedDict()
         self._reducer = collections.OrderedDict()
         self._homogeniser = collections.OrderedDict()
+
+        # Load estimators for a specific backend:
+        bck = StatisticsBackend(backend, scaler='StandardScaler', reducer='PCA')
+
         for feature_name in features:
             feature_axis = self._props['features'][feature_name]
 
-            self._scaler[feature_name] = preprocessing.StandardScaler(with_mean=with_mean,
-                                                        with_std=with_std)
+            # self._scaler[feature_name] = preprocessing.StandardScaler(with_mean=with_mean,
+            #                                             with_std=with_std)
+            self._scaler[feature_name] = bck.scaler(with_mean=with_mean, with_std=with_std)
             self._scaler_props[feature_name] = {'units': '?'}
 
             is_slice = np.all(feature_axis == None)
             if not is_slice:
                 self._interpoler[feature_name] = Vertical_Interpolator(axis=feature_axis, debug=self._debug)
                 if np.prod(feature_axis.shape) == 1:
-                    # Single level, not need to reduce
+                    # Single level: no need to reduce
                     if self._debug: print('Single level, not need to reduce', np.prod(feature_axis.ndim))
                     self._reducer[feature_name] = NoTransform()
                 else:
                     # Multi-vertical-levels, set reducer:
                     if with_reducer:
-                        self._reducer[feature_name] = PCA(n_components=self._props['maxvar'], svd_solver='full')
+                        # self._reducer[feature_name] = PCA(n_components=self._props['maxvar'], svd_solver='full')
+                        self._reducer[feature_name] = bck.reducer(n_components=self._props['maxvar'], svd_solver='full')
                     else:
                         self._reducer[feature_name] = NoTransform()
             else:
                 self._interpoler[feature_name] = NoTransform()
                 self._reducer[feature_name] = NoTransform()
+                if self._debug: print("%s is single level, not need to reduce" % feature_name)
+
             self._homogeniser[feature_name] = {'mean': 0, 'std': 1}
 
         self._classifier = GaussianMixture(n_components=self._props['K'],
@@ -714,13 +271,18 @@ class pcm:
             -------
             X: :class:`xarray.DataArray`
                 A new DataArray with dimension ['n_sampling','n_features']
+                Note that data are always :class:`dask.array.Array`.
 
-            z:
+            z: :class:`numpy.array`
+                The vertical axis of data
 
-            sampling_dims:
+            sampling_dims: dict()
+                Dictionary where keys are :class:`xarray.Dataset` variable names of features
+                and values are another dictionary with the list of sampling dimension in
+                ``DIM_SAMPLING`` key and the name of the vertical axis in the ``DIM_VERTICAL`` key.
 
-            Example
-            -------
+            Examples
+            --------
             This function is meant to be used internally only
 
             __author__: gmaze@ifremer.fr
@@ -910,6 +472,11 @@ class pcm:
 
         return df
 
+    @property
+    def backend(self):
+        """ Statistic backend"""
+        return self._props['backend']
+
     def display(self, deep=False):
         """Display detailed parameters of the PCM
             This is not a get_params because it doesn't return a dictionary
@@ -1014,22 +581,22 @@ class pcm:
             with self._context(this_context + '.1-ravel', self._context_args):
                 X, z, sampling_dims = self.ravel(da, dim=dim, feature_name=feature_name)
                 if self._debug:
-                    print("\tX RAVELED with success, now shape and type:",
-                          type(X), X.shape, type(X.data))
+                    print("\t", str(LogDataType(X)), "X RAVELED with success")
 
             # INTERPOLATION STEP:
             with self._context(this_context + '.2-interp', self._context_args):
                 X = self._interpoler[feature_name].transform(X, z)
                 if self._debug:
-                    print("\tX INTERPOLATED with success, now shape and type:",
-                          type(X), X.shape, type(X.data))
-                    print(X.values.flags['WRITEABLE'])
+                    if isinstance(self._interpoler[feature_name], NoTransform):
+                        print("\t", str(LogDataType(X)), "X INTERPOLATED with success (NoTransform)")
+                    else:
+                        print("\t", str(LogDataType(X)), "X INTERPOLATED with success)")
+                    # print(X.values.flags['WRITEABLE'])
                     # After the interpolation step, we must not have nan in the 2d array:
                     assert_all_finite(X, allow_nan=False)
 
             # FIT STEPS:
-            # Based on scikit-lean methods
-            # We need to fit the pre-processing methods in order to re-use them when
+            # We need to fit pre-processing methods in order to re-use them when
             # predicting a new dataset
 
             # SCALING:
@@ -1040,25 +607,48 @@ class pcm:
                         self._scaler_props[feature_name]['units'] = da.attrs['units']
 
             with self._context(this_context + '.4-scale_transform', self._context_args):
-                X.data = self._scaler[feature_name].transform(X.data, copy=False)
+                try:
+                    X.data = self._scaler[feature_name].transform(X.data, copy=False)
+                except ValueError:
+                    if self._debug: print("\t\t Failed to scale.transform without copy, fall back on copy=True")
+                    X.data = self._scaler[feature_name].transform(X.data, copy=True)
+                    pass
+                except:
+                    raise
+
                 if self._debug:
-                    print("\tX SCALED with success, now shape and type:",
-                          type(X), X.shape, type(X.data))
+                    print("\t", str(LogDataType(X)), "X SCALED with success)")
 
             # REDUCTION:
             with self._context(this_context + '.5-reduce_fit', self._context_args):
                 if (not hasattr(self, 'fitted')) and (self._props['with_reducer']):
-                    self._reducer[feature_name].fit(X)
+
+                    if self.backend == 'dask_ml':
+                        # We have to convert any type of data array into a Dask array because the
+                        # the dask_ml cannot handle anything else (!)
+                        #todo Raise an issue on dask_ml github to ask why is this choice made
+                        # Related issues:
+                        #   https://github.com/dask/dask-ml/issues/6
+                        #   https://github.com/dask/dask-ml/issues/541
+                        #   https://github.com/dask/dask-ml/issues/542
+                        X.data = dask.array.from_array(X.data, chunks=X.shape)
+
+                    if isinstance(X.data, dask.array.Array):
+                        self._reducer[feature_name].fit(X.data)
+                    else:
+                        self._reducer[feature_name].fit(X)
 
             with self._context(this_context + '.6-reduce_transform', self._context_args):
-                X = self._reducer[feature_name].transform(X) # Reduction, return np.array
+                X = self._reducer[feature_name].transform(X.data) # Reduction, return np.array
 
                 # After reduction the new array is [ sampling, reduced_dim ]
-                X = xr.DataArray(X, dims=['sampling', 'n_features'],
-                                 coords={'sampling': range(0, X.shape[0]), 'n_features': np.arange(0,X.shape[1])})
+                X = xr.DataArray(X,
+                                 dims=['sampling', 'n_features'],
+                                 coords={'sampling': range(0, X.shape[0]),
+                                         'n_features': np.arange(0,X.shape[1])})
                 if self._debug:
-                    print("\tX REDUCED with success, now shape and type:",
-                          type(X), X.shape, type(X.data))
+                    print("\t", str(LogDataType(X)), "X REDUCED with success)")
+
 
         # Output:
         return X, sampling_dims
@@ -1074,15 +664,15 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         Returns
         -------
@@ -1090,7 +680,7 @@ class pcm:
             Pre-processed set of features, with dimensions (N_SAMPLE, N_FEATURES)
 
         sampling_dims: list()
-            List of the input :class:`xarray.DataSet` dimensions stacked as sampling points
+            List of the input :class:`xarray.Dataset` dimensions stacked as sampling points
 
         """
         this_context = str(action)+'.1-preprocess'
@@ -1117,7 +707,7 @@ class pcm:
             for feature_in_pcm in features_dict:
                 feature_in_ds = features_dict[feature_in_pcm]
                 if self._debug:
-                    print( ("\t> Preprocessing xarray dataset '%s' as PCM feature '%s'")%(feature_in_ds, feature_in_pcm) )
+                    print( ("\n\t> Preprocessing xarray dataset '%s' as PCM feature '%s'")%(feature_in_ds, feature_in_pcm) )
 
                 if ('maxlevel' in self._context_args) and (self._context_args['maxlevel'] <= 2):
                     a = this_context + '.2-features'
@@ -1130,6 +720,8 @@ class pcm:
                                                                feature_name=feature_in_pcm,
                                                                action=action)
                     xlabel = ["%s_%i"%(feature_in_pcm, i) for i in range(0, x.shape[1])]
+                    if self._debug:
+                        print("\t%s pre-processed with success, "  % feature_in_pcm, str(LogDataType(x)))
 
                 with self._context(this_context + '.3-homogeniser', self._context_args):
                     # Store full array mean and std during fit:
@@ -1137,6 +729,7 @@ class pcm:
                         self._homogeniser[feature_in_pcm]['mean'] = np.mean(x[:])
                         self._homogeniser[feature_in_pcm]['std'] = np.std(x[:])
                         #todo _homogeniser should be a proper standard scaler
+
                     if F>1:
                         # For more than 1 feature, we need to make them comparable,
                         # so we normalise each features by their global stats:
@@ -1157,6 +750,9 @@ class pcm:
 
             with self._context(this_context + '.4-xarray', self._context_args):
                 self._xlabel = Xlabel
+                if self._debug:
+                    print("\tFeatures array shape and type for xarray:",
+                          X.shape, type(X), type(X.data))
                 X = xr.DataArray(X, dims=['n_samples', 'n_features'],
                                  coords={'n_samples': range(0, X.shape[0]), 'n_features': Xlabel})
 
@@ -1178,15 +774,15 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         Returns
         -------
@@ -1217,19 +813,19 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         inplace: boolean, False by default
             If False, return a :class:`xarray.DataArray` with predicted labels
-            If True, return the input :class:`xarray.DataSet` with labels added as a new :class:`xarray.DataArray`
+            If True, return the input :class:`xarray.Dataset` with labels added as a new :class:`xarray.DataArray`
 
         name: str, default is 'PCM_LABELS'
             Name of the :class:`xarray.DataArray` with labels
@@ -1241,7 +837,7 @@ class pcm:
 
         *or*
 
-        :class:`xarray.DataSet`
+        :class:`xarray.Dataset`
             Input dataset with Component labels as a 'PCM_LABELS' new :class:`xarray.DataArray`
             (if option 'inplace' = True)
         """
@@ -1284,19 +880,19 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         inplace: boolean, False by default
             If False, return a :class:`xarray.DataArray` with predicted labels
-            If True, return the input :class:`xarray.DataSet` with labels added as a new :class:`xarray.DataArray`
+            If True, return the input :class:`xarray.Dataset` with labels added as a new :class:`xarray.DataArray`
 
         name: string ('PCM_LABELS')
             Name of the DataArray holding labels.
@@ -1360,19 +956,19 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         inplace: boolean, False by default
             If False, return a :class:`xarray.DataArray` with predicted probabilities
-            If True, return the input :class:`xarray.DataSet` with probabilities added as a new :class:`xarray.DataArray`
+            If True, return the input :class:`xarray.Dataset` with probabilities added as a new :class:`xarray.DataArray`
 
         name: str, default is 'PCM_POST'
             Name of the DataArray with prediction probability (posteriors)
@@ -1435,15 +1031,15 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         Returns
         -------
@@ -1472,15 +1068,15 @@ class pcm:
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         dim: str
-            Name of the vertical dimension in the input :class:`xarray.DataSet`
+            Name of the vertical dimension in the input :class:`xarray.Dataset`
 
         Returns
         -------

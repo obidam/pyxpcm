@@ -24,7 +24,7 @@ def open_dataset(name):
 
         Returns
         -------
-        :class:`xarray.DataSet`
+        :class:`xarray.Dataset`
 
     """
 

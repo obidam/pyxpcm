@@ -26,7 +26,7 @@ def quant(ds,
 
     Parameters
     ----------
-    ds: :class:`xarray.DataSet`
+    ds: :class:`xarray.Dataset`
         The dataset to work with
     of: str
         Name of the :class:`xarray.DataArray` to compute quantiles for.
@@ -107,7 +107,7 @@ def robustness(ds, name='PCM_POST', classdimname='pcm_class', inplace=False, out
 
         inplace: boolean, False by default
             If False, return a :class:`xarray.DataArray` with robustness
-            If True, return the input :class:`xarray.DataSet` with robustness added as a new :class:`xarray.DataArray`
+            If True, return the input :class:`xarray.Dataset` with robustness added as a new :class:`xarray.DataArray`
 
         Returns
         -------
@@ -154,7 +154,7 @@ def robustness_digit(ds, name='PCM_POST', classdimname='pcm_class', inplace=Fals
 
         inplace: boolean, False by default
             If False, return a :class:`xarray.DataArray` with robustness category
-            If True, return the input :class:`xarray.DataSet` with robustness category added as a new :class:`xarray.DataArray`
+            If True, return the input :class:`xarray.Dataset` with robustness category added as a new :class:`xarray.DataArray`
 
         Returns
         -------

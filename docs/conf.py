@@ -20,6 +20,7 @@ import os
 import subprocess
 import sys
 import xarray
+import datetime
 
 from contextlib import suppress
 allowed_failures = set()
@@ -56,6 +57,7 @@ pyXpcm_src = os.path.abspath('..')
 print("pyXpcm loaded:", os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('..'))
 import pyxpcm
+print("pyxpcm: %s, %s" % (pyxpcm.__version__, pyxpcm.__file__))
 
 # sys.path.insert(0, os.path.abspath("./_ext"))
 
@@ -80,7 +82,8 @@ print("sys.path:", sys.path)
 #     'sphinx.ext.viewcode',
 #     'sphinx.ext.githubpages']
 
-extensions = ['sphinx.ext.autodoc',
+extensions = [
+    # 'sphinx.ext.autodoc',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.autosummary',
     'sphinx.ext.intersphinx',
@@ -119,15 +122,14 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'pyXpcm'
-copyright = u'2018, Guillaume Maze'
-author = u'Guillaume Maze'
+copyright = "2018-%s, pyXpcm Developers" % datetime.datetime.now().year
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
 # built documents.
 #
 # The short X.Y version.
-version = u'0.4'
+version = u'0.4.0'
 # The full version, including alpha/beta/rc tags.
 release = u'0.4.0'
 
@@ -136,7 +138,7 @@ release = u'0.4.0'
 #
 # This is also used if you do content translation via gettext catalogs.
 # Usually you set "language" from the command line for these cases.
-language = None
+# language = None
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
@@ -211,7 +213,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'pyxpcm.tex', u'pyXpcm Documentation',
-     u'Guillaume Maze', 'manual'),
+     u'pyXpcm Developers', 'manual'),
 ]
 
 
@@ -221,9 +223,8 @@ latex_documents = [
 # (source start file, name, description, authors, manual section).
 man_pages = [
     (master_doc, 'pyxpcm', u'pyXpcm Documentation',
-     [author], 1)
+     ["pyXpcm Developers"], 1)
 ]
-
 
 # -- Options for Texinfo output -------------------------------------------
 
@@ -232,7 +233,7 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'pyxpcm', u'pyXpcm Documentation',
-     author, 'pyxpcm', 'One line description of project.',
+     "pyXpcm Developers", 'pyxpcm', 'One line description of project.',
      'Miscellaneous'),
 ]
 
@@ -245,6 +246,8 @@ intersphinx_mapping = {
     'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
     'matplotlib': ('https://matplotlib.org/', None),
     'xarray': ('http://xarray.pydata.org/en/stable/', None),
+    'dask': ('https://docs.dask.org/en/latest/', None),
+    'dask_ml': ('https://docs.dask.org/en/latest/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
-    'seaborn': ('https://seaborn.pydata.org/generated/', None),
+    'seaborn': ('https://seaborn.pydata.org/', None),
 }

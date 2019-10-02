@@ -85,41 +85,10 @@ Helper
 
     tutorial.open_dataset
 
-Xarray dataset accessor: the *pyxpcm* name space
-================================================
+Xarray *pyxpcm* name space
+==========================
 
-PCM Computation
----------------
+.. automodule:: pyxpcm.xarray
 
-.. autosummary::
-    :toctree: generated/
-
-    xr_pyxpcm.fit
-    xr_pyxpcm.fit_predict
-    xr_pyxpcm.predict
-    xr_pyxpcm.predict_proba
-    xr_pyxpcm.score
-    xr_pyxpcm.bic
-
-Diagnostics
------------
-
-.. autosummary::
-    :toctree: generated/
-
-    xr_pyxpcm.quantile
-    xr_pyxpcm.robustness
-    xr_pyxpcm.robustness_digit
-
-
-Low-level functions
--------------------
-
-.. autosummary::
-    :toctree: generated/
-
-    xr_pyxpcm.add
-    xr_pyxpcm.clean
-    xr_pyxpcm.feature_dict
-    xr_pyxpcm.sampling_dim
-    xr_pyxpcm.mask
+.. autoclass:: pyXpcmDataSetAccessor()
+    :members:

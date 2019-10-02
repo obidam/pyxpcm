@@ -220,8 +220,8 @@ def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
             dimensions of the resulting array can be controlled with the squeeze
             keyword, see above.
 
-        Example
-        -------
+        Examples
+        --------
         fig, ax = m.plot.subplots(maxcols=4, sharey=True, figsize=(12,6))
 
         __author__: gmaze@ifremer.fr
@@ -310,11 +310,11 @@ def preprocessed(m, ds, features=None, dim=None, n=1000, kde=False, style='darkg
 
         Parameters
         ----------
-        ds: :class:`xarray.DataSet`
+        ds: :class:`xarray.Dataset`
             The dataset to work with
 
         features: dict()
-            Definitions of PCM features in the input :class:`xarray.DataSet`.
+            Definitions of PCM features in the input :class:`xarray.Dataset`.
             If not specified or set to None, features are identified using :class:`xarray.DataArray` attributes 'feature_name'.
 
         n : int

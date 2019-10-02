@@ -2,7 +2,7 @@ __version__ = "0.4.0"
 
 # Import class:
 from .pcmodel import pcm as pcm
-from .pcmodel import ds_xarray_accessor_pyXpcm as xr_pyxpcm
+from .xarray import *
 
 # Import
 # from . import stats

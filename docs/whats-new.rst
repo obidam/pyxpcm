@@ -14,7 +14,7 @@ v0.4 (1 Oct. 2019)
 
     - Behind the scene full management of ND-Array classification (so that you can classify directly profiles on a latitude/longitude/time grid, not only a collection of profiles already in 2D array)
 
-    - pyXpcm methods are directly accessible through the :class:`xarray.DataSet` accessor namespace ``pyxpcm``
+    - pyXpcm methods are directly accessible through the :class:`xarray.Dataset` accessor namespace ``pyxpcm``
 
 - pyXpcm now consumes xarray/dask objects all along, not only on the user front-end.
 
