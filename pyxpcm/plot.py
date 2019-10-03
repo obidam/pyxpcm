@@ -7,21 +7,26 @@ Provide basic methods for quick and easy plotting of/with PCM features
 
 """
 
+# Import packages:
 from . import pcmodel
+from contextlib import contextmanager
 import warnings
-import pandas as pd
+
+# Import packages in the requirements.txt:
 import numpy as np
-
-import matplotlib.pyplot as plt
-import matplotlib as mpl
-import matplotlib.cm as cm
-import matplotlib.colors as mcolors
-import matplotlib.ticker as mticker
-
+import pandas as pd
 from sklearn.utils import validation
 import sklearn
 
-from contextlib import contextmanager
+# Import mandatory packages:
+try:
+    import matplotlib.pyplot as plt
+    import matplotlib as mpl
+    import matplotlib.cm as cm
+    import matplotlib.colors as mcolors
+    import matplotlib.ticker as mticker
+except:
+    warnings("pyXpcm requires matplotlib installed for plotting functionalities")
 
 try:
     import cartopy
@@ -38,6 +43,9 @@ try:
 except ModuleNotFoundError:
     warnings("pyXpcm requires seaborn installed for full plotting functionalities")
     with_seaborn = False
+
+
+# Let's start
 
 @contextmanager
 def axes_style(style="white"):
