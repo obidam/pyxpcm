@@ -1,32 +1,56 @@
 #!/bin/env python
 # -*coding: UTF-8 -*-
 #
-# Provide some basic methods for plotting
-# plot.cmap_robustness
-# plot.latlongrid
-# plot.scaler
-# plot.reducer
-# plot.quant
-#
-# Created by gmaze on 2017/12/11
-__author__ = 'gmaze@ifremer.fr'
+"""
 
+Provide basic methods for quick and easy plotting of/with PCM features
+
+"""
+
+from . import pcmodel
+import warnings
+import pandas as pd
 import numpy as np
+
 import matplotlib.pyplot as plt
 import matplotlib as mpl
 import matplotlib.cm as cm
 import matplotlib.colors as mcolors
+import matplotlib.ticker as mticker
+
 from sklearn.utils import validation
 import sklearn
-import pandas as pd
-import seaborn as sns
-import cartopy
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
-import matplotlib.ticker as mticker
-sns.set_context("paper")
-from . import pcmodel
-from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+
+from contextlib import contextmanager
+
+try:
+    import cartopy
+    import cartopy.crs as ccrs
+    import cartopy.feature as cfeature
+    from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
+except ModuleNotFoundError:
+    warnings("pyXpcm requires cartopy installed for full plotting functionalities")
+
+try:
+    import seaborn as sns
+    sns.set_context("paper")
+    with_seaborn = True
+except ModuleNotFoundError:
+    warnings("pyXpcm requires seaborn installed for full plotting functionalities")
+    with_seaborn = False
+
+@contextmanager
+def axes_style(style="white"):
+    """ Provide a context for plots
+
+        The point is to handle the availability of :mod:`seaborn` or not
+
+    """
+    if with_seaborn: # Execute within a seaborn context:
+        with sns.axes_style(style):
+            yield
+    else: # Otherwise do nothing
+        yield
 
 def cmap_robustess():
     """ Return a categorical colormap for robustness """
@@ -80,58 +104,8 @@ def colorbar_index(ncolors, cmap, **kwargs):
     colorbar.set_ticklabels(range(ncolors))
     return colorbar
 
-class _PlotMethods(object):
-    """
-        Enables use of pyxpcm.plot functions as attributes on a PCM object.
-        For example: m.plot(), m.plot.scaler(), m.plot.cmap('Set2'), m.plot.colorbar()
-    """
-
-    def __init__(self, m):
-        self._pcm = m
-        self._cmap = self.cmap()
-
-    def __call__(self, **kwargs):
-        raise ValueError("pyxpcm.plot cannot be called directly. Use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
-
-    def cmap(self, **kwargs):
-        """Return a categorical colormap for this PCM"""
-        return cmap(self._pcm, **kwargs)
-
-    def colorbar(self, **kwargs):
-        """Add a colorbar to the current plot with centered ticks on discrete colors"""
-        return colorbar(self._pcm, **kwargs)
-
-    def subplots(self, **kwargs):
-        """Return (figure, axis) with one subplot per cluster"""
-        return subplots(self._pcm, **kwargs)
-
-    def latlongrid(self, ax, **kwargs):
-        """Add latitude/longitude grid to a cartopy geoaxes """
-        return latlongrid(ax, **kwargs)
-
-    def scaler(self, **kwargs):
-        """Plot PCM scaler properties"""
-        return scaler(self._pcm, **kwargs)
-
-    def reducer(self, **kwargs):
-        """Plot PCM reducer properties"""
-        return reducer(self._pcm,  **kwargs)
-
-    def timeit(self, **kwargs):
-        """Plot registered timing of operations"""
-        return timeit(self._pcm, **kwargs)
-
-    def preprocessed(self, ds, **kwargs):
-        """Plot preprocessed features as pairwise scatter plots"""
-        return preprocessed(self._pcm, ds, **kwargs)
-
-    def quantile(self, da, **kwargs):
-        """Plot the q-th quantiles of a dataArray for each PCM component"""
-        return quantile(self._pcm, da, **kwargs)
-
-
 def latlongrid(ax, dx=5., dy=5., fontsize=6, **kwargs):
-    """ Add latitude/longitude grid to a cartopy geoaxes  """
+    """ Add latitude/longitude grid line and labels to a cartopy geoaxes  """
     if not isinstance(ax, cartopy.mpl.geoaxes.GeoAxesSubplot):
         raise ValueError("Please provide a cartopy.mpl.geoaxes.GeoAxesSubplot instance")
     defaults = {'linewidth':.5, 'color':'gray', 'alpha':0.5, 'linestyle':'--'}
@@ -157,9 +131,9 @@ def cmap(m, name='Set2', palette=False, usage='class'):
 
         palette : bool
 
-            Whether to return a Seaborn color palette or not (default is False).
+            Whether to return a Seaborn color palette or not.
 
-            - False: function returns a :class:``matplotlib.colors.LinearSegmentedColormap``
+            - False (default): function returns a :class:``matplotlib.colors.LinearSegmentedColormap``
             - True: function returns a :func:``seaborn.color_palette``
 
         usage : str
@@ -176,8 +150,10 @@ def cmap(m, name='Set2', palette=False, usage='class'):
     if usage == 'class':
         if not palette:
             c = cmap_discretize(name, m.K)
-        else:
+        elif with_seaborn:
             c = sns.color_palette(name, m.K)
+        else:
+            raise ValueError("Rquire seaborn install for palette=True")
     elif usage == 'robustness':
         c = mpl.colors.ListedColormap(['#FF0000', '#CC00FF', '#0066FF', '#CCFF00', '#00FF66'])
     else:
@@ -247,17 +223,18 @@ def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
     return fig, ax
 
 def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white', **kwargs):
-    """ Plot PCM registered timing of operations
+    """ Plot :class:`pyxpcm.pcm` registered timing of operations
 
         Parameters
         ----------
-        Param : ParamType
-            DescriptionParam
+        group='Method',
+        split='Sub-method',
+        subplot_kw=None, style='white'
 
         Returns
         -------
+        fig, ax, df
 
-        __author__: gmaze@ifremer.fr
     """
 
     # Read timings:
@@ -268,7 +245,7 @@ def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white'
     [dpt.append(len(key.split("."))) for key in m._timeit]
     max_dpt = np.max(dpt)
 
-    with sns.axes_style(style):
+    with axes_style(style):
         defaults = {'figsize': (5, 3), 'dpi': 90}
         if not subplot_kw:
             fig, ax = plt.subplots(**{**defaults, **kwargs})
@@ -299,7 +276,7 @@ def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white'
             df.plot(kind='barh', stacked=1, legend=0, subplots=0, ax=ax)
             plt.legend(loc='center left', bbox_to_anchor=(1.0, 0.5))
 
-        sns.despine()
+        if with_seaborn: sns.despine()
         ax.grid(True)
         ax.set_xlabel('Time [ms]')
         ax.set_ylabel(group)
@@ -308,8 +285,12 @@ def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white'
 def preprocessed(m, ds, features=None, dim=None, n=1000, kde=False, style='darkgrid', **kargs):
     """ Plot preprocessed features as pairwise scatter plots
 
+        Require :mod:`seaborn`
+
         Parameters
         ----------
+        :class:`pyxpcm.pcm` instance
+
         ds: :class:`xarray.Dataset`
             The dataset to work with
 
@@ -327,6 +308,8 @@ def preprocessed(m, ds, features=None, dim=None, n=1000, kde=False, style='darkg
 
         __author__: gmaze@ifremer.fr
     """
+    if not with_seaborn:
+        raise ValueError("Seaborn is required for this function")
 
     # Get preprocessed features (the [n_samples, n_features] numpy array seen by the classifier)
     X, sampling_dims = m.preprocessing(ds, features=features, dim=dim)
@@ -358,14 +341,14 @@ def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
 
     Parameters
     ----------
-    m: PCM class instance
+    :class:`pyxpcm.pcm` instance
 
     """
     # Check if the PCM is trained:
     validation.check_is_fitted(m, 'fitted')
 
     # Plot
-    with sns.axes_style(style):
+    with axes_style(style):
         defaults = {'sharey':'row', 'figsize':(10, 5*m.F), 'dpi':80, 'facecolor':'w', 'edgecolor':'k'}
         if not subplot_kw:
             fig, ax = plt.subplots(ncols=2, nrows=m.F, **{**defaults, **kwargs})
@@ -416,7 +399,7 @@ def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, su
     validation.check_is_fitted(m, 'fitted')
 
     # Plot
-    with sns.axes_style(style):
+    with axes_style(style):
         defaults = {'sharey': 'row', 'figsize': (5*m.F, 5), 'dpi': 80, 'facecolor': 'w', 'edgecolor': 'k'}
         if not subplot_kw:
             if maxcols == np.Inf:
@@ -469,7 +452,7 @@ def quantile(m, da, xlim=None,
 
     Parameters
     ----------
-    m: PCM class instance
+    m : :class:`pyxpcm.pcm` instance
 
     da: :class:`xarray.DataArray` with quantiles
 
@@ -531,5 +514,54 @@ def quantile(m, da, xlim=None,
     plt.tight_layout()
 
     return fig, ax
+
+class _PlotMethods(object):
+    """
+        Enables use of pyxpcm.plot functions as attributes on a PCM object.
+        For example: m.plot(), m.plot.scaler(), m.plot.cmap('Set2'), m.plot.colorbar()
+    """
+
+    def __init__(self, m):
+        self._pcm = m
+        self._cmap = self.cmap()
+
+    def __call__(self, **kwargs):
+        raise ValueError("pyxpcm.plot cannot be called directly. Use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
+
+    def cmap(self, **kwargs):
+        """Return a categorical colormap for this PCM"""
+        return cmap(self._pcm, **kwargs)
+
+    def colorbar(self, **kwargs):
+        """Add a colorbar to the current plot with centered ticks on discrete colors"""
+        return colorbar(self._pcm, **kwargs)
+
+    def subplots(self, **kwargs):
+        """Return (figure, axis) with one subplot per cluster"""
+        return subplots(self._pcm, **kwargs)
+
+    def latlongrid(self, ax, **kwargs):
+        """Add latitude/longitude grid to a cartopy geoaxes """
+        return latlongrid(ax, **kwargs)
+
+    def scaler(self, **kwargs):
+        """Plot PCM scaler properties"""
+        return scaler(self._pcm, **kwargs)
+
+    def reducer(self, **kwargs):
+        """Plot PCM reducer properties"""
+        return reducer(self._pcm,  **kwargs)
+
+    def timeit(self, **kwargs):
+        """Plot registered timing of operations"""
+        return timeit(self._pcm, **kwargs)
+
+    def preprocessed(self, ds, **kwargs):
+        """Plot preprocessed features as pairwise scatter plots"""
+        return preprocessed(self._pcm, ds, **kwargs)
+
+    def quantile(self, da, **kwargs):
+        """Plot the q-th quantiles of a dataArray for each PCM component"""
+        return quantile(self._pcm, da, **kwargs)
 
 
