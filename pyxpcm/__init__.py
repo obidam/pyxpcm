@@ -4,8 +4,7 @@ __version__ = "0.4.0"
 from .pcmodel import pcm as pcm
 from .xarray import *
 
-# Import
-# from . import stats
-# from . import plot
+# Other Import
 from . import tutorial
 from . import utils
+from . import plot

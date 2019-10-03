@@ -69,7 +69,6 @@ Documentation
     whats-new
     api
 
-
 .. _Xarray: http://xarray.pydata.org
 .. _netCDF: http://www.unidata.ucar.edu/software/netcdf
 .. _Pangeo: http://pangeo.io

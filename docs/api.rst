@@ -48,6 +48,8 @@ Computation
    pcm.bic
 
 
+.. _api-plot:
+
 Plotting
 ========
 

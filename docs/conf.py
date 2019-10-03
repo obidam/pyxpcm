@@ -247,7 +247,7 @@ intersphinx_mapping = {
     'matplotlib': ('https://matplotlib.org/', None),
     'xarray': ('http://xarray.pydata.org/en/stable/', None),
     'dask': ('https://docs.dask.org/en/latest/', None),
-    'dask_ml': ('https://docs.dask.org/en/latest/', None),
+    'dask_ml': ('https://ml.dask.org/', None),
     'sklearn': ('https://scikit-learn.org/stable/', None),
     'seaborn': ('https://seaborn.pydata.org/', None),
 }
