@@ -8,3 +8,4 @@ from .xarray import *
 from . import tutorial
 from . import utils
 from . import plot
+from . import stats

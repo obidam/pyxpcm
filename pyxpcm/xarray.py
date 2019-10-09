@@ -36,8 +36,9 @@ class pyXpcmDataSetAccessor:
      """
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
+        self._added = list()
 
-    def __id_feature_name(self, pcm, feature):
+    def __id_feature_name(self, this_pcm, feature):
         """Identify the dataset variable name to be used for a given feature name
 
             feature must be a dictionary or None for automatic discovery
@@ -45,7 +46,7 @@ class pyXpcmDataSetAccessor:
         feature_name_found = False
 
         for feature_in_pcm in feature:
-            if feature_in_pcm not in pcm._props['features']:
+            if feature_in_pcm not in this_pcm._props['features']:
                 msg = ("Feature '%s' not set in this PCM")%(feature_in_pcm)
                 raise PCMFeatureError(msg)
 
@@ -70,7 +71,7 @@ class pyXpcmDataSetAccessor:
                 msg = ("Feature '%s' not found in this dataset. You may want to add the 'feature_name' "
                                   "attribute to the variable you'd like to use or provide a dictionnary")%(feature_in_pcm)
                 raise PCMFeatureError(msg)
-            elif pcm._debug:
+            elif this_pcm._debug:
                 print(("\tIdying '%s' as '%s' in this dataset") % (feature_in_pcm, feature_in_ds))
 
         return feature_in_ds
@@ -78,24 +79,30 @@ class pyXpcmDataSetAccessor:
     def add(self, da):
         """ Add a new :class:`xarray.DataArray` to this :class:`xarray.Dataset` """
 
+        if da.name in self._obj.data_vars:
+            warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
+
         # Add pyXpcm tracking clues:
         da.attrs['comment'] = "Automatically added by pyXpcm"
 
         #
         # vname = da.name
         self._obj[da.name] = da
+        # self._obj = xr.merge([self._obj, da])
+        self._added.append(da.name) # Update internal list of added variables
         return self._obj
 
     def clean(self):
         """ Remove all variables created with pyXpcm front this :class:`xarray.Dataset` """
         # See add() method to identify these variables.
-        for vname in self._obj.data_vars:
-            if ("comment" in self._obj[vname].attrs) \
-                and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
-                self._obj = self._obj.drop(vname)
-        return self._obj
+        return self._obj.drop(self._added)
+        # for vname in self._obj.data_vars:
+        #     if ("comment" in self._obj[vname].attrs) \
+        #         and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
+        #         self._obj = self._obj.drop(vname)
+        # return self._obj
 
-    def feature_dict(self, pcm, features=None):
+    def feature_dict(self, this_pcm, features=None):
         """ Return dictionary of features for this :class:`xarray.Dataset` and a PCM
 
             Parameters
@@ -112,9 +119,9 @@ class pyXpcmDataSetAccessor:
 
         """
         features_dict = dict()
-        for feature_in_pcm in pcm._props['features']:
+        for feature_in_pcm in this_pcm._props['features']:
             if features == None:
-                feature_in_ds = self.__id_feature_name(pcm, {feature_in_pcm: None})
+                feature_in_ds = self.__id_feature_name(this_pcm, {feature_in_pcm: None})
             elif feature_in_pcm not in features:
                 raise PCMFeatureError("%s feature not defined" % feature_in_pcm)
             else:
@@ -137,12 +144,12 @@ class pyXpcmDataSetAccessor:
         #         features_dict[feature_in_pcm] = feature_in_ds
 
         # Re-order the dictionary to match the PCM set order:
-        for key in pcm._props['features']:
+        for key in this_pcm._props['features']:
             features_dict[key] = features_dict.pop(key)
 
         return features_dict
 
-    def sampling_dim(self, pcm, features=None, dim=None):
+    def sampling_dim(self, this_pcm, features=None, dim=None):
         """ Return the list of dimensions to be stacked for sampling
 
             Parameters
@@ -155,7 +162,7 @@ class pyXpcmDataSetAccessor:
 
             dim : None (default) or str()
                 The :class:`xarray.Dataset` dimension to use as vertical axis in all features.
-                If set to None, it is automatically set to the dimension with an atribute ``axis`` set to ``Z``.
+                If set to None, it is automatically set to the dimension with an attribute ``axis`` set to ``Z``.
 
             Returns
             -------
@@ -164,10 +171,9 @@ class pyXpcmDataSetAccessor:
                 dictionary with the list of sampling dimension in DIM_SAMPLING key and the name of the vertical axis in
                 the DIM_VERTICAL key.
 
-
         """
 
-        feature_dict = self.feature_dict(pcm, features=features)
+        feature_dict = self.feature_dict(this_pcm, features=features)
         SD = dict()
 
         for feature_name_in_pcm in feature_dict:
@@ -176,7 +182,7 @@ class pyXpcmDataSetAccessor:
             SD[feature_name_in_ds] = dict()
 
             # Is this a thick array or a slice ?
-            is_slice = np.all(pcm._props['features'][feature_name_in_pcm] == None)
+            is_slice = np.all(this_pcm._props['features'][feature_name_in_pcm] is None)
 
             if is_slice:
                 # No vertical dimension to use, simple stacking
@@ -205,22 +211,22 @@ class pyXpcmDataSetAccessor:
 
         return SD
 
-    def mask(self, pcm, features=None, dim=None):
+    def mask(self, this_pcm, features=None, dim=None):
         """ Create a mask where all PCM features are defined
 
             Create a mask where all feature profiles are not null
-            over the PCM feature axis.
+            over the this_pcm feature axis.
 
             Parameters
             ----------
             :class:`pyxpcm.pcmmodel.pcm`
 
-            features: dict()
-                Definitions of PCM features in the :class:`xarray.Dataset`.
+            features : dict()
+                Definitions of this_pcm features in the :class:`xarray.Dataset`.
                 If not specified or set to None, features are identified
                 using :class:`xarray.DataArray` attributes 'feature_name'.
 
-            dim: str
+            dim : str
                 Name of the vertical dimension in the :class:`xarray.Dataset`.
                 If not specified or set to None, dim is identified as the
                 :class:`xarray.DataArray` variables with attributes 'axis' set to 'z'.
@@ -230,20 +236,20 @@ class pyXpcmDataSetAccessor:
             :class:`xarray.DataArray`
 
         """
-        feature_dict = self.feature_dict(pcm, features=features)
-        SD = self.sampling_dim(pcm, dim=dim, features=features)
+        feature_dict = self.feature_dict(this_pcm, features=features)
+        SD = self.sampling_dim(this_pcm, dim=dim, features=features)
         M = list()
-        for feature_name_in_pcm in feature_dict:
-            feature_name_in_ds = feature_dict[feature_name_in_pcm]
+        for feature_name_in_this_pcm in feature_dict:
+            feature_name_in_ds = feature_dict[feature_name_in_this_pcm]
             da = self._obj[feature_name_in_ds]
 
             # Is this a thick array or a slice ?
-            is_slice = np.all(pcm._props['features'][feature_name_in_pcm] == None)
+            is_slice = np.all(this_pcm._props['features'][feature_name_in_this_pcm] == None)
 
             if not is_slice:
                 dim = SD[feature_name_in_ds]['DIM_VERTICAL']
-                z_top = np.max(pcm._props['features'][feature_name_in_pcm])
-                z_bto = np.min(pcm._props['features'][feature_name_in_pcm])
+                z_top = np.max(this_pcm._props['features'][feature_name_in_this_pcm])
+                z_bto = np.min(this_pcm._props['features'][feature_name_in_this_pcm])
 
                 Nz = len((self._obj[dim].where(self._obj[dim] >= z_bto, drop=True)\
                                         .where(self._obj[dim] <= z_top, drop=True)).notnull())
@@ -255,231 +261,71 @@ class pyXpcmDataSetAccessor:
                 #     self._obj[dim]>=z_bto).notnull().sum(dim=dim) == len(np.where(self._obj[dim]>=z_bto)[0])
             else:
                 mask = self._obj[feature_name_in_ds].notnull()
-            mask = mask.rename('PCM_MASK')
+            mask = mask.rename('pcm_MASK')
             M.append(mask)
         mask = xr.concat(M, dim='n_features')
         mask = mask.sum(dim='n_features')
-        mask = mask == pcm.F
+        mask = mask == this_pcm.F
         return mask
 
-    def quantile(self,
-                  q,
-                  of=None,
-                  using='PCM_LABELS',
-                  outname='PCM_QUANT',
-                  inplace=True,
-                  keep_attrs=False):
-        """Compute q-th quantile of a :class:`xarray.DataArray` for each PCM components
-
-            Parameters
-            ----------
-            float in the range of [0,1] (or sequence of floats)
-                Quantiles to compute, which must be between 0 and 1 inclusive.
-
-            of: str
-                Name of the :class:`xarray.Dataset` variable to compute quantiles for.
-
-            using: str
-                Name of the :class:`xarray.Dataset` variable with classification labels to use.
-                Use 'PCM_LABELS' by default.
-
-            outname: 'PCM_QUANT' or str
-                Name of the :class:`xarray.DataArray` with quantile
-
-            inplace: boolean, True by default
-                If True, return the input :class:`xarray.Dataset` with quantile variable added as a new :class:`xarray.DataArray`
-                If False, return a :class:`xarray.DataArray` with quantile
-
-            keep_attrs: boolean, False by default
-                Preserve ``of`` :class:`xarray.Dataset` attributes or not in the new quantile variable.
-
-            Returns
-            -------
-            :class:`xarray.Dataset` with shape (K, n_quantiles, N_z=n_features)
-            or
-            :class:`xarray.DataArray` with shape (K, n_quantiles, N_z=n_features)
-
-        """
-
-        if using not in self._obj.data_vars:
-            raise ValueError(("Variable '%s' not found in this dataset") % (using))
-
-        if of not in self._obj.data_vars:
-            raise ValueError(("Variable '%s' not found in this dataset") % (of))
-
-        # Fill in the dataset, otherwise the xarray.quantile doesn't work
-        # ds = ds.compute()
-        if isinstance(self._obj[of].data, dask.array.Array):
-            raise TypeError("quant does not work for arrays stored as dask "
-                            "arrays. Load the data via .compute() or .load() "
-                            "prior to calling this method.")
-
-        # ID sampling dimensions for this array (all dimensions but those of LABELS)
-        sampling_dims = self._obj[using].dims
-        ds = self._obj.stack({'sampling': sampling_dims})
-        qlist = []  # list of quantiles to compute
-        for label, group in ds.groupby(using):
-            v = group[of].quantile(q, dim='sampling', keep_attrs=True)
-            qlist.append(v)
-
-        # Try to infer the dimension of the class components:
-        # The dimension surely has the unique value in labels:
-        l = self._obj[using].where(self._obj[using].notnull(), drop=True).values.flatten()
-        uniquelabels = np.unique(l[~np.isnan(l)])
-        found_class = False
-        for thisdim in ds.dims:
-            if len(ds[thisdim].values) == len(uniquelabels) and \
-                    np.array_equal(ds[thisdim].values, uniquelabels):
-                dim_class = thisdim
-                found_class = True
-        if not found_class:
-            dim_class = ("pcm_class_%s") % (outname)
-
-        # Create xarray with all quantiles:
-        if found_class:
-            da = xr.concat(qlist, dim=ds[dim_class])
-        else:
-            da = xr.concat(qlist, dim=dim_class)
-        da = da.rename(outname)
-        da = da.unstack()
-
-        # Output:
-        if keep_attrs:
-            da.attrs = ds[of].attrs
+    @pcm_method
+    def quantile(self, this_pcm, inplace=False, **kwargs):
+        """  """
+        da = this_pcm.stat.quantile(self._obj, **kwargs)
         if inplace:
-            return self.add(da)
-        else:
-            return da
-
-    def robustness(self, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS', inplace=True):
-        """ Compute classification robustness
-
-            Parameters
-            ----------
-            name: str, default is 'PCM_POST'
-                Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
-
-            classdimname: str, default is 'pcm_class'
-                Name of the dimension holding classes
-
-            outname: 'PCM_ROBUSTNESS' or str
-                Name of the :class:`xarray.DataArray` with robustness
-
-            inplace: boolean, False by default
-                If False, return a :class:`xarray.DataArray` with robustness
-                If True, return the input :class:`xarray.Dataset` with robustness added as a new :class:`xarray.DataArray`
-
-            Returns
-            -------
-            :class:`xarray.Dataset` if inplace=True
-            or
-            :class:`xarray.DataArray` if inplace=False
-
-        """
-        maxpost = self._obj[name].max(dim=classdimname)
-        K = len(self._obj[classdimname])
-        robust = (maxpost - 1. / K) * K / (K - 1.)
-
-        id = dict()
-        id[classdimname] = 0
-        da = self._obj[name][id].rename(outname)
-        da.values = robust
-        da.attrs['long_name'] = 'PCM classification robustness'
-        da.attrs['units'] = ''
-        da.attrs['valid_min'] = 0
-        da.attrs['valid_max'] = 1
-        da.attrs['llh'] = self._obj[name].attrs['llh']
-
-        # Add labels to the dataset:
-        if inplace:
-            if outname in self._obj.data_vars:
-                warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
-            return self.add(da)
-        else:
-            return da
-
-    def robustness_digit(self, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS_CAT', inplace=True):
-        """ Digitize classification robustness
-
-            Parameters
-            ----------
-            ds: :class:`xarray.Dataset`
-                Input dataset
-
-            name: str, default is 'PCM_POST'
-                Name of the :class:`xarray.DataArray` with prediction probability (posteriors)
-
-            classdimname: str, default is 'pcm_class'
-                Name of the dimension holding classes
-
-            outname: 'PCM_ROBUSTNESS_CAT' or str
-                Name of the :class:`xarray.DataArray` with robustness categories
-
-            inplace: boolean, False by default
-                If False, return a :class:`xarray.DataArray` with robustness
-                If True, return the input :class:`xarray.Dataset` with robustness categories
-                added as a new :class:`xarray.DataArray`
-
-            Returns
-            -------
-            :class:`xarray.Dataset` if inplace=True
-            or
-            :class:`xarray.DataArray` if inplace=False
-        """
-        maxpost = self._obj[name].max(dim=classdimname)
-        K = len(self._obj[classdimname])
-        robust = (maxpost - 1. / K) * K / (K - 1.)
-        Plist = [0, 0.33, 0.66, 0.9, .99, 1]
-        rowl0 = ('Unlikely', 'As likely as not', 'Likely', 'Very Likely', 'Virtually certain')
-        robust_id = np.digitize(robust, Plist) - 1
-
-        id = dict()
-        id[classdimname] = 0
-        da = self._obj[name][id].rename(outname)
-        da.values = robust_id
-        da.attrs['long_name'] = 'PCM classification robustness category'
-        da.attrs['units'] = ''
-        da.attrs['valid_min'] = 0
-        da.attrs['valid_max'] = 4
-        da.attrs['llh'] = self._obj[name].attrs['llh']
-        da.attrs['bins'] = Plist
-        da.attrs['legend'] = rowl0
-
-        # Add labels to the dataset:
-        if inplace:
-            if outname in self._obj.data_vars:
-                warnings.warn(("%s variable already in the dataset: overwriting") % (outname))
             return self.add(da)
         else:
             return da
 
     @pcm_method
-    def fit(self, pcm, **kwargs):
+    def robustness(self, this_pcm, inplace=False, **kwargs):
+        """  """
+        da = this_pcm.stat.robustness(self._obj, **kwargs)
+        if inplace:
+            return self.add(da)
+        else:
+            return da
+
+    @pcm_method
+    def robustness_digit(self, this_pcm, inplace=False, **kwargs):
+        """  """
+        da = this_pcm.stat.robustness_digit(self._obj, **kwargs)
+        if inplace:
+            return self.add(da)
+        else:
+            return da
+
+    @pcm_method
+    def fit(self, this_pcm, **kwargs):
         """ Map this :class:`xarray.Dataset` on :meth:`pyxpcm.pcm.fit` """
-        return pcm.fit(self._obj, **kwargs)
+        this_pcm.fit(self._obj, **kwargs)
 
     @pcm_method
-    def predict(self, pcm, **kwargs):
+    def predict(self, this_pcm, inplace=False, **kwargs):
         """ Map this :class:`xarray.Dataset` on :func:`pyxpcm.pcm.predict` """
-        return pcm.predict(self._obj, **kwargs)
+        da = this_pcm.predict(self._obj, **kwargs)
+        if inplace:
+            return self.add(da)
+        else:
+            return da
 
     @pcm_method
-    def fit_predict(self, pcm, **kwargs):
+    def fit_predict(self, this_pcm, **kwargs):
         """ Map this :class:`xarray.Dataset` on :func:`pyxpcm.pcm.fit_predict` """
-        return pcm.fit_predict(self._obj, **kwargs)
+        return this_pcm.fit_predict(self._obj, **kwargs)
 
     @pcm_method
-    def predict_proba(self, pcm, **kwargs):
+    def predict_proba(self, this_pcm, **kwargs):
         """ Map this :class:`xarray.Dataset` on :func:`pyxpcm.pcm.predict_proba` """
-        return pcm.predict_proba(self._obj, **kwargs)
+        return this_pcm.predict_proba(self._obj, **kwargs)
 
     @pcm_method
-    def score(self, pcm, **kwargs):
+    def score(self, this_pcm, **kwargs):
         """ Map this :class:`xarray.Dataset` on :func:`pyxpcm.pcm.score` """
-        return pcm.score(self._obj, **kwargs)
+        return this_pcm.score(self._obj, **kwargs)
 
     @pcm_method
-    def bic(self, pcm, **kwargs):
+    def bic(self, this_pcm, **kwargs):
         """ Map this :class:`xarray.Dataset` on :func:`pyxpcm.pcm.bic` """
-        return pcm.bic(self._obj, **kwargs)
+        return this_pcm.bic(self._obj, **kwargs)
 

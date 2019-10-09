@@ -27,6 +27,7 @@ from contextlib import contextmanager
 
 # Internal:
 from .plot import _PlotMethods
+from .stats import _StatMethods
 from .utils import LogDataType, Vertical_Interpolator, NoTransform, StatisticsBackend
 
 # Scikit-learn useful methods:
@@ -37,20 +38,8 @@ from sklearn.utils import assert_all_finite
 from sklearn.exceptions import NotFittedError
 
 ####### Scikit-learn statistic backend:
-# https://scikit-learn.org/stable/modules/preprocessing.html
-from sklearn import preprocessing
-# http://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html
-from sklearn.decomposition import PCA
-
 # http://scikit-learn.org/stable/modules/mixture.html
 from sklearn.mixture import GaussianMixture
-
-####### Dask-ml statistic backend:
-# https://ml.dask.org/modules/api.html#module-dask_ml.decomposition
-from dask_ml import preprocessing
-# https://ml.dask.org/modules/generated/dask_ml.decomposition.PCA.html
-# from dask_ml.decomposition import PCA
-
 
 class PCMFeatureError(Exception):
     """Exception raised when features not found."""
@@ -59,7 +48,7 @@ class PCMFeatureError(Exception):
 class pcm(object):
     """Base class for a Profile Classification Model
 
-    Consume and return :mod:`xarray` objects
+        Consume and return :mod:`xarray` objects
 
     """
     def __init__(self,
@@ -208,6 +197,9 @@ class pcm(object):
             self._context_args = {'maxlevel': 3, 'verb':timeit_verb}
             self._timeit = dict()
 
+        # Define statistics for the fit method:
+        self._fit_stats = dict({'n_samples_seen_': None, 'score': None, 'etime': None})
+
     @contextmanager
     def __timeit_context(self, name, opts=dict()):
         default_opts = {'maxlevel': np.inf, 'verb':False}
@@ -252,6 +244,30 @@ class pcm(object):
 
     def __repr__(self):
         return self.display(deep=self._verb)
+
+    # def xmerge(self, ds, da):
+    #     """ Add a new :class:`xarray.DataArray` to a :class:`xarray.Dataset` """
+    #
+    #     if da.name in ds.data_vars:
+    #         warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
+    #
+    #     # Add pyXpcm tracking clues:
+    #     da.attrs['comment'] = "Automatically added by pyXpcm"
+    #
+    #     #
+    #     # vname = da.name
+    #     # self._obj[da.name] = da
+    #     ds = xr.merge([ds, da])
+    #     return ds
+    #
+    # def __clean(self, ds):
+    #     """ Remove all variables created with pyXpcm front a :class:`xarray.Dataset` """
+    #     # See add() method to identify these variables.
+    #     for vname in ds.data_vars:
+    #         if ("comment" in ds[vname].attrs) \
+    #             and (ds[vname].attrs['comment'] == "Automatically added by pyXpcm"):
+    #             ds = ds.drop(vname)
+    #     return ds
 
     def ravel(self, da, dim=None, feature_name=str):
         """ Extract from N-d array a X(feature,sample) 2-d array and vertical dimension z
@@ -375,6 +391,12 @@ class pcm(object):
         return _PlotMethods(self)
 
     @property
+    def stat(self):
+        """Access statistic functions
+        """
+        return _StatMethods(self)
+
+    @property
     def timeit(self):
         """ Return a :class:`pandas.DataFrame` with method times """
 
@@ -476,6 +498,15 @@ class pcm(object):
     def backend(self):
         """ Statistic backend"""
         return self._props['backend']
+
+    @property
+    def fitstats(self):
+        """ Estimator fit properties
+
+            The number of samples processed by the estimator
+            Will be reset on new calls to fit, but increments across partial_fit calls.
+        """
+        return self._fit_stats
 
     def display(self, deep=False):
         """Display detailed parameters of the PCM
@@ -707,7 +738,8 @@ class pcm(object):
             for feature_in_pcm in features_dict:
                 feature_in_ds = features_dict[feature_in_pcm]
                 if self._debug:
-                    print( ("\n\t> Preprocessing xarray dataset '%s' as PCM feature '%s'")%(feature_in_ds, feature_in_pcm) )
+                    print( ("\n\t> Preprocessing xarray dataset '%s' as PCM feature '%s'")\
+                           %(feature_in_ds, feature_in_pcm) )
 
                 if ('maxlevel' in self._context_args) and (self._context_args['maxlevel'] <= 2):
                     a = this_context + '.2-features'
@@ -798,7 +830,15 @@ class pcm(object):
 
             with self._context('fit.3-score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
-                # self._props['bic'] = self._classifier.bic(X)
+
+            # Furthermore gather some information about the fit:
+            self._fit_stats['score'] = self._props['llh']
+            if 'n_samples_seen_' not in self._classifier.__dict__:
+                self._fit_stats['n_samples_seen_'] = X.shape[0]
+            else:
+                self._fit_stats['n_samples_seen_'] = self._classifier.n_samples_seen_
+            if 'n_iter_' in self._classifier.__dict__:
+                self._fit_stats['n_iter_'] = self._classifier.n_iter_
 
         # Done:
         self.fitted = True
@@ -865,8 +905,6 @@ class pcm(object):
 
             # Add labels to the dataset:
             if inplace:
-                if name in ds.data_vars:
-                    warnings.warn( ("%s variable already in the dataset: overwriting")%(name) )
                 return ds.pyxpcm.add(da)
             else:
                 return da
@@ -920,6 +958,15 @@ class pcm(object):
                 self._props['llh'] = self._classifier.score(X)
                 self._props['bic'] = self._classifier.bic(X)
 
+            # Furthermore gather some information about this fit:
+            self._fit_stats['score'] = self._props['llh']
+            if 'n_samples_seen_' not in self._classifier.__dict__:
+                self._fit_stats['n_samples_seen_'] = X.shape[0]
+            else:
+                self._fit_stats['n_samples_seen_'] = self._classifier.n_samples_seen_
+            if 'n_iter_' in self._classifier.__dict__:
+                self._fit_stats['n_iter_'] = self._classifier.n_iter_
+
             # Done:
             self.fitted = True
 
@@ -941,8 +988,6 @@ class pcm(object):
 
             # Add labels to the dataset:
             if inplace:
-                if name in ds.data_vars:
-                    warnings.warn( ("%s variable already in the dataset: overwriting")%(name) )
                 return ds.pyxpcm.add(da)
             else:
                 return da
@@ -1020,8 +1065,6 @@ class pcm(object):
 
             # Add labels to the dataset:
             if inplace:
-                if name in ds.data_vars:
-                    warnings.warn(("%s variable already in the dataset: overwriting") % (name))
                 return ds.pyxpcm.add(da)
             else:
                 return da

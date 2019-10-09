@@ -33,7 +33,7 @@ try:
     import cartopy.crs as ccrs
     import cartopy.feature as cfeature
     from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
-except ModuleNotFoundError:
+except ModuleNotFoundError: # ModuleNotFoundError added in python 3.6
     warnings("pyXpcm requires cartopy installed for full plotting functionality")
 
 try:

@@ -220,11 +220,11 @@ class StatisticsBackend(object):
     """
 
     def __init__(self, backend='sklearn', scaler='StandardScaler', reducer='PCA'):
-        """ Create a Statistics Backend
+        """ Create a Statistic Backend
 
             Use classic backends:
+                bck = StatisticsBackend('sklearn') # Default
                 bck = StatisticsBackend('dask_ml')
-                bck = StatisticsBackend('sklearn')
 
             Use your own packages and specify estimator's name:
                 bck = StatisticsBackend('myown_statistic_module', scaler='myscaler_method')
@@ -293,9 +293,12 @@ class StatisticsBackend(object):
         return method
 
     def scaler(self, **kwargs):
-        if self.backend_type == 'classic':
+        if self.backend == 'sklearn':
             s = importlib.import_module(self.backend)
             method = getattr(getattr(s, 'preprocessing'), self.scaler_method)
+        elif self.backend == 'dask_ml':
+            s = importlib.import_module('dask_ml.preprocessing')
+            method = getattr(s, self.scaler_method)
         elif self.backend_type == 'custom':
             s = importlib.import_module(self.backend)
             method = getattr(s, self.scaler_method)

@@ -3,6 +3,9 @@
 
     Useful for documentation and to play with pyXpcm
 
+
+    Data files should be hosted on another repo
+
 """
 __author__ = 'gmaze@ifremer.fr'
 
@@ -13,6 +16,8 @@ import xarray as xr
 
 #todo Re-factor tutorial dataset loading process following ideas from Xarray/Seaborn
 # https://github.com/pydata/xarray/blob/master/xarray/tutorial.py
+
+#todo Migrate data files to another repo
 
 def open_dataset(name):
     """ Open a dataset from the pyXpcm distrib
