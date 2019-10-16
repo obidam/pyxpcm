@@ -42,11 +42,29 @@ def open_dataset(name):
     elif name == 'isas_series':
         acc = isas(what='sample_series')
 
+    elif name == 'dummy':
+        acc = dummy()
+
     else:
         raise ValueError("Don't know this tutorial dataset")
 
     return acc
 
+class dummy():
+
+    def load(self, Np=100, Nz=10):
+        z = np.linspace(0, -500, Nz)
+        ds = xr.Dataset({
+            'TEMP': xr.DataArray(np.random.rand(Np, Nz),
+                                 dims=['n_prof', 'depth'], coords={'depth': z}),
+            'PSAL': xr.DataArray(np.random.rand(Np, Nz),
+                                 dims=['n_prof', 'depth'], coords={'depth': z})
+            })
+        ds['depth'].attrs['axis'] = 'Z'
+        ds['TEMP'].attrs['feature_name'] = 'temperature'
+        ds['PSAL'].attrs['feature_name'] = 'salinity'
+        ds.attrs['comment'] = "Dummy fields with random values"
+        return ds
 
 class argo():
     def __init__(self, what='sample'):
@@ -112,7 +130,6 @@ def load_argo():
 def load_isas15():
     """Load and return a sample of ISAS15 data"""
     raise ValueError('This function is deprecated, please use: pyxpcm.tutorial.open_dataset')
-
 
 def load_isas15series():
     """Load and return a sample of ISAS15 data timeseries"""

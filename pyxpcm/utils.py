@@ -64,7 +64,7 @@ class NoTransform(BaseEstimator):
         self.fitted = True
         return self
 
-    def transform(self, x, *args):
+    def transform(self, x, *args, **kwargs):
         return x
 
     def score(self, x):
@@ -271,7 +271,7 @@ class StatisticsBackend(object):
             try:
                 importlib.import_module(backend)
             except ModuleNotFoundError:
-                raise ValueError("This custom statistic backend is not available (%s)" % backend)
+                raise ValueError("This statistic backend is not available (%s)" % backend)
             except ValueError:
                 raise ValueError("One of the method is not a proper estimator")
             except:

@@ -24,11 +24,13 @@ import dask
 import warnings
 import time
 from contextlib import contextmanager
+from datetime import datetime
 
 # Internal:
 from .plot import _PlotMethods
 from .stats import _StatMethods
 from .utils import LogDataType, Vertical_Interpolator, NoTransform, StatisticsBackend
+from . import io
 
 # Scikit-learn useful methods:
 from sklearn.base import BaseEstimator
@@ -52,8 +54,8 @@ class pcm(object):
 
     """
     def __init__(self,
-                 K,
-                 features=dict(),
+                 K:int,
+                 features:dict(),
                  scaling=1,
                  reduction=1, maxvar=15,
                  classif='gmm', covariance_type='full',
@@ -114,6 +116,13 @@ class pcm(object):
             Statistic library backend, 'sklearn' (default) or 'dask_ml'
 
         """
+        if K==0:
+            raise ValueError("Can't create a PCM with K=0")
+        if K is None:
+            raise ValueError("K must be defined to create a PMC")
+        if not bool(features):
+            raise PCMFeatureError("Can't create a PCM without features")
+
         if   scaling==0: with_scaler = 'none'; with_mean=False; with_std = False
         elif scaling==1: with_scaler = 'normal'; with_mean=True; with_std = True
         elif scaling==2: with_scaler = 'center'; with_mean=True; with_std = False
@@ -155,10 +164,15 @@ class pcm(object):
 
         for feature_name in features:
             feature_axis = self._props['features'][feature_name]
+            if isinstance(feature_axis, xr.DataArray):
+                self._props['features'][feature_name] = feature_axis.values
 
             # self._scaler[feature_name] = preprocessing.StandardScaler(with_mean=with_mean,
             #                                             with_std=with_std)
-            self._scaler[feature_name] = bck.scaler(with_mean=with_mean, with_std=with_std)
+            if 'none' not in self._props['with_scaler']:
+                self._scaler[feature_name] = bck.scaler(with_mean=with_mean, with_std=with_std)
+            else:
+                self._scaler[feature_name] = NoTransform()
             self._scaler_props[feature_name] = {'units': '?'}
 
             is_slice = np.all(feature_axis == None)
@@ -171,14 +185,14 @@ class pcm(object):
                 else:
                     # Multi-vertical-levels, set reducer:
                     if with_reducer:
-                        # self._reducer[feature_name] = PCA(n_components=self._props['maxvar'], svd_solver='full')
-                        self._reducer[feature_name] = bck.reducer(n_components=self._props['maxvar'], svd_solver='full')
+                        self._reducer[feature_name] = bck.reducer(n_components=self._props['maxvar'],
+                                                                  svd_solver='full')
                     else:
                         self._reducer[feature_name] = NoTransform()
             else:
                 self._interpoler[feature_name] = NoTransform()
                 self._reducer[feature_name] = NoTransform()
-                if self._debug: print("%s is single level, not need to reduce" % feature_name)
+                if self._debug: print("%s is single level, no need to reduce" % feature_name)
 
             self._homogeniser[feature_name] = {'mean': 0, 'std': 1}
 
@@ -198,7 +212,7 @@ class pcm(object):
             self._timeit = dict()
 
         # Define statistics for the fit method:
-        self._fit_stats = dict({'n_samples_seen_': None, 'score': None, 'etime': None})
+        self._fit_stats = dict({'datetime': None, 'n_samples_seen_': None, 'score': None, 'etime': None})
 
     @contextmanager
     def __timeit_context(self, name, opts=dict()):
@@ -508,6 +522,16 @@ class pcm(object):
         """
         return self._fit_stats
 
+    def to_netcdf(self, ncfile, **ka):
+        """ Save PCM to netcdf file
+
+            Parameters
+            ----------
+            path : str
+                Path to file
+        """
+        return io.to_netcdf(self, ncfile, **ka)
+
     def display(self, deep=False):
         """Display detailed parameters of the PCM
             This is not a get_params because it doesn't return a dictionary
@@ -641,8 +665,15 @@ class pcm(object):
                 try:
                     X.data = self._scaler[feature_name].transform(X.data, copy=False)
                 except ValueError:
-                    if self._debug: print("\t\t Failed to scale.transform without copy, fall back on copy=True")
-                    X.data = self._scaler[feature_name].transform(X.data, copy=True)
+                    if self._debug: print("\t\t Fail to scale.transform without copy, fall back on copy=True")
+                    try:
+                        X.data = self._scaler[feature_name].transform(X.data, copy=True)
+                    except ValueError:
+                        if self._debug: print("\t\t Fail to scale.transform with copy, fall back on input copy")
+                        X.data = self._scaler[feature_name].transform(X.data.copy())
+                        pass
+                    except:
+                        raise
                     pass
                 except:
                     raise
@@ -655,8 +686,8 @@ class pcm(object):
                 if (not hasattr(self, 'fitted')) and (self._props['with_reducer']):
 
                     if self.backend == 'dask_ml':
-                        # We have to convert any type of data array into a Dask array because the
-                        # the dask_ml cannot handle anything else (!)
+                        # We have to convert any type of data array into a Dask array because
+                        # dask_ml cannot handle anything else (!)
                         #todo Raise an issue on dask_ml github to ask why is this choice made
                         # Related issues:
                         #   https://github.com/dask/dask-ml/issues/6
@@ -757,15 +788,17 @@ class pcm(object):
 
                 with self._context(this_context + '.3-homogeniser', self._context_args):
                     # Store full array mean and std during fit:
-                    if (action == 'fit') or (action == 'fit_predict'):
-                        self._homogeniser[feature_in_pcm]['mean'] = np.mean(x[:])
-                        self._homogeniser[feature_in_pcm]['std'] = np.std(x[:])
-                        #todo _homogeniser should be a proper standard scaler
-
                     if F>1:
                         # For more than 1 feature, we need to make them comparable,
                         # so we normalise each features by their global stats:
-                        x = (x-self._homogeniser[feature_in_pcm]['mean'])/self._homogeniser[feature_in_pcm]['std']
+                        # FIT:
+                        if (action == 'fit') or (action == 'fit_predict'):
+                            self._homogeniser[feature_in_pcm]['mean'] = x.mean().values
+                            self._homogeniser[feature_in_pcm]['std'] = x.std().values
+                            #todo _homogeniser should be a proper standard scaler
+                        # TRANSFORM:
+                        x = (x-self._homogeniser[feature_in_pcm]['mean'])/\
+                            self._homogeniser[feature_in_pcm]['std']
                         if self._debug and action == 'fit':
                             print(("\tHomogenisation for fit of %s") % (feature_in_pcm))
                         elif self._debug:
@@ -833,6 +866,7 @@ class pcm(object):
 
             # Furthermore gather some information about the fit:
             self._fit_stats['score'] = self._props['llh']
+            self._fit_stats['datetime'] = datetime.utcnow()
             if 'n_samples_seen_' not in self._classifier.__dict__:
                 self._fit_stats['n_samples_seen_'] = X.shape[0]
             else:
@@ -892,7 +926,7 @@ class pcm(object):
             with self._context('predict.2-predict', self._context_args):
                 labels = self._classifier.predict(X)
             with self._context('predict.score', self._context_args):
-                self._props['llh'] = self._classifier.score(X)
+                llh = self._classifier.score(X)
 
             # Create a xarray with labels output:
             with self._context('predict.3-xarray', self._context_args):
@@ -901,7 +935,7 @@ class pcm(object):
                 da.attrs['units'] = ''
                 da.attrs['valid_min'] = 0
                 da.attrs['valid_max'] = self._props['K']-1
-                da.attrs['llh'] = self._props['llh']
+                da.attrs['llh'] = llh
 
             # Add labels to the dataset:
             if inplace:

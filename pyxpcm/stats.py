@@ -1,10 +1,9 @@
 #!/bin/env python
 # -*coding: UTF-8 -*-
 #
-# This will be removed at some points
-# These methods are no longer needed here !
-# Statistics of PCM for a dataset are now accessed through the xarray.dataset accessor like:
-#   ds.pyxpcm.robustness(...
+# Methods to be accesses through the xarray accessor or pcm "stat" space:
+# m.stat.<method>
+# ds.pyxpcm.<method>
 #
 # Created by gmaze on 2017/12/05
 __author__ = 'gmaze@ifremer.fr'

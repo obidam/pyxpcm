@@ -9,3 +9,4 @@ from . import tutorial
 from . import utils
 from . import plot
 from . import stats
+from .io import load, load_netcdf

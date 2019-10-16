@@ -83,7 +83,14 @@ class pyXpcmDataSetAccessor:
             warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
 
         # Add pyXpcm tracking clues:
-        da.attrs['comment'] = "Automatically added by pyXpcm"
+        da.attrs['_pyXpcm_cleanable'] = True
+
+        # Check if da dimensions are new or not
+        # For new dimensions we need to add the pyXpcm attribute for later clean
+        new_dims = list(set(da.dims)-set(self._obj.dims))
+        for d in new_dims:
+            da[d].attrs['_pyXpcm_cleanable'] = True
+            # self._added.append(d)
 
         #
         # vname = da.name
@@ -94,8 +101,12 @@ class pyXpcmDataSetAccessor:
 
     def clean(self):
         """ Remove all variables created with pyXpcm front this :class:`xarray.Dataset` """
+        return self._obj.drop([
+            k for k, v in self._obj.variables.items()
+            if v.attrs.get("_pyXpcm_cleanable")
+        ])
         # See add() method to identify these variables.
-        return self._obj.drop(self._added)
+        # return self._obj.drop(self._added)
         # for vname in self._obj.data_vars:
         #     if ("comment" in self._obj[vname].attrs) \
         #         and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
