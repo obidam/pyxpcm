@@ -26,7 +26,7 @@ try:
     import matplotlib.colors as mcolors
     import matplotlib.ticker as mticker
 except:
-    warnings("pyXpcm requires matplotlib installed for plotting functionality")
+    warnings.warn("pyXpcm requires matplotlib installed for plotting functionality")
 
 try:
     import cartopy
@@ -34,14 +34,14 @@ try:
     import cartopy.feature as cfeature
     from cartopy.mpl.gridliner import LONGITUDE_FORMATTER, LATITUDE_FORMATTER
 except ModuleNotFoundError: # ModuleNotFoundError added in python 3.6
-    warnings("pyXpcm requires cartopy installed for full plotting functionality")
+    warnings.warn("pyXpcm requires cartopy installed for full plotting functionality")
 
 try:
     import seaborn as sns
     sns.set_context("paper")
     with_seaborn = True
 except ModuleNotFoundError:
-    warnings("pyXpcm requires seaborn installed for full plotting functionality")
+    warnings.warn("pyXpcm requires seaborn installed for full plotting functionality")
     with_seaborn = False
 
 
