@@ -27,7 +27,7 @@ __format_version__ = 0.1
 def _TransformerName(obj):
     return str(type(obj)).split('>')[0].split('.')[-1].split("'")[0]
 
-def load(file_path="pcm.nc"):
+def _load(file_path="pcm.nc"):
     """ Load a PCM file"""
     filename, file_extension = os.path.splitext(file_path)
     if file_extension == '.nc':
@@ -37,7 +37,7 @@ def load(file_path="pcm.nc"):
             m = pickle.load(f)
     return m
 
-def save(m, file_path="pcm.nc"):
+def _save(m, file_path="pcm.nc"):
     """ Save a PCM to file """
     filename, file_extension = os.path.splitext(file_path)
     if file_extension == '.nc':
@@ -45,7 +45,6 @@ def save(m, file_path="pcm.nc"):
     else:
         with open(file_path, "wb") as f:
             pickle.dump(m, f)
-
 
 def to_netcdf(m, ncfile=None, global_attributes=dict(), mode='w'):
     """ Save PCM to netcdf
@@ -56,7 +55,15 @@ def to_netcdf(m, ncfile=None, global_attributes=dict(), mode='w'):
         Parameters
         ----------
         ncfile : str
-            File name to which to save this PCM. File-like objects are only supported by the scipy engine.
+            File name to which to save this PCM.
+
+        global_attributes: dict()
+            Dictionnary of attributes to add the Netcdf4 file under the global scope.
+
+        mode : str
+            Writing mode of the file.
+            mode='w' (default) to overwrite any existing file.
+            Anything else will raise an Error if file exists.
     """
 
     if (mode == 'w' and os.path.exists(ncfile) and os.path.isfile(ncfile)):
@@ -244,7 +251,15 @@ def to_netcdf(m, ncfile=None, global_attributes=dict(), mode='w'):
     pcm2cdf['classifier'].to_netcdf(ncfile, mode='a', format='NETCDF4', group='classifier')
 
 def load_netcdf(ncfile):
-    """ Load a PCM model saved in netcdf format """
+    """ Load a PCM model saved in netcdf format
+
+        Parameters
+        ----------
+        ncfile : str
+            File name from which to load a PCM.
+
+
+    """
 
     pcm2cdf = dict()
     pcm2cdf['global'] = xr.open_dataset(ncfile, group='/')

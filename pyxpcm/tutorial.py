@@ -52,7 +52,7 @@ def open_dataset(name):
 
 class dummy():
 
-    def load(self, Np=100, Nz=10):
+    def load(self, Np=100, Nz=20):
         z = np.linspace(0, -500, Nz)
         ds = xr.Dataset({
             'TEMP': xr.DataArray(np.random.rand(Np, Nz),

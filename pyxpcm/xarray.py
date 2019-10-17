@@ -5,13 +5,12 @@ Provide accessor to enhance interoperability between :mod:`xarray` and :mod:`pyx
 
 Provide a scope named ``pyxpcm`` as accessor to :class:`xarray.Dataset` objects.
 
-Note that because of https://github.com/pydata/xarray/issues/3268, nothing happens in place here. So it should always goes like (even with `inplace=True`):
-
-    ds = ds.pyxpcm.<method>()
-
 """
 # Created by gmaze on 2019-10-02
 
+# Note that because of https://github.com/pydata/xarray/issues/3268, nothing happens in place here. So it should always goes like (even with `inplace=True`):
+#
+#     ds = ds.pyxpcm.<method>()
 
 import os
 import sys

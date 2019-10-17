@@ -18,6 +18,7 @@
     pcmodel.pcm.predict_proba
     pcmodel.pcm.score
     pcmodel.pcm.bic
+    pcmodel.pcm.to_netcdf
 
     pcmodel.pcm.plot
     pcmodel.pcm.plot.cmap
@@ -36,3 +37,7 @@
     plot.quantile
 
     tutorial.open_dataset
+
+    pcmodel.pcm.to_netcdf
+    io.to_netcdf
+    io.open_netcdf

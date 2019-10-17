@@ -44,6 +44,7 @@ Documentation
 * :doc:`basic_gridded`
 * :doc:`preprocessing`
 * :doc:`pcm_prop`
+* :doc:`io`
 * :doc:`debug_perf`
 
 .. toctree::
@@ -54,6 +55,7 @@ Documentation
     basic_gridded.ipynb
     preprocessing.ipynb
     pcm_prop.ipynb
+    io.ipynb
     debug_perf.ipynb
 
 
