@@ -8,7 +8,7 @@ To begin with, import PCM and numpy:
 .. ipython:: python
 
     import numpy as np
-    from pyxpcm.pcmodel import pcm
+    from pyxpcm.models import pcm
 
 Create a PCM
 ------------

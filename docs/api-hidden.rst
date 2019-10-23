@@ -7,28 +7,31 @@
 .. autosummary::
     :toctree: generated/
 
-    pcmodel.pcm
-    pcmodel.pcm.K
-    pcmodel.pcm.F
-    pcmodel.pcm.features
-    pcmodel.pcm.timeit
-    pcmodel.pcm.fit
-    pcmodel.pcm.fit_predict
-    pcmodel.pcm.predict
-    pcmodel.pcm.predict_proba
-    pcmodel.pcm.score
-    pcmodel.pcm.bic
-    pcmodel.pcm.to_netcdf
+    models.pcm
+    models.pcm.K
+    models.pcm.F
+    models.pcm.features
+    models.pcm.timeit
+    models.pcm.fit
+    models.pcm.fit_predict
+    models.pcm.predict
+    models.pcm.predict_proba
+    models.pcm.score
+    models.pcm.bic
+    models.pcm.to_netcdf
 
-    pcmodel.pcm.plot
-    pcmodel.pcm.plot.cmap
-    pcmodel.pcm.plot.colorbar
-    pcmodel.pcm.plot.subplots
-    pcmodel.pcm.plot.scaler
-    pcmodel.pcm.plot.reducer
-    pcmodel.pcm.plot.timeit
-    pcmodel.pcm.plot.preprocessed
-    pcmodel.pcm.plot.quantile
+    models.pcm.ravel
+    models.pcm.unravel
+
+    models.pcm.plot
+    models.pcm.plot.cmap
+    models.pcm.plot.colorbar
+    models.pcm.plot.subplots
+    models.pcm.plot.scaler
+    models.pcm.plot.reducer
+    models.pcm.plot.timeit
+    models.pcm.plot.preprocessed
+    models.pcm.plot.quantile
 
     plot.cmap
     plot.latlongrid
@@ -38,6 +41,13 @@
 
     tutorial.open_dataset
 
-    pcmodel.pcm.to_netcdf
+    models.pcm.to_netcdf
     io.to_netcdf
     io.open_netcdf
+
+    pyxpcm.xarray.pyXpcmDataSetAccesso
+    pyxpcm.xarray.pyXpcmDataSetAccesso.add
+    pyxpcm.xarray.pyXpcmDataSetAccesso.clean
+    pyxpcm.xarray.pyXpcmDataSetAccesso.feature_dict
+    pyxpcm.xarray.pyXpcmDataSetAccesso.sampling_dim
+    pyxpcm.xarray.pyXpcmDataSetAccesso.mask

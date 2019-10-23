@@ -48,7 +48,7 @@ class PCMFeatureError(Exception):
 
 
 class pcm(object):
-    """Base class for a Profile Classification Model
+    """Profile Classification Model class constructor
 
         Consume and return :mod:`xarray` objects
 
@@ -393,10 +393,14 @@ class pcm(object):
         """Return the number of features"""
         return self._props['F']
 
+    # @property
+    # def features(self):
+    #     """Return the list of feature names"""
+    #     return [feature for feature in self._props['features']]
     @property
     def features(self):
-        """Return the list of feature names"""
-        return [feature for feature in self._props['features']]
+        """Return the features definition"""
+        return self._props['features']
 
     @property
     def plot(self):

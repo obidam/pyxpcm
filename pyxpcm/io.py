@@ -17,7 +17,7 @@ from datetime import datetime
 import errno
 from sklearn.utils import validation
 from sklearn.mixture import GaussianMixture
-from . import pcmodel
+from . import models
 from . import __version__
 
 # Define variables fo netcdf load/save:
@@ -47,7 +47,7 @@ def _save(m, file_path="pcm.nc"):
             pickle.dump(m, f)
 
 def to_netcdf(m, ncfile=None, global_attributes=dict(), mode='w'):
-    """ Save PCM to netcdf
+    """ Save a PCM to a netcdf file
 
         Any existing file at this location will be overwritten.
         Time logging information are not saved.
@@ -93,8 +93,9 @@ def to_netcdf(m, ncfile=None, global_attributes=dict(), mode='w'):
     pcm2cdf = dict()
 
     # Create global scope
+    feature_names = [feature for feature in m.features]
     ds_global = xr.merge([
-        xr.DataArray(m.features, name='feature', dims='F', coords={'F': np.arange(0, m.F)}),
+        xr.DataArray(feature_names, name='feature', dims='F', coords={'F': np.arange(0, m.F)}),
         xr.DataArray(np.arange(0, m.K), name='class', dims='K', coords={'K': np.arange(0, m.K)}),
     ])
     ds_global.attrs['backend'] = m.backend
@@ -251,7 +252,7 @@ def to_netcdf(m, ncfile=None, global_attributes=dict(), mode='w'):
     pcm2cdf['classifier'].to_netcdf(ncfile, mode='a', format='NETCDF4', group='classifier')
 
 def load_netcdf(ncfile):
-    """ Load a PCM model saved in netcdf format
+    """ Load a PCM model from a netcdf file
 
         Parameters
         ----------
@@ -288,7 +289,7 @@ def load_netcdf(ncfile):
     for feature in pcm2cdf['global']['feature'].values:
         features[feature] = pcm2cdf[feature]['Z'].values
 
-    loaded_m = pcmodel.pcm(K,
+    loaded_m = models.pcm(K,
                    features=features,
                    scaling=scaling,
                    reduction=reduction, maxvar=maxvar,

@@ -61,6 +61,8 @@ class dummy():
                                  dims=['n_prof', 'depth'], coords={'depth': z})
             })
         ds['depth'].attrs['axis'] = 'Z'
+        ds['depth'].attrs['units'] = 'meters'
+        ds['depth'].attrs['positive'] = 'up'
         ds['TEMP'].attrs['feature_name'] = 'temperature'
         ds['PSAL'].attrs['feature_name'] = 'salinity'
         ds.attrs['comment'] = "Dummy fields with random values"
@@ -82,6 +84,8 @@ class argo():
             ncfile = 'argo_sample_test.nc'
             ds = xr.open_mfdataset(join(self.data_root, ncfile))
             ds['DEPTH'].attrs['axis'] = 'Z'
+            ds['DEPTH'].attrs['units'] = 'meters'
+            ds['DEPTH'].attrs['positive'] = 'up'
             #todo I need to add these attributes directly into the netcdf file
             ds.attrs = dict()
             ds.attrs['Sample test prepared by'] = "G. Maze"
@@ -107,6 +111,8 @@ class isas():
             ds = xr.open_mfdataset(join(self.data_root, ncfile))
             ds['depth'] = -np.abs(ds['depth'])
             ds['depth'].attrs['axis'] = 'Z'
+            ds['depth'].attrs['units'] = 'meters'
+            ds['depth'].attrs['positive'] = 'up'
             ds['SST'] = ds['TEMP'].isel(depth=0)
             # Data small enough to fit in memory on any computer
             ds = ds.chunk({'latitude': None, 'longitude': None})
@@ -117,6 +123,8 @@ class isas():
             ds = xr.open_mfdataset(join(self.data_root, ncfile))
             ds['depth'] = -np.abs(ds['depth'])
             ds['depth'].attrs['axis'] = 'Z'
+            ds['depth'].attrs['units'] = 'meters'
+            ds['depth'].attrs['positive'] = 'up'
             ds['SST'] = ds['TEMP'].isel(depth=0)
             # Data small enough to fit in memory on any computer
             ds = ds.chunk({'latitude': None, 'longitude': None, 'time': None})

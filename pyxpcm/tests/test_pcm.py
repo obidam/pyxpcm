@@ -1,5 +1,5 @@
-from pyxpcm.pcmodel import pcm
-from pyxpcm.pcmodel import PCMFeatureError
+from pyxpcm.models import pcm
+from pyxpcm.models import PCMFeatureError
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 import pyxpcm

@@ -1,4 +1,13 @@
 # -*coding: UTF-8 -*-
+"""
+
+Test suite for pyXpcm continuous integration
+
+#todo Fix Travis environment failing on io test because of missing dask.preprocessing backend
+eg: https://travis-ci.org/gmaze/pyxpcm/builds/599093644
+
+"""
+
 
 # import mpl and change the backend before other mpl imports
 try:

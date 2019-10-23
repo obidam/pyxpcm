@@ -176,17 +176,14 @@ class Vertical_Interpolator(object):
                 if self._debug: print(
                     "\t\tOutput axis is in the input axis, not need to interpolate, simple intersection")
                 in1 = np.in1d(Caxis, self.axis)
-                #                 C = C[:, in1]
                 C = C[{vertical_dim: in1}]
-            #                  da[dict(space=0)]
 
             elif (not self.issimilar(Caxis)):
-
                 if self._debug: print("\t\tOutput axis is new, will use interpolation")
-                [Np, Nz] = C.shape
+                # [Np, Nz] = C.shape
 
                 ##########################
-                # Possibly Create a mixed layer for the interpolation to work smoothly at the surface
+                # Possibly create a mixed layer for the interpolation to work smoothly at the surface:
                 if ((Caxis[0] < 0.) & (self.axis[0] == 0.)):
                     C, Caxis = self.mix(C, Caxis, vertical_dim)
 

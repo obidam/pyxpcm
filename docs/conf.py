@@ -145,7 +145,7 @@ release = u'0.4.0'
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store',
                     '.ipynb_checkpoints', '_ext', 'tempo_out',
-                    'offline']
+                    'offline', 'matlab']
 
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = 'sphinx'

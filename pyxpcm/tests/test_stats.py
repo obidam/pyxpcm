@@ -6,8 +6,8 @@
 # Created by gmaze on 2019-03-26
 __author__ = 'gmaze@ifremer.fr'
 
-from pyxpcm.pcmodel import pcm
-from pyxpcm.pcmodel import PCMFeatureError
+from pyxpcm.models import pcm
+from pyxpcm.models import PCMFeatureError
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 from pyxpcm import tutorial as pcmdata

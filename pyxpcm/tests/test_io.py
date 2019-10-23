@@ -8,7 +8,7 @@ __author__ = 'gmaze@ifremer.fr'
 
 import os
 import pyxpcm
-from pyxpcm.pcmodel import pcm
+from pyxpcm.models import pcm
 import pytest
 
 def test_saveload_prediction():

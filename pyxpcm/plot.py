@@ -8,7 +8,7 @@ Provide basic methods for quick and easy plotting of/with PCM features
 """
 
 # Import packages:
-from . import pcmodel
+from . import models
 from contextlib import contextmanager
 import warnings
 
@@ -180,14 +180,14 @@ def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
 
         Parameters
         ----------
-        :class:`pyxpcm.pcmodel.pcm`
+        :class:`pyxpcm.models.pcm`
             A PCM instance
 
         maxcols : int
             Maximum number of columns to use
 
         K : int
-            The number of subplot required (:func:`pyxpcm.pcmodel.pcm.K` by default)
+            The number of subplot required (:func:`pyxpcm.models.pcm.K` by default)
 
         subplot_kw : dict()
             Arguments to be submitted to the :class:`matplotlib.pyplot.subplots` subplot_kw options.
@@ -230,14 +230,15 @@ def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
         fig.delaxes(ax[i])
     return fig, ax
 
-def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white', **kwargs):
-    """ Plot :class:`pyxpcm.pcm` registered timing of operations
+def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white', unit='ms', **kwargs):
+    """ Plot PCM registered timing of operations
 
         Parameters
         ----------
         group='Method',
         split='Sub-method',
         subplot_kw=None, style='white'
+        unit='s'
 
         Returns
         -------
@@ -247,6 +248,14 @@ def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white'
 
     # Read timings:
     df = m.timeit
+
+    # Default timeit unit is milli-seconds
+    if unit == 's':
+        df = df/1000.
+    elif unit == 'm':
+        df = df/1000./60.
+    elif unit == 'h':
+        df = df/1000./60./60.
 
     # Get max levels:
     dpt = list()
@@ -286,7 +295,7 @@ def timeit(m, group='Method', split='Sub-method', subplot_kw=None, style='white'
 
         if with_seaborn: sns.despine()
         ax.grid(True)
-        ax.set_xlabel('Time [ms]')
+        ax.set_xlabel( "Time [%s]" % unit)
         ax.set_ylabel(group)
     return fig, ax, df
 
@@ -445,7 +454,7 @@ def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, su
                 ax[icol].legend(loc='lower right')
                 if icol == 0:
                     ax[icol].set_ylabel(feature_axis_name)
-            elif isinstance(m._reducer[feature], pcmodel.NoTransform):
+            elif isinstance(m._reducer[feature], models.NoTransform):
                 ax[icol].set_title('No reducer for %s' % feature, fontsize=10)
             else:
                 ax[icol].set_title('Unknown reducer for %s !' % feature, fontsize=10)

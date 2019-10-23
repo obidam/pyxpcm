@@ -1,8 +1,8 @@
 __version__ = "0.4.0"
 
 # Import class:
-from .pcmodel import pcm as pcm
-from .xarray import *
+from .models import pcm
+from .xarray import pyXpcmDataSetAccessor
 
 # Other Import
 from . import tutorial

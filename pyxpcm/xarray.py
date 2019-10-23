@@ -17,7 +17,7 @@ import sys
 import numpy as np
 import xarray as xr
 import dask
-from .pcmodel import pcm, PCMFeatureError
+from .models import pcm, PCMFeatureError
 import warnings
 
 # Decorators
@@ -76,7 +76,7 @@ class pyXpcmDataSetAccessor:
         return feature_in_ds
 
     def add(self, da):
-        """ Add a new :class:`xarray.DataArray` to this :class:`xarray.Dataset` """
+        """ Add and register a new :class:`xarray.DataArray` to this :class:`xarray.Dataset` """
 
         if da.name in self._obj.data_vars:
             warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
@@ -99,7 +99,13 @@ class pyXpcmDataSetAccessor:
         return self._obj
 
     def clean(self):
-        """ Remove all variables created with pyXpcm front this :class:`xarray.Dataset` """
+        """ Remove all registered :class:`xarray.DataArray` created with pyXpcm front this :class:`xarray.Dataset`
+
+        """
+        #todo Fix issue Dataset cleaning could miss some dimensions added by pyXpcm
+        # :issue:`3222`
+        # https://github.com/pydata/xarray/issues/3268
+
         return self._obj.drop([
             k for k, v in self._obj.variables.items()
             if v.attrs.get("_pyXpcm_cleanable")
@@ -201,7 +207,7 @@ class pyXpcmDataSetAccessor:
                 SD[feature_name_in_ds]['DIM_VERTICAL'] = None
             else:
                 if not dim:
-                    # Try to infer the vertical dimension name looking for the CF 'axis' attribute in all dimensions
+                    # Try to infer the vertical dimension name looking for the CF 'axis' attribute in all dimensions of the array
                     dim_found = False
                     for this_dim in da.dims:
                         if ('axis' in da[this_dim].attrs) and (da[this_dim].attrs['axis'] == 'Z'):

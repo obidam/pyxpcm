@@ -15,6 +15,7 @@ Creating a PCM
    :toctree: generated/
 
    pcm
+   pyxpcm.load_netcdf
 
 Attributes
 --------------
@@ -24,15 +25,7 @@ Attributes
 
    pcm.K
    pcm.F
-
-Contents
-------------
-
-.. autosummary::
-   :toctree: generated/
-
    pcm.features
-   pcm.timeit
 
 Computation
 ---------------
@@ -48,6 +41,17 @@ Computation
    pcm.bic
 
 
+Low-level PCM properties and functions
+======================================
+
+.. autosummary::
+   :toctree: generated/
+
+   pcm.timeit
+   pcm.ravel
+   pcm.unravel
+
+
 .. _api-plot:
 
 Plotting
@@ -57,6 +61,17 @@ Plotting
     :toctree: generated/
 
     pcm.plot
+
+Plot PCM Contents
+-----------------
+.. autosummary::
+    :toctree: generated/
+
+    plot.quantile
+    plot.scaler
+    plot.reducer
+    plot.preprocessed
+    plot.timeit
 
 Tools
 -----
@@ -68,25 +83,14 @@ Tools
     plot.subplots
     plot.latlongrid
 
-Plot PCM Contents
------------------
-.. autosummary::
-    :toctree: generated/
-
-    plot.scaler
-    plot.reducer
-    plot.timeit
-    plot.preprocessed
-    plot.quantile
-
-Save/load
-=========
+Save/load PCM models
+====================
 
 .. autosummary::
     :toctree: generated/
 
     pcm.to_netcdf
-    io.load_netcdf
+    pyxpcm.load_netcdf
 
 Helper
 ======
