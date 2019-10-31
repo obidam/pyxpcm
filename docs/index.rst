@@ -29,9 +29,9 @@ Documentation
 **User guide**
 
 * :doc:`example`
-* :doc:`preprocessing`
 * :doc:`pcm_prop`
 * :doc:`io`
+* :doc:`preprocessing`
 * :doc:`debug_perf`
 
 .. toctree::
@@ -40,9 +40,9 @@ Documentation
     :caption: User guide
 
     example.ipynb
-    preprocessing.ipynb
     pcm_prop.ipynb
     io.ipynb
+    preprocessing.ipynb
     debug_perf.ipynb
 
 

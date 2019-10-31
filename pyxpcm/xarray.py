@@ -14,16 +14,23 @@ Provide a scope named ``pyxpcm`` as accessor to :class:`xarray.Dataset` objects.
 
 import os
 import sys
+import warnings
 import numpy as np
 import xarray as xr
 import dask
 from .models import pcm, PCMFeatureError
-import warnings
+from . import stat
+# from .utils import docstring
 
 # Decorators
 def pcm_method(func):
     #todo Decorator that directly map PCM functions on xarray accessor
-    #todo Follow doctring from  PCM functions to xarray accessor
+    func.__doc__ = getattr(pcm, func.__name__).__doc__
+    return func
+
+def pcm_stat_method(func):
+    #todo Decorator that directly map PCM functions on xarray accessor
+    func.__doc__ = getattr(stat, func.__name__).__doc__
     return func
 
 @xr.register_dataset_accessor('pyxpcm')
@@ -285,35 +292,7 @@ class pyXpcmDataSetAccessor:
         return mask
 
     @pcm_method
-    def quantile(self, this_pcm, inplace=False, **kwargs):
-        """  """
-        da = this_pcm.stat.quantile(self._obj, **kwargs)
-        if inplace:
-            return self.add(da)
-        else:
-            return da
-
-    @pcm_method
-    def robustness(self, this_pcm, inplace=False, **kwargs):
-        """  """
-        da = this_pcm.stat.robustness(self._obj, **kwargs)
-        if inplace:
-            return self.add(da)
-        else:
-            return da
-
-    @pcm_method
-    def robustness_digit(self, this_pcm, inplace=False, **kwargs):
-        """  """
-        da = this_pcm.stat.robustness_digit(self._obj, **kwargs)
-        if inplace:
-            return self.add(da)
-        else:
-            return da
-
-    @pcm_method
     def fit(self, this_pcm, **kwargs):
-        """ Map this :class:`xarray.Dataset` on :meth:`pyxpcm.pcm.fit` """
         this_pcm.fit(self._obj, **kwargs)
 
     @pcm_method
@@ -345,3 +324,29 @@ class pyXpcmDataSetAccessor:
         """ Map this :class:`xarray.Dataset` on :func:`pyxpcm.pcm.bic` """
         return this_pcm.bic(self._obj, **kwargs)
 
+    @pcm_stat_method
+    def quantile(self, this_pcm, inplace=False, **kwargs):
+        """ Map this :class:`xarray.Dataset` on :meth:`pyxpcm.pcm.stat.quantile` """
+        da = this_pcm.stat.quantile(self._obj, **kwargs)
+        if inplace:
+            return self.add(da)
+        else:
+            return da
+
+    @pcm_stat_method
+    def robustness(self, this_pcm, inplace=False, **kwargs):
+        """ Map this :class:`xarray.Dataset` on :meth:`pyxpcm.pcm.stat.robustness` """
+        da = this_pcm.stat.robustness(self._obj, **kwargs)
+        if inplace:
+            return self.add(da)
+        else:
+            return da
+
+    @pcm_stat_method
+    def robustness_digit(self, this_pcm, inplace=False, **kwargs):
+        """ Map this :class:`xarray.Dataset` on :meth:`pyxpcm.pcm.stat.robustness_digit` """
+        da = this_pcm.stat.robustness_digit(self._obj, **kwargs)
+        if inplace:
+            return self.add(da)
+        else:
+            return da

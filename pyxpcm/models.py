@@ -28,8 +28,8 @@ from datetime import datetime
 
 # Internal:
 from .plot import _PlotMethods
-from .stats import _StatMethods
-from .utils import LogDataType, Vertical_Interpolator, NoTransform, StatisticsBackend
+from .stat import _StatMethods
+from .utils import LogDataType, Vertical_Interpolator, NoTransform, StatisticsBackend, docstring
 from . import io
 
 # Scikit-learn useful methods:
@@ -147,7 +147,8 @@ class pcm(object):
                         'maxvar': maxvar,
                         'features': collections.OrderedDict(features),
                         'chunk_size': chunk_size,
-                        'backend': backend}
+                        'backend': backend,
+                        'cmap': None}
         self._xmask = None # xarray mask for nd-array used at pre-processing steps
 
         self._verb = verb #todo _verb is a property, should be set/get with a decorator
@@ -393,30 +394,27 @@ class pcm(object):
         """Return the number of features"""
         return self._props['F']
 
-    # @property
-    # def features(self):
-    #     """Return the list of feature names"""
-    #     return [feature for feature in self._props['features']]
     @property
     def features(self):
-        """Return the features definition"""
+        """Return features definition dictionnary"""
         return self._props['features']
 
     @property
     def plot(self):
         """Access plotting functions
         """
-        return _PlotMethods(self)
+        self._plt = _PlotMethods(self)
+        return self._plt
 
     @property
     def stat(self):
-        """Access statistic functions
+        """Access statistics functions
         """
         return _StatMethods(self)
 
     @property
     def timeit(self):
-        """ Return a :class:`pandas.DataFrame` with method times """
+        """ Return a :class:`pandas.DataFrame` with Execution time of method called on this instance """
 
         def get_multindex(times):
             """ Create multi-index pandas """
@@ -526,6 +524,7 @@ class pcm(object):
         """
         return self._fit_stats
 
+    @docstring(io.to_netcdf.__doc__)
     def to_netcdf(self, ncfile, **ka):
         """ Save PCM to netcdf file
 
@@ -602,7 +601,6 @@ class pcm(object):
         
         # Done
         return '\n'.join(summary)
-
 
     def preprocessing_this(self, da, dim=None, feature_name=str(), action='?'):
         """Pre-process data before anything

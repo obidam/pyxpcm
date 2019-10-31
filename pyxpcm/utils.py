@@ -14,6 +14,16 @@ import dask
 from sklearn.base import BaseEstimator
 import importlib
 
+def docstring(value):
+    """Replace one function docstring
+
+        To be used as a decorator
+    """
+    def _doc(func):
+        func.__doc__ = value
+        return func
+    return _doc
+
 def LogDataType(obj, prt=False):
     """ Description of data array type and shape/chunk
 
@@ -149,17 +159,21 @@ class Vertical_Interpolator(object):
 
     def transform(self, C, Caxis):
         """
-            Interpolate data on the PCM vertical axis
+            Interpolate data on a PCM vertical axis
 
             C[n_samples, n_levels]
 
             Caxis[n_levels]
-
         """
+
+        # Sanity checks:
         if not isinstance(C, xr.DataArray):
             raise ValueError("Transform works with xarray.DataArray only")
         elif 'sampling' not in C.dims:
             raise KeyError("Transform only works with xarray.DataArray with a 'sampling' dimension")
+        if np.min(Caxis)>np.min(self.axis):
+            raise ValueError("xarray.DataArray vertical axis is not deep enough for this PCM axis [%0.2f > %0.2f]"
+                             %(np.min(Caxis), np.min(self.axis)))
 
         vertical_dim = list(C.dims)
         vertical_dim.remove('sampling')  # Because C must be an output of pcm.ravel()

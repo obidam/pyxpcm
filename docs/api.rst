@@ -28,7 +28,7 @@ Attributes
    pcm.features
 
 Computation
----------------
+-----------
 
 .. autosummary::
    :toctree: generated/
@@ -39,7 +39,6 @@ Computation
    pcm.predict_proba
    pcm.score
    pcm.bic
-
 
 Low-level PCM properties and functions
 ======================================
@@ -82,6 +81,20 @@ Tools
     plot.colorbar
     plot.subplots
     plot.latlongrid
+
+
+.. _api-stat:
+
+Statistics
+==========
+
+.. autosummary::
+    :toctree: generated/
+
+    pcm.stat
+    stat.quantile
+    stat.robustness
+    stat.robustness_digit
 
 Save/load PCM models
 ====================

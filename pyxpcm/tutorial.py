@@ -7,7 +7,6 @@
     Data files should be hosted on another repo
 
 """
-__author__ = 'gmaze@ifremer.fr'
 
 # import os
 from os.path import dirname, join
@@ -20,12 +19,17 @@ import xarray as xr
 #todo Migrate data files to another repo
 
 def open_dataset(name):
-    """ Open a dataset from the pyXpcm distrib
+    """ Open a toy dataset from the pyXpcm distrib
 
         Parameters
         ----------
         name : str
-            Name of the dataset to load, could be: 'argo', 'isas_snapshot', 'isas_series'
+            Name of the dataset to load among:
+
+                - `dummy` (depth,sample) dummy array
+                - `argo`  (depth,sample) real Argo data sample
+                - `isas_snapshot` (depth,latitude,longitude) real gridded product
+                - `isas_series` (depth,latitude,longitude,time) real gridded product time series
 
         Returns
         -------
@@ -52,7 +56,7 @@ def open_dataset(name):
 
 class dummy():
 
-    def load(self, Np=100, Nz=20):
+    def load(self, Np=1000, Nz=50):
         z = np.linspace(0, -500, Nz)
         ds = xr.Dataset({
             'TEMP': xr.DataArray(np.random.rand(Np, Nz),

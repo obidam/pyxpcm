@@ -39,9 +39,9 @@ With **pyXpcm** you can conduct a PCM analysis for a collection of profiles (gri
 
 The philosophy of the **pyXpcm** toolbox is to create and be able to use a PCM from and on different ocean datasets and variables. In order to achieve this, a PCM is created with information about ocean variables to classify and the vertical axis of these variables. Then this PCM can be fitted and subsequently classify ocean profiles from any datasets, as long as it contains the PCM variables.
 
-The **pyXpcm** procedure is to preprocess (stack, scale, reduce and combine data) and then to fit a classifier on data. Once the model is fitted **pyXpcm** can classify data. The library uses many language and logic from `scikit-learn scikit_` but doesn't inherit from a :class:`sklearn.BaseEstimator`.
+The **pyXpcm** procedure is to preprocess (stack, scale, reduce and combine data) and then to fit a classifier on data. Once the model is fitted **pyXpcm** can classify data. The library uses many language and logic from `Scikit-learn`_ but doesn't inherit from a :class:`sklearn.BaseEstimator`.
 
-.. _scikit: https://scikit-learn.org/
+.. _Scikit-learn: https://scikit-learn.org/
 .. _Xarray: http://xarray.pydata.org
 .. _Maze et al, 2017: http://dx.doi.org/10.1016/j.pocean.2016.12.008
 .. _Jones et al, 2019: http://dx.doi.org/10.1029/2018jc014629

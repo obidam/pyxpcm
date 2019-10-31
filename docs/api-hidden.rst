@@ -39,6 +39,11 @@
     plot.reducer
     plot.quantile
 
+    models.pcm.stat
+    stat.quantile
+    stat.robustness
+    stat.robustness_digit
+
     tutorial.open_dataset
 
     models.pcm.to_netcdf

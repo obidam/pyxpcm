@@ -1,7 +1,7 @@
 #!/bin/env python
 # -*coding: UTF-8 -*-
 #
-# Methods to be accesses through the xarray accessor or pcm "stat" space:
+# Methods to be accessed through the xarray accessor or pcm "stat" space:
 # m.stat.<method>
 # ds.pyxpcm.<method>
 #
@@ -14,8 +14,9 @@ import xarray as xr
 import numpy as np
 import dask.array
 import warnings
+from .utils import docstring
 
-def _quantile(ds,
+def quantile(ds,
              q=0.5,
              of=None,
              using='PCM_LABELS',
@@ -97,8 +98,7 @@ def _quantile(ds,
         da.attrs = ds[of].attrs
     return da
 
-
-def _robustness(ds, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS'):
+def robustness(ds, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS'):
     """ Compute classification robustness
 
         Parameters
@@ -140,8 +140,7 @@ def _robustness(ds, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBU
     #
     return da
 
-
-def _robustness_digit(ds, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS_CAT'):
+def robustness_digit(ds, name='PCM_POST', classdimname='pcm_class', outname='PCM_ROBUSTNESS_CAT'):
     """ Digitize classification robustness
 
         Parameters
@@ -191,7 +190,6 @@ def _robustness_digit(ds, name='PCM_POST', classdimname='pcm_class', outname='PC
     # Add labels to the dataset:
     return da
 
-
 class _StatMethods(object):
     """
         Enables use of pyxpcm.stat functions as attributes on a PCM object.
@@ -203,14 +201,14 @@ class _StatMethods(object):
     def __call__(self, **kwargs):
         raise ValueError("pyxpcm.stat cannot be called directly. Use one of the statistics methods: quantile, robustness, robustness_digit")
 
+    @docstring(quantile.__doc__)
     def quantile(self, *ags, **kwargs):
-        """ - """
-        return _quantile(*ags, **kwargs)
+        return quantile(*ags, **kwargs)
 
+    @docstring(robustness.__doc__)
     def robustness(self, *ags, **kwargs):
-        """ - """
-        return _robustness(*ags, **kwargs)
+        return robustness(*ags, **kwargs)
 
+    @docstring(robustness_digit.__doc__)
     def robustness_digit(self, *ags, **kwargs):
-        """ - """
-        return _robustness_digit(*ags, **kwargs)
+        return robustness_digit(*ags, **kwargs)

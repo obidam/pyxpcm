@@ -9,6 +9,7 @@ Provide basic methods for quick and easy plotting of/with PCM features
 
 # Import packages:
 from . import models
+from .utils import docstring
 from contextlib import contextmanager
 import warnings
 
@@ -101,9 +102,9 @@ def cmap_discretize(name, K):
         new_cmap = mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
     return new_cmap
 
-def colorbar_index(ncolors, cmap, **kwargs):
+def colorbar_index(ncolors, name, **kwargs):
     """Adjust colorbar ticks with discrete colors"""
-    cmap = cmap_discretize(cmap, ncolors)
+    cmap = cmap_discretize(name, ncolors)
     mappable = cm.ScalarMappable(cmap=cmap)
     mappable.set_array([])
     mappable.set_clim(-0.5, ncolors+0.5)
@@ -128,7 +129,7 @@ def latlongrid(ax, dx=5., dy=5., fontsize=6, **kwargs):
     gl.ylabel_style = {'fontsize':fontsize}
     return gl
 
-def cmap(m, name='Set2', palette=False, usage='class'):
+def cmap(m, name, palette=False, usage='class'):
     """Return categorical colormaps
 
         Parameters
@@ -171,7 +172,10 @@ def cmap(m, name='Set2', palette=False, usage='class'):
 def colorbar(m, cmap=None, **kwargs):
     """Add a colorbar to the current plot with centered ticks on discrete colors"""
     if cmap==None:
-        cmap = m.plot.cmap()
+        if m._props['cmap']==None:
+            cmap = m.plot.cmap()
+        else:
+            cmap = m._props['cmap']
     z = { **{'fraction':0.03, 'label':'Class'}, **kwargs}
     return colorbar_index(ncolors=m.K, cmap=cmap, **z)
 
@@ -540,45 +544,55 @@ class _PlotMethods(object):
 
     def __init__(self, m):
         self._pcm = m
-        self._cmap = self.cmap()
+        self._kmap = 'Set1'
 
     def __call__(self, **kwargs):
-        raise ValueError("pyxpcm.plot cannot be called directly. Use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
+        raise ValueError("plot cannot be called directly. Use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
 
     def cmap(self, **kwargs):
         """Return a categorical colormap for this PCM"""
-        return cmap(self._pcm, **kwargs)
+        defaults = {'name': self._kmap}
+        opts = {**defaults, **kwargs}
+        c = cmap(self._pcm, **opts)
+        if 'usage' in opts and opts['usage']=='class':
+            self._kmap = opts['name']
+        return c
 
+    @docstring(colorbar.__doc__)
     def colorbar(self, **kwargs):
-        """Add a colorbar to the current plot with centered ticks on discrete colors"""
-        return colorbar(self._pcm, **kwargs)
+        if self._kmap:
+            defaults = {'name': self._kmap}
+            opts = {**defaults, **kwargs}
+        else:
+            opts = kwargs
+        return colorbar(self._pcm, **opts)
 
+    @docstring(subplots.__doc__)
     def subplots(self, **kwargs):
-        """Return (figure, axis) with one subplot per cluster"""
         return subplots(self._pcm, **kwargs)
 
+    @docstring(latlongrid.__doc__)
     def latlongrid(self, ax, **kwargs):
-        """Add latitude/longitude grid to a cartopy geoaxes """
         return latlongrid(ax, **kwargs)
 
+    @docstring(scaler.__doc__)
     def scaler(self, **kwargs):
-        """Plot PCM scaler properties"""
         return scaler(self._pcm, **kwargs)
 
+    @docstring(reducer.__doc__)
     def reducer(self, **kwargs):
-        """Plot PCM reducer properties"""
         return reducer(self._pcm,  **kwargs)
 
+    @docstring(timeit.__doc__)
     def timeit(self, **kwargs):
-        """Plot registered timing of operations"""
         return timeit(self._pcm, **kwargs)
 
+    @docstring(preprocessed.__doc__)
     def preprocessed(self, ds, **kwargs):
-        """Plot preprocessed features as pairwise scatter plots"""
         return preprocessed(self._pcm, ds, **kwargs)
 
+    @docstring(quantile.__doc__)
     def quantile(self, da, **kwargs):
-        """Plot the q-th quantiles of a dataArray for each PCM component"""
         return quantile(self._pcm, da, **kwargs)
 
 

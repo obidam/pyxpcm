@@ -8,5 +8,5 @@ from .xarray import pyXpcmDataSetAccessor
 from . import tutorial
 from . import utils
 from . import plot
-from . import stats
+from . import stat
 from .io import load_netcdf

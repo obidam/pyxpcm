@@ -3,7 +3,7 @@
 What's New
 ==========
 
-v0.4 (1 Oct. 2019)
+v0.4 (1 Nov. 2019)
 ------------------
 
 .. warning::
@@ -12,17 +12,17 @@ v0.4 (1 Oct. 2019)
 
 - Enhancements:
 
-    - Multi-features classification
+    - Multiple-features classification
 
-    - ND-Array classification handling (so that you can classify directly profiles on for instnace a latitude/longitude/time grid, not only a collection of profiles already in 2D array)
+    - ND-Array classification (so that you can classify directly profiles from gridded products, eg: latitude/longitude/time grid, and not only a collection of profiles already in 2D array)
 
-    - pyXpcm methods are directly accessible through the :class:`xarray.Dataset` accessor namespace ``pyxpcm``
+    - pyXpcm methods can be accessed through the :class:`xarray.Dataset` accessor namespace ``pyxpcm``
 
     - Allow to choose statistic backends (sklearn, dask_ml or user-defined)
 
-    - Save/load PCM to netcdf files
+    - Save/load PCM to/from netcdf files
 
-- pyXpcm now consumes xarray/dask objects all along, not only on the user front-end. This add a small overhead on fit with small dataset but allows for PCM to handle large datasets.
+- pyXpcm now consumes xarray/dask objects all along, not only on the user front-end. This add a small overhead with small dataset but allows for PCM to handle large and more complex datasets.
 
 
 v0.3 (5 Apr. 2019)
