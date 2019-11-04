@@ -1,11 +1,12 @@
-"""
-.. moduleauthor:: Guillaume Maze <gmaze@ifremer.fr>
-"""
+__version__ = "0.4.0"
 
 # Import class:
-from .pcmodel import pcm as pcm
+from .models import pcm
+from .xarray import pyXpcmDataSetAccessor
 
-# Import
-from . import stats
+# Other Import
+from . import tutorial
+from . import utils
 from . import plot
-from . import datasets
+from . import stat
+from .io import load_netcdf

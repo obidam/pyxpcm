@@ -6,8 +6,8 @@ API reference
 
 This page provides an auto-generated summary of pyXpcm's API. For more details and examples, refer to the relevant chapters in the main part of the documentation.
 
-Profile Classification Model
-============================
+Top-level PCM functions
+=======================
 
 Creating a PCM
 --------------
@@ -15,18 +15,20 @@ Creating a PCM
    :toctree: generated/
 
    pcm
+   pyxpcm.load_netcdf
 
 Attributes
-----------
+--------------
 
 .. autosummary::
    :toctree: generated/
 
    pcm.K
-   pcm.feature_axis
+   pcm.F
+   pcm.features
 
-Methods
--------
+Computation
+-----------
 
 .. autosummary::
    :toctree: generated/
@@ -36,39 +38,85 @@ Methods
    pcm.predict
    pcm.predict_proba
    pcm.score
+   pcm.bic
 
-Plot
-----
-
-.. autosummary::
-   :toctree: generated/
-
-   pcm.plot
-   pcm.plot.cmap
-   pcm.plot.colorbar
-
-Statistic module
-================
+Low-level PCM properties and functions
+======================================
 
 .. autosummary::
    :toctree: generated/
 
-   stats.quant
+   pcm.timeit
+   pcm.ravel
+   pcm.unravel
 
-Plotting module
-===============
+
+.. _api-plot:
+
+Plotting
+========
+
+.. autosummary::
+    :toctree: generated/
+
+    pcm.plot
+
+Plot PCM Contents
+-----------------
+.. autosummary::
+    :toctree: generated/
+
+    plot.quantile
+    plot.scaler
+    plot.reducer
+    plot.preprocessed
+    plot.timeit
+
+Tools
+-----
+.. autosummary::
+    :toctree: generated/
+
+    plot.cmap
+    plot.colorbar
+    plot.subplots
+    plot.latlongrid
+
+
+.. _api-stat:
+
+Statistics
+==========
+
+.. autosummary::
+    :toctree: generated/
+
+    pcm.stat
+    stat.quantile
+    stat.robustness
+    stat.robustness_digit
+
+Save/load PCM models
+====================
+
+.. autosummary::
+    :toctree: generated/
+
+    pcm.to_netcdf
+    pyxpcm.load_netcdf
+
+Helper
+======
 
 .. autosummary::
    :toctree: generated/
 
-   plot.scaler
-   plot.quant
+    tutorial.open_dataset
 
-Dummy datasets
-==============
+Xarray *pyxpcm* name space
+==========================
 
-.. autosummary::
-   :toctree: generated/
+.. automodule:: pyxpcm.xarray
 
-   datasets.load_argo
-   datasets.load_isas15
+.. autoclass:: pyXpcmDataSetAccessor()
+    :members:
