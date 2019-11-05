@@ -401,15 +401,13 @@ class pcm(object):
 
     @property
     def plot(self):
-        """Access plotting functions
-        """
+        """Access plotting functions"""
         self._plt = _PlotMethods(self)
         return self._plt
 
     @property
     def stat(self):
-        """Access statistics functions
-        """
+        """Access statistics functions"""
         return _StatMethods(self)
 
     @property
@@ -512,7 +510,7 @@ class pcm(object):
 
     @property
     def backend(self):
-        """ Statistic backend"""
+        """Return the name of the statistic backend"""
         return self._props['backend']
 
     @property
