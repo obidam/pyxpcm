@@ -25,6 +25,7 @@ stable-req\.txt
 docs/_build/
 docs/offline/
 docs/generated/
+docs/tempo_out/
 docs/_ext/
 
 \.ipynb_checkpoints/
