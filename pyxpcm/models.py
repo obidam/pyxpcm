@@ -858,10 +858,10 @@ class pcm(object):
             X, sampling_dims = self.preprocessing(ds, features=features, dim=dim, action='fit')
 
             # CLASSIFICATION-MODEL TRAINING:
-            with self._context('fit.2-fit', self._context_args):
+            with self._context('fit.fit', self._context_args):
                 self._classifier.fit(X)
 
-            with self._context('fit.3-score', self._context_args):
+            with self._context('fit.score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
 
             # Furthermore gather some information about the fit:
@@ -990,7 +990,6 @@ class pcm(object):
                 self._classifier.fit(X)
             with self._context('fit_predict.score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
-                self._props['bic'] = self._classifier.bic(X)
 
             # Furthermore gather some information about this fit:
             self._fit_stats['score'] = self._props['llh']
@@ -1007,9 +1006,6 @@ class pcm(object):
             # CLASSIFICATION PREDICTION:
             with self._context('fit_predict.predict', self._context_args):
                 labels = self._classifier.predict(X)
-
-            with self._context('fit_predict.score', self._context_args):
-                self._props['llh'] = self._classifier.score(X)
 
             # Create a xarray with labels output:
             with self._context('fit_predict.xarray', self._context_args):

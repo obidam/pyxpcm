@@ -1,9 +1,9 @@
-name: pyxpcm-docs
-channels:
-  - conda-forge
-dependencies:
-  - cartopy=0.17.0
-  - seaborn=0.9.0
-  - nbsphinx=0.4
-  - dask-ml=0.11.0
+#name: pyxpcm-docs
+#channels:
+#  - conda-forge
+#dependencies:
+#  - cartopy=0.17.0
+#  - seaborn=0.9.0
+#  - nbsphinx=0.4
+#  - dask-ml=0.11.0
 

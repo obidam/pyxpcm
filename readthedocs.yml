@@ -19,11 +19,7 @@ python:
   system_packages: true
   install:
     - requirements: requirements.txt
-    - requirements: docs/requirements.txt
     - method: pip
       path: .
       extra_requirements:
         - docs
-
-conda:
-  environment: docs/environment.yml
