@@ -49,10 +49,3 @@
     models.pcm.to_netcdf
     io.to_netcdf
     io.open_netcdf
-
-    pyxpcm.xarray.pyXpcmDataSetAccesso
-    pyxpcm.xarray.pyXpcmDataSetAccesso.add
-    pyxpcm.xarray.pyXpcmDataSetAccesso.clean
-    pyxpcm.xarray.pyXpcmDataSetAccesso.feature_dict
-    pyxpcm.xarray.pyXpcmDataSetAccesso.sampling_dim
-    pyxpcm.xarray.pyXpcmDataSetAccesso.mask

@@ -1,9 +1,5 @@
 # -*coding: UTF-8 -*-
 #
-# scipy==1.1.0
-# xarray==0.10.7
-# matplotlib==2.1.1
-# scikit-learn==0.19.2
 
 __author__ = 'gmaze@ifremer.fr'
 
@@ -17,7 +13,7 @@ with open('requirements.txt') as f:
 
 setuptools.setup(
     name="pyxpcm",
-    version="0.4",
+    version="0.4.0",
     description='pyxpcm: Ocean Profile Classification Model',
     url='http://github.com/obidam/pyxpcm',
     author='Guillaume Maze',

@@ -16,7 +16,6 @@ Documentation
 * :doc:`install`
 * :doc:`model_catalogue`
 
-
 .. toctree::
     :maxdepth: 1
     :hidden:
@@ -31,7 +30,6 @@ Documentation
 * :doc:`example`
 * :doc:`pcm_prop`
 * :doc:`io`
-* :doc:`preprocessing`
 * :doc:`debug_perf`
 
 .. toctree::
@@ -42,7 +40,6 @@ Documentation
     example.ipynb
     pcm_prop.ipynb
     io.ipynb
-    preprocessing.ipynb
     debug_perf.ipynb
 
 
