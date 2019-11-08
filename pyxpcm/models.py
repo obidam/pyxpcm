@@ -923,13 +923,13 @@ class pcm(object):
             X, sampling_dims = self.preprocessing(ds, features=features, dim=dim, action='predict')
 
             # CLASSIFICATION PREDICTION:
-            with self._context('predict.2-predict', self._context_args):
+            with self._context('predict.predict', self._context_args):
                 labels = self._classifier.predict(X)
             with self._context('predict.score', self._context_args):
                 llh = self._classifier.score(X)
 
             # Create a xarray with labels output:
-            with self._context('predict.3-xarray', self._context_args):
+            with self._context('predict.xarray', self._context_args):
                 da = self.unravel(ds, sampling_dims, labels).rename(name)
                 da.attrs['long_name'] = 'PCM labels'
                 da.attrs['units'] = ''
@@ -986,9 +986,9 @@ class pcm(object):
             X, sampling_dims = self.preprocessing(ds, features=features, dim=dim, action='fit_predict')
 
             # CLASSIFICATION-MODEL TRAINING:
-            with self._context('fit_predict.2-fit', self._context_args):
+            with self._context('fit_predict.fit', self._context_args):
                 self._classifier.fit(X)
-            with self._context('fit_predict.3-score', self._context_args):
+            with self._context('fit_predict.score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
                 self._props['bic'] = self._classifier.bic(X)
 
@@ -1005,14 +1005,14 @@ class pcm(object):
             self.fitted = True
 
             # CLASSIFICATION PREDICTION:
-            with self._context('fit_predict.4-predict', self._context_args):
+            with self._context('fit_predict.predict', self._context_args):
                 labels = self._classifier.predict(X)
 
-            with self._context('fit_predict.5-score', self._context_args):
+            with self._context('fit_predict.score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
 
             # Create a xarray with labels output:
-            with self._context('fit_predict.6-xarray', self._context_args):
+            with self._context('fit_predict.xarray', self._context_args):
                 da = self.unravel(ds, sampling_dims, labels).rename(name)
                 da.attrs['long_name'] = 'PCM labels'
                 da.attrs['units'] = ''
@@ -1078,13 +1078,13 @@ class pcm(object):
             X, sampling_dims = self.preprocessing(ds, features=features, dim=dim, action='predict_proba')
 
             # CLASSIFICATION PREDICTION:
-            with self._context('predict_proba.2-predict', self._context_args):
+            with self._context('predict_proba.predict', self._context_args):
                 post_values = self._classifier.predict_proba(X)
-            with self._context('predict_proba.3-score', self._context_args):
+            with self._context('predict_proba.score', self._context_args):
                 self._props['llh'] = self._classifier.score(X)
 
             # Create a xarray with posteriors:
-            with self._context('predict_proba.4-xarray', self._context_args):
+            with self._context('predict_proba.xarray', self._context_args):
                 P = list()
                 for k in range(self.K):
                     X = post_values[:, k]
@@ -1097,7 +1097,7 @@ class pcm(object):
                 da.attrs['valid_max'] = 1
                 da.attrs['llh'] = self._props['llh']
 
-            # Add labels to the dataset:
+            # Add posteriors to the dataset:
             if inplace:
                 return ds.pyxpcm.add(da)
             else:
@@ -1133,7 +1133,7 @@ class pcm(object):
             X, sampling_dims = self.preprocessing(ds, features=features, action='score')
 
             # COMPUTE THE PREDICTION SCORE:
-            with self._context('score.2-score', self._context_args):
+            with self._context('score.score', self._context_args):
                 llh = self._classifier.score(X)
 
         return llh
@@ -1188,7 +1188,7 @@ class pcm(object):
             X, sampling_dims = self.preprocessing(ds, features=features, action='bic')
 
             # COMPUTE THE log-likelihood:
-            with self._context('bic.2-score', self._context_args):
+            with self._context('bic.score', self._context_args):
                 llh = self._classifier.score(X)
 
             # COMPUTE BIC:

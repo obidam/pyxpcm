@@ -42,7 +42,8 @@ class pyXpcmDataSetAccessor:
      """
     def __init__(self, xarray_obj):
         self._obj = xarray_obj
-        self._added = list()
+        self._added = list() # Will record all new variables added by pyXpcm
+        self._dims = list(xarray_obj.dims.keys()) # Store the initial list of dimensions
 
     def __id_feature_name(self, this_pcm, feature):
         """Identify the dataset variable name to be used for a given feature name
@@ -83,47 +84,43 @@ class pyXpcmDataSetAccessor:
         return feature_in_ds
 
     def add(self, da):
-        """ Add and register a new :class:`xarray.DataArray` to this :class:`xarray.Dataset` """
-
+        """Add a :class:`xarray.DataArray` to this :class:`xarray.Dataset`"""
         if da.name in self._obj.data_vars:
             warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
 
-        # Add pyXpcm tracking clues:
+        # Add pyXpcm tracking clue to this DataArray:
         da.attrs['_pyXpcm_cleanable'] = True
 
-        # Check if da dimensions are new or not
-        # For new dimensions we need to add the pyXpcm attribute for later clean
-        new_dims = list(set(da.dims)-set(self._obj.dims))
-        for d in new_dims:
-            da[d].attrs['_pyXpcm_cleanable'] = True
-            # self._added.append(d)
-
-        #
-        # vname = da.name
+        # Add it to the DataSet:
         self._obj[da.name] = da
-        # self._obj = xr.merge([self._obj, da])
-        self._added.append(da.name) # Update internal list of added variables
+
+        # Update internal list of added variables:
+        self._added.append(da.name)
         return self._obj
 
-    def clean(self):
-        """ Remove all registered :class:`xarray.DataArray` created with pyXpcm front this :class:`xarray.Dataset`
-
-        """
-        #todo Fix issue Dataset cleaning could miss some dimensions added by pyXpcm
-        # :issue:`3222`
-        # https://github.com/pydata/xarray/issues/3268
-
-        return self._obj.drop([
-            k for k, v in self._obj.variables.items()
+    def drop_all(self):
+        """ Remove :class:`xarray.DataArray` created with pyXpcm front this :class:`xarray.Dataset`"""
+        def drop_dims(this_ds, dims):
+            return this_ds.drop_dims([k for k in this_ds.dims if k not in dims])
+        ds = drop_dims(self._obj, self._dims)
+        return ds.drop([
+            k for k, v in ds.variables.items()
             if v.attrs.get("_pyXpcm_cleanable")
         ])
-        # See add() method to identify these variables.
-        # return self._obj.drop(self._added)
-        # for vname in self._obj.data_vars:
-        #     if ("comment" in self._obj[vname].attrs) \
-        #         and (self._obj[vname].attrs['comment'] == "Automatically added by pyXpcm"):
-        #         self._obj = self._obj.drop(vname)
-        # return self._obj
+
+    def split(self):
+        """Split pyXpcm variables from the original :class:`xarray.Dataset`
+
+            Returns
+            -------
+            :class:`xarray.Dataset`, :class:`xarray.Dataset`
+                Two DataSest: one with pyXpcm variables, one with the original DataSet
+        """
+        _ds = self._obj[[
+            k for k, v in self._obj.variables.items()
+            if v.attrs.get("_pyXpcm_cleanable")
+        ]].copy(deep=True)
+        return _ds, self.drop_all()
 
     def feature_dict(self, this_pcm, features=None):
         """ Return dictionary of features for this :class:`xarray.Dataset` and a PCM

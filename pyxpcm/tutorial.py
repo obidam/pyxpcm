@@ -3,7 +3,6 @@
 
     Useful for documentation and to play with pyXpcm
 
-
     Data files should be hosted on another repo
 
 """
@@ -16,12 +15,7 @@ import xarray as xr
 import hashlib
 from urllib.request import urlretrieve
 
-#todo Re-factor tutorial dataset loading process following ideas from Xarray/Seaborn
-# https://github.com/pydata/xarray/blob/master/xarray/tutorial.py
-
-#todo Migrate data files to another repo
-
-_default_cache_dir = _os.sep.join(("~", ".pyxpcm_tutorial_data"))
+_default_cache_dir = os.sep.join(("~", ".pyxpcm_tutorial_data"))
 
 def open_dataset(name):
     """ Open a dataset from the pyXpcm online data repository (requires internet).
@@ -91,7 +85,7 @@ class argo_loader():
     def load(self):
         """Load and return a sample of Argo profiles on standard depth levels"""
         if self.category == 'sample':
-            ncfile = 'argo_sample.nc'
+            ncfile = 'argo_sample'
             ds = _open_dataset(ncfile)
             #todo I need to add these attributes directly into the netcdf file
             ds['DEPTH'].attrs['axis'] = 'Z'
@@ -116,7 +110,7 @@ class isas_loader():
     def load(self):
         """Load and return a sample of ISAS profiles on standard depth levels"""
         if self.category == 'sample_snapshot':
-            ncfile = 'isas15_sample.nc'
+            ncfile = 'isas15_sample'
             ds = _open_dataset(ncfile)
             #todo I need to add these attributes directly into the netcdf file
             ds['depth'] = -np.abs(ds['depth'])
@@ -127,7 +121,7 @@ class isas_loader():
             ds = ds.chunk({'latitude': None, 'longitude': None})
 
         elif self.category == 'sample_series':
-            ncfile = 'isas15series_sample.nc'
+            ncfile = 'isas15series_sample'
             ds = _open_dataset(ncfile)
             #todo I need to add these attributes directly into the netcdf file
             ds['depth'] = -np.abs(ds['depth'])
