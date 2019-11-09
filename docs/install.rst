@@ -23,18 +23,11 @@ For full plotting functionality (see the :ref:`api-plot` API) the following pack
 Instructions
 ^^^^^^^^^^^^
 
-For the development version:
-
-.. code-block:: text
-
-    pip install git+https://github.com/gmaze/pyxpcm.git@nfeatures
-
 For the latest public release:
 
 .. code-block:: text
 
     pip install pyxpcm
-
 
 .. _Scikit-learn: https://scikit-learn.org
 .. _Dask_ml: https://ml.dask.org
