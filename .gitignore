@@ -23,10 +23,8 @@ MANIFEST.in
 stable-req\.txt
 
 docs/_build/
-docs/offline/
-docs/generated/
-docs/tempo_out/
+docs/_src/
 docs/_ext/
-
+docs/generated/
 \.ipynb_checkpoints/
 
