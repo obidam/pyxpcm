@@ -10,6 +10,9 @@ MANIFEST.in
 # Setuptools distribution folder.
 /dist/
 
+# Local dev folder:
+/dev/
+
 # Local devel usefull folder.
 /local_playground/
 
