@@ -20,4 +20,12 @@ The **Ocean dynamics** and its 3-dimensional structure and variability is so com
 
 ## Install
 
+Latest release:
+
     pip install pyxpcm
+    
+Development version:
+
+    pip install git+https://github.com/obidam/pyxpcm.git
+
+    
