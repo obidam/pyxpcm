@@ -10,6 +10,9 @@ MANIFEST.in
 # Setuptools distribution folder.
 /dist/
 
+# Local dev folder:
+/dev/
+
 # Local devel usefull folder.
 /local_playground/
 
@@ -23,10 +26,8 @@ MANIFEST.in
 stable-req\.txt
 
 docs/_build/
-docs/offline/
-docs/generated/
-docs/tempo_out/
+docs/_src/
 docs/_ext/
-
+docs/generated/
 \.ipynb_checkpoints/
 
