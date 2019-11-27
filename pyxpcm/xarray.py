@@ -235,7 +235,7 @@ class pyXpcmDataSetAccessor:
         """ Create a mask where all PCM features are defined
 
             Create a mask where all feature profiles are not null
-            over the this_pcm feature axis.
+            over the PCM feature axis.
 
             Parameters
             ----------

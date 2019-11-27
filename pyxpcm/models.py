@@ -693,7 +693,7 @@ class pcm(object):
                         #   https://github.com/dask/dask-ml/issues/6
                         #   https://github.com/dask/dask-ml/issues/541
                         #   https://github.com/dask/dask-ml/issues/542
-                        X.data = dask.array.from_array(X.data, chunks=X.shape)
+                        X.data = dask.array.asarray(X.data, chunks=X.shape)
 
                     if isinstance(X.data, dask.array.Array):
                         self._reducer[feature_name].fit(X.data)
@@ -761,7 +761,7 @@ class pcm(object):
                     mask = mask.stack({'sampling': list(mask.dims)})
                 self._xmask = mask
 
-            # Pre-process all features and build the X array
+            # Pre-process all features and build the X qarray
             X = np.empty(())
             Xlabel = list() # Construct a list of string labels for each feature dimension (useful for plots)
             F = self.F # Nb of features
