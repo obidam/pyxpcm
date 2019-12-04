@@ -44,8 +44,10 @@ from sklearn.exceptions import NotFittedError
 from sklearn.mixture import GaussianMixture
 
 class PCMFeatureError(Exception):
-    """Exception raised when features not found."""
+    """Exception raised when features not correct"""
 
+class PCMClassError(Exception):
+    """Exception raised when classes not correct"""
 
 class pcm(object):
     """Profile Classification Model class constructor
@@ -117,9 +119,9 @@ class pcm(object):
 
         """
         if K==0:
-            raise ValueError("Can't create a PCM with K=0")
+            raise PCMClassError("Can't create a PCM with K=0")
         if K is None:
-            raise ValueError("K must be defined to create a PMC")
+            raise PCMClassError("K must be defined to create a PMC")
         if not bool(features):
             raise PCMFeatureError("Can't create a PCM without features")
 

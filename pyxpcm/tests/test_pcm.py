@@ -1,5 +1,5 @@
 from pyxpcm.models import pcm
-from pyxpcm.models import PCMFeatureError
+from pyxpcm.models import PCMFeatureError, PCMClassError
 from sklearn.exceptions import NotFittedError
 from sklearn.utils.validation import check_is_fitted
 import pyxpcm
@@ -35,8 +35,15 @@ def test_pcm_init():
     with pytest.raises(TypeError):
         m = pcm(features=pcm_features_list[0])
 
+    with pytest.raises(PCMClassError):
+        m = pcm(K=0, features=pcm_features_list[0])
+
     with pytest.raises(PCMFeatureError):
         m = pcm(K=1, features=dict())
+
+    with pytest.raises(NotFittedError):
+        m = pcm(K=1, features=pcm_features_list[0])
+        assert check_is_fitted(m, attributes='fitted')
 
     for pcm_features in pcm_features_list:
         m = pcm(K=3, features=pcm_features)
@@ -92,7 +99,3 @@ def test_pcm_init():
                             timeit=True, timeit_verb=True)
                     assert isinstance(m, pcm) == True
 
-    # Must not be trained yet:
-    with pytest.raises(NotFittedError):
-        m = new_m()
-        assert check_is_fitted(m)
