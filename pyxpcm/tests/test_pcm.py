@@ -1,7 +1,6 @@
 from pyxpcm.models import pcm
 from pyxpcm.models import PCMFeatureError, PCMClassError
 from sklearn.exceptions import NotFittedError
-from sklearn.utils.validation import check_is_fitted
 import pyxpcm
 import numpy as np
 import xarray as xr
@@ -43,7 +42,8 @@ def test_pcm_init():
 
     with pytest.raises(NotFittedError):
         m = pcm(K=1, features=pcm_features_list[0])
-        assert check_is_fitted(m, attributes='fitted')
+        if not hasattr(m, 'fitted'):
+            raise NotFittedError
 
     for pcm_features in pcm_features_list:
         m = pcm(K=3, features=pcm_features)
