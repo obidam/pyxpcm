@@ -26,7 +26,7 @@ MANIFEST.in
 stable-req\.txt
 
 docs/_build/
-docs/_src/
+docs/_src
 docs/_ext/
 docs/generated/
 \.ipynb_checkpoints/
