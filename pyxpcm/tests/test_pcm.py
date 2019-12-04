@@ -94,4 +94,5 @@ def test_pcm_init():
 
     # Must not be trained yet:
     with pytest.raises(NotFittedError):
-        assert check_is_fitted(m, 'fitted')
+        m = new_m()
+        assert check_is_fitted(m)

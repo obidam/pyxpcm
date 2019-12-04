@@ -18,3 +18,9 @@ try:
     mpl.use("Agg")
 except ImportError:
     pass
+
+import xarray
+print("xarray: %s, %s" % (xarray.__version__, xarray.__file__))
+
+import sklearn
+print("sklearn: %s, %s" % (sklearn.__version__, sklearn.__file__))
