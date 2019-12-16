@@ -6,20 +6,8 @@ import numpy as np
 import xarray as xr
 import pytest
 
-def new_m():
-    return pcm(K=8, features={'temperature': np.arange(0, -500, 2.)})
-
-def test_data_loader():
-    """Test dummy dataset loader"""
-    for d in ['dummy', 'argo', 'isas_snapshot', 'isas_series']:
-        ds = pyxpcm.tutorial.open_dataset('argo').load()
-        assert isinstance(ds, xr.Dataset) == True
-
-def test_pcm_init():
-    """ Test PCM instantiation
-
-        Try to succeed in creating a PCM with all possible combination of option values
-    """
+def test_pcm_init_req():
+    """Test PCM default instantiation with required arguments"""
     pcm_features_list = (
             {'F1': np.arange(0, -500, 2.)},
             {'F1': np.arange(0, -500, 2.), 'F2': np.arange(0, -500, 2.)},
@@ -40,14 +28,23 @@ def test_pcm_init():
     with pytest.raises(PCMFeatureError):
         m = pcm(K=1, features=dict())
 
+    for pcm_features in pcm_features_list:
+        m = pcm(K=3, features=pcm_features)
+        assert isinstance(m, pcm) == True
+
     with pytest.raises(NotFittedError):
         m = pcm(K=1, features=pcm_features_list[0])
         if not hasattr(m, 'fitted'):
             raise NotFittedError
 
+def test_pcm_init_opt():
+    """Test PCM instantiation with optional arguments"""
+    pcm_features_list = (
+            {'F1': np.arange(0, -500, 2.)},
+            {'F1': np.arange(0, -500, 2.), 'F2': np.arange(0, -500, 2.)},
+            {'F1': np.arange(0, -500, 2.), 'F2': None})
+
     for pcm_features in pcm_features_list:
-        m = pcm(K=3, features=pcm_features)
-        assert isinstance(m, pcm) == True
 
         for scaling in [0, 1, 2]:
             m = pcm(K=3, features=pcm_features, scaling=scaling)

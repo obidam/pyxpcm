@@ -50,6 +50,9 @@ def open_dataset(name):
     elif name == 'dummy':
         acc = dummy()
 
+    elif name == 'orsi':
+        acc = orsi()
+
     else:
         raise ValueError("Don't know this tutorial dataset")
 
@@ -131,6 +134,13 @@ class isas_loader():
             ds['SST'] = ds['TEMP'].isel(depth=0)
             ds = ds.chunk({'latitude': None, 'longitude': None, 'time': None})
 
+        return ds
+
+class orsi():
+    def load(self):
+        """Load path of ORSI fronts"""
+        ncfile = 'ORSIfronts'
+        ds = _open_dataset(ncfile)
         return ds
 
 #######

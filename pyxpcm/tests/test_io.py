@@ -10,6 +10,14 @@ import os
 import pyxpcm
 from pyxpcm.models import pcm
 import pytest
+import xarray as xr
+
+def test_data_loader():
+    """Test dummy dataset loader"""
+    for d in ['dummy', 'argo', 'isas_snapshot', 'isas_series', 'orsi']:
+        ds = pyxpcm.tutorial.open_dataset(d).load()
+        assert isinstance(ds, xr.Dataset) == True
+        print("Load", d, "OK")
 
 def test_saveload_prediction():
     """Test PCM save to netcdf"""

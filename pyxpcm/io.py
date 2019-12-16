@@ -23,7 +23,7 @@ from . import __version__
 # Define variables for netcdf load/save:
 __software_name__ = 'Profile Classification Model - pyXpcm library'
 __format_version__ = 2.0
-# Version 1.0 was the single feature / matlab format.
+# Version 1.0 was the version used by the Matlab library, limited to a single feature clustering.
 # Instead of converting, we make sure to be able to load version 1.0
 
 def _TransformerName(obj):
