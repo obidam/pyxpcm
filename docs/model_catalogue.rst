@@ -25,10 +25,9 @@ We'll try to list here pre-trained PCM models ready for you to use and classify 
       - 8
       - Southern Ocean
       - Argo (2001-2017)
-      - [#f2]_
+      - `Zenodo <https://doi.org/10.5281/zenodo.1543106>`_
       - `Jones et al (2019)`_
 
 .. [#f1] Number of classes
-.. [#f2] *Coming up soon !*
 .. _Maze et al (2017): http://dx.doi.org/10.1016/j.pocean.2016.12.008
 .. _Jones et al (2019): http://dx.doi.org/10.1029/2018jc014629
