@@ -764,7 +764,7 @@ class pcm(object):
                     mask = mask.stack({'sampling': list(mask.dims)})
                 self._xmask = mask
 
-            # Pre-process all features and build the X qarray
+            # Pre-process all features and build the X array
             X = np.empty(())
             Xlabel = list() # Construct a list of string labels for each feature dimension (useful for plots)
             F = self.F # Nb of features

@@ -31,3 +31,6 @@ docs/_ext/
 docs/generated/
 \.ipynb_checkpoints/
 
+#
+*.pdf
+

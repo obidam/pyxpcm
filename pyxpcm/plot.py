@@ -437,7 +437,7 @@ def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, su
         for (feature, icol) in zip(m._props['features'], np.arange(0, m.F)):
             ax[icol].set_title(feature, fontsize=10)
 
-            if isinstance(m._reducer[feature], sklearn.decomposition.pca.PCA):
+            if isinstance(m._reducer[feature], sklearn.decomposition.PCA):
                 X_eof = m._reducer[feature].components_
                 if pcalist is None:
                     pcalist = range(0, X_eof.shape[0])
@@ -468,7 +468,9 @@ def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, su
 def quantile(m, da, xlim=None,
           classdimname='pcm_class',
           quantdimname = 'quantile',
-          maxcols=3, cmap=None, **kwargs):
+          maxcols=3, cmap=None,
+          ylabel='feature dimension',
+          **kwargs):
     """Plot q-th quantiles of a dataArray for each PCM components
 
     Parameters
@@ -530,7 +532,7 @@ def quantile(m, da, xlim=None,
         ax[k].set_xlim(xlim)
         ax[k].set_ylim(np.array([da[VERTICAL_DIM].min(), da[VERTICAL_DIM].max()]))
         # ax[k].set_xlabel(Q.units)
-        if k == 0: ax[k].set_ylabel('feature dimension')
+        if k == 0: ax[k].set_ylabel(ylabel)
         ax[k].grid(True)
     plt.tight_layout()
 
