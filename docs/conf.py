@@ -16,6 +16,7 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
+
 import os
 import subprocess
 import sys
@@ -144,7 +145,7 @@ release = u'0.4.0'
 # directories to ignore when looking for source files.
 # This patterns also effect to html_static_path and html_extra_path
 exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store',
-                    '.ipynb_checkpoints', '_ext', 'tempo_out',
+                    '.ipynb_checkpoints', '_ext', 'tempo_out', '_src',
                     'offline', 'matlab']
 
 # The name of the Pygments (syntax highlighting) style to use.

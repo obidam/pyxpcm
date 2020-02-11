@@ -638,16 +638,16 @@ class pcm(object):
             with self._context(this_context + '.1-ravel', self._context_args):
                 X, z, sampling_dims = self.ravel(da, dim=dim, feature_name=feature_name)
                 if self._debug:
-                    print("\t", str(LogDataType(X)), "X RAVELED with success")
+                    print("\t", "X RAVELED with success", str(LogDataType(X)))
 
             # INTERPOLATION STEP:
             with self._context(this_context + '.2-interp', self._context_args):
                 X = self._interpoler[feature_name].transform(X, z)
                 if self._debug:
                     if isinstance(self._interpoler[feature_name], NoTransform):
-                        print("\t", str(LogDataType(X)), "X INTERPOLATED with success (NoTransform)")
+                        print("\t", "X INTERPOLATED with success (NoTransform)", str(LogDataType(X)))
                     else:
-                        print("\t", str(LogDataType(X)), "X INTERPOLATED with success)")
+                        print("\t", "X INTERPOLATED with success", str(LogDataType(X)))
                     # print(X.values.flags['WRITEABLE'])
                     # After the interpolation step, we must not have nan in the 2d array:
                     assert_all_finite(X, allow_nan=False)
@@ -675,13 +675,14 @@ class pcm(object):
                         X.data = self._scaler[feature_name].transform(X.data.copy())
                         pass
                     except:
+                        if self._debug: print(X.values.flags['WRITEABLE'])
                         raise
                     pass
                 except:
                     raise
 
                 if self._debug:
-                    print("\t", str(LogDataType(X)), "X SCALED with success)")
+                    print("\t", "X SCALED with success)", str(LogDataType(X)))
 
             # REDUCTION:
             with self._context(this_context + '.5-reduce_fit', self._context_args):
@@ -711,7 +712,7 @@ class pcm(object):
                                  coords={'sampling': range(0, X.shape[0]),
                                          'n_features': np.arange(0,X.shape[1])})
                 if self._debug:
-                    print("\t", str(LogDataType(X)), "X REDUCED with success)")
+                    print("\t", "X REDUCED with success)", str(LogDataType(X)))
 
 
         # Output:

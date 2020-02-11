@@ -30,7 +30,6 @@ Documentation
 * :doc:`example`
 * :doc:`pcm_prop`
 * :doc:`io`
-* :doc:`debug_perf`
 
 .. toctree::
     :maxdepth: 1
@@ -40,8 +39,18 @@ Documentation
     example.ipynb
     pcm_prop.ipynb
     io.ipynb
-    debug_perf.ipynb
 
+
+* :doc:`preprocessing`
+* :doc:`debug_perf`
+
+.. toctree::
+    :maxdepth: 1
+    :hidden:
+    :caption: Advanced
+
+    preprocessing.ipynb
+    debug_perf.ipynb
 
 **Help & reference**
 

@@ -29,6 +29,12 @@ For the latest public release:
 
     pip install pyxpcm
 
+For the latest development version:
+
+.. code-block:: text
+
+    pip install git+http://github.com/obidam/pyxpcm.git
+
 .. _Scikit-learn: https://scikit-learn.org
 .. _Dask_ml: https://ml.dask.org
 
