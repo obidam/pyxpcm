@@ -271,11 +271,16 @@ class pyXpcmDataSetAccessor:
                 z_top = np.max(this_pcm._props['features'][feature_name_in_this_pcm])
                 z_bto = np.min(this_pcm._props['features'][feature_name_in_this_pcm])
 
-                Nz = len((self._obj[dim].where(self._obj[dim] >= z_bto, drop=True)\
-                                        .where(self._obj[dim] <= z_top, drop=True)).notnull())
-                mask = self._obj[feature_name_in_ds]\
-                            .where(self._obj[dim] >= z_bto)\
-                            .where(self._obj[dim] <= z_top).notnull().sum(dim=dim) == Nz
+                # Nz = len((self._obj[dim].where(self._obj[dim] >= z_bto, drop=True)\
+                #                         .where(self._obj[dim] <= z_top, drop=True)).notnull())
+                z = self._obj[dim]
+                z_ok = np.ma.masked_inside(z, z_bto, z_top, copy=True).mask
+                Nz = np.count_nonzero(z_ok == True)
+                mask = self._obj[feature_name_in_ds][{dim:z_ok}].notnull().sum(dim=dim) == Nz
+
+                # mask = self._obj[feature_name_in_ds]\
+                #             .where(z >= z_bto)\
+                #             .where(z <= z_top).notnull().sum(dim=dim) == Nz
 
                 # mask = self._obj[feature_name_in_ds].where(
                 #     self._obj[dim]>=z_bto).notnull().sum(dim=dim) == len(np.where(self._obj[dim]>=z_bto)[0])
