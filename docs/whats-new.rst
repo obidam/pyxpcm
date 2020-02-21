@@ -3,8 +3,18 @@
 What's New
 ==========
 
-v0.4 (1 Nov. 2019)
-------------------
+v0.4.1 (21 Feb. 2020)
+---------------------
+
+- Improved documentation
+
+- Improved unit testing
+
+- Bug fix:
+    -  Fix a bug in the preprocessing step using dask_ml bakend that would cause an error for data already in dask arrays
+
+v0.4.0 (1 Nov. 2019)
+--------------------
 
 .. warning::
 
