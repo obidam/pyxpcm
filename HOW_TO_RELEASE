@@ -12,6 +12,7 @@ How to issue a pyxpcm release
       due to a bad merge. Check for these before a release by using git diff,
       e.g., ``git diff v0.X.Y whats-new.rst`` where 0.X.Y is the previous
       release.
+    - You can compare the master branch with the last release tag, eg: https://github.com/obidam/pyxpcm/compare/v0.4.0...master
  3. If you have any doubts, run the full test suite one final time!
       py.test
  4. On the master branch, commit the release in git:
