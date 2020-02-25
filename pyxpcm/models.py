@@ -149,9 +149,9 @@ class pcm(object):
                         'maxvar': maxvar,
                         'features': collections.OrderedDict(features),
                         'chunk_size': chunk_size,
-                        'backend': backend,
-                        'cmap': None}
+                        'backend': backend}
         self._xmask = None # xarray mask for nd-array used at pre-processing steps
+        self._register = collections.OrderedDict() # Will register mutable instances of sub-modules like 'plot'
 
         self._verb = verb #todo _verb is a property, should be set/get with a decorator
         self._debug = debug
@@ -261,30 +261,6 @@ class pcm(object):
 
     def __repr__(self):
         return self.display(deep=self._verb)
-
-    # def xmerge(self, ds, da):
-    #     """ Add a new :class:`xarray.DataArray` to a :class:`xarray.Dataset` """
-    #
-    #     if da.name in ds.data_vars:
-    #         warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
-    #
-    #     # Add pyXpcm tracking clues:
-    #     da.attrs['comment'] = "Automatically added by pyXpcm"
-    #
-    #     #
-    #     # vname = da.name
-    #     # self._obj[da.name] = da
-    #     ds = xr.merge([ds, da])
-    #     return ds
-    #
-    # def __clean(self, ds):
-    #     """ Remove all variables created with pyXpcm front a :class:`xarray.Dataset` """
-    #     # See add() method to identify these variables.
-    #     for vname in ds.data_vars:
-    #         if ("comment" in ds[vname].attrs) \
-    #             and (ds[vname].attrs['comment'] == "Automatically added by pyXpcm"):
-    #             ds = ds.drop(vname)
-    #     return ds
 
     def ravel(self, da, dim=None, feature_name=str):
         """ Extract from N-d array a X(feature,sample) 2-d array and vertical dimension z
@@ -404,8 +380,11 @@ class pcm(object):
     @property
     def plot(self):
         """Access plotting functions"""
-        self._plt = _PlotMethods(self)
-        return self._plt
+        # Create a mutable instance on 1st call so that later changes will be reflected in future calls
+        # https://stackoverflow.com/a/8140747
+        if 'plot' not in self._register:
+            self._register['plot'] = [_PlotMethods(self)]
+        return self._register['plot'][0]
 
     @property
     def stat(self):

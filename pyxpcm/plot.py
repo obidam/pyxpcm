@@ -102,7 +102,7 @@ def cmap_discretize(name, K):
         new_cmap = mcolors.LinearSegmentedColormap(cmap.name + "_%d" % N, cdict, N)
     return new_cmap
 
-def colorbar_index(ncolors, name, **kwargs):
+def colorbar_index(ncolors, name='Set1', **kwargs):
     """Adjust colorbar ticks with discrete colors"""
     cmap = cmap_discretize(name, ncolors)
     mappable = cm.ScalarMappable(cmap=cmap)
@@ -170,12 +170,22 @@ def cmap(m, name, palette=False, usage='class'):
     return c
 
 def colorbar(m, cmap=None, **kwargs):
-    """Add a colorbar to the current plot with centered ticks on discrete colors"""
+    """Add a colorbar to the current plot with centered ticks on discrete colors
+
+        Parameters
+        ----------
+        :class:`pyxpcm.models.pcm`
+            A PCM instance
+
+        cmap : :class:``matplotlib.colors.LinearSegmentedColormap`` or :func:``seaborn.color_palette``
+
+        Returns
+        -------
+        :class:``matplotlib.pyplot.colorbar``
+
+    """
     if cmap==None:
-        if m._props['cmap']==None:
-            cmap = m.plot.cmap()
-        else:
-            cmap = m._props['cmap']
+        cmap = _PlotMethods(m).cmap() # Load default colormap
     z = { **{'fraction':0.03, 'label':'Class'}, **kwargs}
     return colorbar_index(ncolors=m.K, cmap=cmap, **z)
 
@@ -546,27 +556,24 @@ class _PlotMethods(object):
 
     def __init__(self, m):
         self._pcm = m
-        self._kmap = 'Set1'
+        self._cmap_name = 'Set1'
 
     def __call__(self, **kwargs):
         raise ValueError("plot cannot be called directly. Use one of the plotting methods: cmap, colorbar, subplots, scaler, reducer, timeit, preprocessed")
 
+    @docstring(cmap.__doc__)
     def cmap(self, **kwargs):
-        """Return a categorical colormap for this PCM"""
-        defaults = {'name': self._kmap}
+        defaults = {'name': self._cmap_name, 'usage':'class'}
         opts = {**defaults, **kwargs}
+        if 'name' in kwargs and opts['usage']=='class':
+            self._cmap_name = opts['name'] # Update
         c = cmap(self._pcm, **opts)
-        if 'usage' in opts and opts['usage']=='class':
-            self._kmap = opts['name']
         return c
 
     @docstring(colorbar.__doc__)
     def colorbar(self, **kwargs):
-        if self._kmap:
-            defaults = {'name': self._kmap}
-            opts = {**defaults, **kwargs}
-        else:
-            opts = kwargs
+        defaults = {'name': self._cmap_name}
+        opts = {**defaults, **kwargs}
         return colorbar(self._pcm, **opts)
 
     @docstring(subplots.__doc__)
