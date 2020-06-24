@@ -21,7 +21,7 @@ import collections
 import inspect
 import dask
 
-import warnings
+# import warnings
 import time
 from contextlib import contextmanager
 from datetime import datetime
