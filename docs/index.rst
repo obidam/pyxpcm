@@ -1,6 +1,9 @@
 pyXpcm: Ocean Profile Classification Model
 ==========================================
 
+.. image:: https://zenodo.org/badge/DOI/10.5281/zenodo.3906236.svg
+   :target: https://doi.org/10.5281/zenodo.3906236
+
 **pyXpcm** is a python package to create and work with ocean **Profile Classification Model** that consumes and produces Xarray_ objects. Xarray_ objects are N-D labeled arrays and datasets in Python.
 
 An ocean **Profile Classification Model** allows to automatically assemble ocean profiles in clusters according to their vertical structure similarities.
