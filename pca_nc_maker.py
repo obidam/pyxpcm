@@ -83,8 +83,10 @@ def merge_whole_density_netcdf():
                                combine='by_coords',
                                chunks={'time': 1},
                                data_vars='minimal',
-                               #parallel=True,
-                               coords='minimal', compat='override')
+                               # parallel=True,
+                               coords='minimal',
+                               compat='override')
+
     # this is too intense for memory
 
     return pca_ds
@@ -93,6 +95,7 @@ def merge_whole_density_netcdf():
 def save_density_netcdf(pca_ds):
 
     xr.save_mfdataset([pca_ds], ['nc/pcm_pca.nc'], format='NETCDF4')
+
 
 def take_derivative_pca(dimension="YC", typ='float32'):
 
@@ -122,7 +125,9 @@ def take_derivative_pca(dimension="YC", typ='float32'):
                       ['nc/pc_grad_' + dimension + '.nc'],
                       format='NETCDF4')
 
+
 def go_through_all():
+    
     run_through_pca()
     pca_ds = merge_whole_density_netcdf()
     save_density_netcdf(pca_ds)
