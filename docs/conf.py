@@ -26,13 +26,6 @@ import datetime
 from contextlib import suppress
 allowed_failures = set()
 
-if 'conda' in sys.executable:
-    print('conda environment:')
-    subprocess.run(['conda', 'list'])
-else:
-    print('pip environment:')
-    subprocess.run(['pip', 'list'])
-
 print("xarray: %s, %s" % (xarray.__version__, xarray.__file__))
 
 with suppress(ImportError):
@@ -55,7 +48,6 @@ except ImportError:
     autodoc_mock_imports.append('cartopy')
 
 pyXpcm_src = os.path.abspath('..')
-print("pyXpcm loaded:", os.path.abspath('..'))
 sys.path.insert(0, os.path.abspath('..'))
 import pyxpcm
 print("pyxpcm: %s, %s" % (pyxpcm.__version__, pyxpcm.__file__))
