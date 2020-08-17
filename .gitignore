@@ -14,6 +14,7 @@ MANIFEST.in
 /dev/
 
 # Local devel usefull folder.
+/local_work/
 /local_playground/
 
 # Python egg metadata, regenerated from source files by setuptools.
