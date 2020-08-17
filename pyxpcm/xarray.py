@@ -89,7 +89,7 @@ class pyXpcmDataSetAccessor:
             warnings.warn(("%s variable already in the dataset: overwriting") % (da.name))
 
         # Add pyXpcm tracking clue to this DataArray:
-        da.attrs['_pyXpcm_cleanable'] = True
+        da.attrs['_pyXpcm_cleanable'] = 1
 
         # Add it to the DataSet:
         self._obj[da.name] = da
@@ -105,7 +105,7 @@ class pyXpcmDataSetAccessor:
         ds = drop_dims(self._obj, self._dims)
         return ds.drop([
             k for k, v in ds.variables.items()
-            if v.attrs.get("_pyXpcm_cleanable")
+            if v.attrs.get("_pyXpcm_cleanable") == 1
         ])
 
     def split(self):
@@ -118,7 +118,7 @@ class pyXpcmDataSetAccessor:
         """
         _ds = self._obj[[
             k for k, v in self._obj.variables.items()
-            if v.attrs.get("_pyXpcm_cleanable")
+            if v.attrs.get("_pyXpcm_cleanable") == 1
         ]].copy(deep=True)
         return _ds, self.drop_all()
 
