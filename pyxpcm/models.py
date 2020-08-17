@@ -808,6 +808,45 @@ class pcm(object):
                       " and sampling dimensions:", sampling_dims)
         return X, sampling_dims
 
+    def add_pca_to_xarray(self, ds, features=None,
+                          dim=None, action='fit',
+                          mask=None, inplace=False):
+        """
+        A function to preprocess the fields, fit the PCs,
+        and output the pca coefficients to an xarray dataarray object.
+
+        :param ds: :class:`xarray.Dataset` to process
+        :param features: dictionary with features inside e.g.: {'SALT': 'SALT'}
+        :param dim: string for dimension along which the model is fitted (e.g. Z)
+        :param action: string to be forwarded to preprocessing function
+        :param mask: mask over dataset
+        :param inplace: whether to add the dataarray to the existing dataset,
+               or just to return the datarray on its own.
+
+        """
+        with self._context('fit', self._context_args):
+            X, sampling_dims = self.preprocessing(ds, features=features, dim=dim,
+                                                  action=action, mask=mask)
+            pca_values = X.values
+            n_features = str(X.coords['n_features'].values)
+
+        with self._context('add_pca.xarray', self._context_args):
+            P = list()
+            for k in range(np.shape(pca_values)[1]):
+                X = pca_values[:, k]
+                x = self.unravel(ds, sampling_dims, X)
+                P.append(x)
+
+            da = xr.concat(P, dim='pca').rename('PCA_VALUES')
+            da.attrs['long_name'] = 'PCA Values'
+            da.attrs['n_features'] = n_features
+
+        # Add posteriors to the dataset:
+        if inplace:
+            return ds.pyxpcm.add(da)
+        else:
+            return da    
+
     def fit(self, ds, features=None, dim=None):
         """Estimate PCM parameters
 
@@ -1003,45 +1042,6 @@ class pcm(object):
                 return ds.pyxpcm.add(da)
             else:
                 return da
-
-    def add_pca_to_xarray(self, ds, features=None,
-                          dim=None, action='fit',
-                          mask=None, inplace=False):
-        """
-        A function to preprocess the fields, fit the PCs,
-        and output the pca coefficients to an xarray dataarray object.
-
-        :param ds: :class:`xarray.Dataset` to process
-        :param features: dictionary with features inside e.g.: {'SALT': 'SALT'}
-        :param dim: string for dimension along which the model is fitted (e.g. Z)
-        :param action: string to be forwarded to preprocessing function
-        :param mask: mask over dataset
-        :param inplace: whether to add the dataarray to the existing dataset,
-               or just to return the datarray on its own.
-
-        """
-        with self._context('fit', self._context_args):
-            X, sampling_dims = self.preprocessing(ds, features=features, dim=dim,
-                                                  action=action, mask=mask)
-            pca_values = X.values
-            n_features = str(X.coords['n_features'].values)
-
-        with self._context('add_pca.xarray', self._context_args):
-            P = list()
-            for k in range(np.shape(pca_values)[1]):
-                X = pca_values[:, k]
-                x = self.unravel(ds, sampling_dims, X)
-                P.append(x)
-
-            da = xr.concat(P, dim='pca').rename('PCA_VALUES')
-            da.attrs['long_name'] = 'PCA Values'
-            da.attrs['n_features'] = n_features
-
-        # Add posteriors to the dataset:
-        if inplace:
-            return ds.pyxpcm.add(da)
-        else:
-            return da
 
     def predict_proba(self, ds, features=None, dim=None, inplace=False, name='PCM_POST', classdimname='pcm_class'):
         """Predict posterior probability of each components given the data
