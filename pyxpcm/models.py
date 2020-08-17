@@ -129,11 +129,11 @@ class pcm(object):
         elif scaling==1: with_scaler = 'normal'; with_mean=True; with_std = True
         elif scaling==2: with_scaler = 'center'; with_mean=True; with_std = False
         else: raise NameError('scaling must be 0, 1 or 2')
-        
+
         if   reduction==0: with_reducer = False
         elif reduction==1: with_reducer = True
         else: raise NameError('reduction must be 0 or 1')
-        
+
         if classif=='gmm': with_classifier = 'gmm';
         else: raise NameError("classifier must be 'gmm' (no other methods implemented at this time)")
 
@@ -246,11 +246,11 @@ class pcm(object):
 
     def __call__(self, **kwargs):
         self.__init__(**kwargs)
-    
+
     def __iter__(self):
         self.__i = 0
         return self
-    
+
     def __next__(self):
         if self.__i < self.K:
             i = self.__i
@@ -522,7 +522,7 @@ class pcm(object):
         summary = [("<pcm '%s' (K: %i, F: %i)>")%(self._props['with_classifier'],
                                                   self._props['K'],
                                                   len(self._props['features']))]
-        
+
         # PCM core properties:
         prop_info = ('Number of class: %i') % self._props['K']
         summary.append(prop_info)
@@ -535,7 +535,7 @@ class pcm(object):
         # prop_info = ('Feature axis: [%s, ..., %s]') % (repr(self._props['features'][0]),
         #                                                repr(self._props['feature_axis'][-1]))
         # summary.append(prop_info)
-        
+
         prop_info = ('Fitted: %r') % hasattr(self, 'fitted')
         summary.append(prop_info)
 
@@ -572,12 +572,12 @@ class pcm(object):
         if (hasattr(self,'fitted')):
             prop_info = ('\t log likelihood of the training set: %f') % self._props['llh']
             summary.append(prop_info)
-        
+
         if (deep):
             summary.append("\t Classifier properties:")
             d = self._classifier.get_params(deep=deep)
             for p in d: summary.append(("\t\t %s: %r")%(p,d[p]))
-        
+
         # Done
         return '\n'.join(summary)
 
@@ -1003,6 +1003,45 @@ class pcm(object):
                 return ds.pyxpcm.add(da)
             else:
                 return da
+
+    def add_pca_to_xarray(self, ds, features=None,
+                          dim=None, action='fit',
+                          mask=None, inplace=False):
+        """
+        A function to preprocess the fields, fit the PCs,
+        and output the pca coefficients to an xarray dataarray object.
+
+        :param ds: :class:`xarray.Dataset` to process
+        :param features: dictionary with features inside e.g.: {'SALT': 'SALT'}
+        :param dim: string for dimension along which the model is fitted (e.g. Z)
+        :param action: string to be forwarded to preprocessing function
+        :param mask: mask over dataset
+        :param inplace: whether to add the dataarray to the existing dataset,
+               or just to return the datarray on its own.
+
+        """
+        with self._context('fit', self._context_args):
+            X, sampling_dims = self.preprocessing(ds, features=features, dim=dim,
+                                                  action=action, mask=mask)
+            pca_values = X.values
+            n_features = str(X.coords['n_features'].values)
+
+        with self._context('add_pca.xarray', self._context_args):
+            P = list()
+            for k in range(np.shape(pca_values)[1]):
+                X = pca_values[:, k]
+                x = self.unravel(ds, sampling_dims, X)
+                P.append(x)
+
+            da = xr.concat(P, dim='pca').rename('PCA_VALUES')
+            da.attrs['long_name'] = 'PCA Values'
+            da.attrs['n_features'] = n_features
+
+        # Add posteriors to the dataset:
+        if inplace:
+            return ds.pyxpcm.add(da)
+        else:
+            return da
 
     def predict_proba(self, ds, features=None, dim=None, inplace=False, name='PCM_POST', classdimname='pcm_class'):
         """Predict posterior probability of each components given the data
