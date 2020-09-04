@@ -9,7 +9,6 @@ __author__ = 'gmaze@ifremer.fr'
 import os
 import pyxpcm
 from pyxpcm.models import pcm
-import pytest
 import xarray as xr
 
 def test_data_loader():
