@@ -29,5 +29,9 @@ Latest release:
 Development version:
 
     pip install git+https://github.com/obidam/pyxpcm.git
+    
+## Dev roadmap
+This library has shown to be surprisingly robust over a couple of years: it kept working without active dev.  
+A new release is expected in 2023, to fix raised issues and to implement new features.
 
     
