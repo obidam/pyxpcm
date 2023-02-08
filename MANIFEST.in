@@ -1,0 +1,9 @@
+include *.txt
+include README.md
+
+graft pyxpcm
+
+prune *.egg-info
+
+exclude *.yml
+exclude .gitignore
