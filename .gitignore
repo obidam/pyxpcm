@@ -1,9 +1,6 @@
 # Compiled python modules.
 *.pyc
 
-# Manifest
-MANIFEST.in
-
 # build distribution folder.
 /build/
 
