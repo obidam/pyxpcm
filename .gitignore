@@ -32,3 +32,5 @@ docs/generated/
 #
 *.pdf
 
+# This should not be tracked, only shipped in the sdist and wheel.
+pyxpcm/_version.py
