@@ -1,0 +1,39 @@
+[build-system]
+requires = [
+    "setuptools>=45",
+    "setuptools_scm>=7",
+    "tomli>=1.0.0; python_version < '3.11'",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pyxpcm"
+authors = [
+    {name = "Guillaume Maze", email = "gmaze@ifremer.fr"},
+]
+description = "pyxpcm: Ocean Profile Classification Model"
+dynamic = ["version", "dependencies"]
+license = {text = "GPLv3"}
+classifiers = [
+    "Programming Language :: Python :: 3.6",
+    "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+]
+requires-python = ">=3.6"
+
+[project.urls]
+home = "http://github.com/obidam/pyxpcm"
+
+[tool.setuptools]
+packages = ["pyxpcm"]
+zip-safe = false
+include-package-data = true
+
+[tool.setuptools.dynamic]
+dependencies = {file = ["requirements.txt"]}
+readme = {file = ["README.md"]}
+
+[tool.setuptools_scm]
+write_to = "pyxpcm/_version.py"
+write_to_template = "__version__ = '{version}'"
