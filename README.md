@@ -36,4 +36,4 @@ Our plan is a new release in 2023 that will:
 
 - [ ] fix issues: [#33](https://github.com/obidam/pyxpcm/issues/33), [#38](https://github.com/obidam/pyxpcm/issues/38)
 - [ ] implement new features: [#5](https://github.com/obidam/pyxpcm/issues/5), [#13](https://github.com/obidam/pyxpcm/issues/13), [#17](https://github.com/obidam/pyxpcm/issues/17), [#26](https://github.com/obidam/pyxpcm/issues/26)
-- [ ] Improve CI (move from Travis to GHA)
+- [x] Move from Travis to GHA for CI tests [#40](https://github.com/obidam/pyxpcm/pull/40)
