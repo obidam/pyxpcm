@@ -1,9 +1,10 @@
 pyXpcm: Ocean Profile Classification Model
 ==========================================
 
-[![DOI-Software](https://zenodo.org/badge/DOI/10.5281/zenodo.3906236.svg)](https://doi.org/10.5281/zenodo.3906236)
+[![DOI-Software](https://img.shields.io/badge/DOI%3A%20Software-10.5281%2Fzenodo.3906236-blue)](//dx.doi.org/10.5281/zenodo.3906236)
+[![DOI-Paper](https://img.shields.io/badge/DOI%3A%20Paper-10.1016%2Fj.pocean.2016.12.008-blue)](//dx.doi.org/10.1016/j.pocean.2016.12.008)  
 [![Documentation Status](https://img.shields.io/readthedocs/pyxpcm?logo=readthedocs)](https://pyxpcm.readthedocs.io/en/latest/?badge=latest)
-[![CI tests](https://github.com/obidam/pyxpcm/actions/workflows/tests.yml/badge.svg)](https://github.com/obidam/pyxpcm/actions/workflows/tests.yml)  
+[![CI tests](https://github.com/obidam/pyxpcm/actions/workflows/tests.yml/badge.svg)](https://github.com/obidam/pyxpcm/actions/workflows/tests.yml)
 [![codecov](https://codecov.io/gh/obidam/pyxpcm/branch/master/graph/badge.svg)](https://codecov.io/gh/obidam/pyxpcm)
 [![PyPI](https://img.shields.io/pypi/v/pyxpcm)](//pypi.org/project/pyxpcm/)  
 [![contributions welcome](https://img.shields.io/badge/contributions-welcome-brightgreen.svg?style=flat)](https://github.com/dwyl/esta/issues) 
