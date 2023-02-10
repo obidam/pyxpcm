@@ -36,7 +36,7 @@ jobs:
     # CI tests for environments with requirements in pinned versions, using Scikit-learn backend
     # All commits must pass this
 
-    name: Scikit - Pinned - Py${{matrix.python-version}} - ${{ matrix.os }}
+    name: Scikit-Learn - Pinned - Py${{matrix.python-version}} - ${{ matrix.os }}
     needs: detect-ci-trigger
     runs-on: ${{ matrix.os }}
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
@@ -57,7 +57,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "CONDA_ENV_FILE=ci/requirements/py${{matrix.python-version}}-pinned-scikitlearn.yml" >> $GITHUB_ENV
+          echo "CONDA_ENV_FILE=ci/requirements/py${{matrix.python-version}}-all-pinned-scikitlearn.yml" >> $GITHUB_ENV
           echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
 
       - name: Setup micromamba
@@ -106,7 +106,7 @@ jobs:
     # CI tests for environments with requirements in pinned versions, using Dask-ML backend
     # All commits must pass this
 
-    name: DaskML - Pinned - Py${{matrix.python-version}} - ${{ matrix.os }}
+    name: Dask-ML - Pinned - Py${{matrix.python-version}} - ${{ matrix.os }}
     needs: detect-ci-trigger
     runs-on: ${{ matrix.os }}
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
@@ -127,7 +127,7 @@ jobs:
 
       - name: Set environment variables
         run: |
-          echo "CONDA_ENV_FILE=ci/requirements/py${{matrix.python-version}}-pinned-daskml.yml" >> $GITHUB_ENV
+          echo "CONDA_ENV_FILE=ci/requirements/py${{matrix.python-version}}-all-pinned-daskml.yml" >> $GITHUB_ENV
           echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
 
       - name: Setup micromamba
