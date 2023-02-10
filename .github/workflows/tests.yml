@@ -1,0 +1,43 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+
+jobs:
+  run:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        os: [windows-latest, ubuntu-latest, macos-latest]
+      fail-fast: false
+
+    steps:
+    - uses: actions/checkout@v3
+      with: 
+        # fetch more than the last single commit to help scm generate proper version
+        fetch-depth: 20
+
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+
+    - name: Fetch git tags
+      run: git fetch origin 'refs/tags/*:refs/tags/*'
+
+    - name: Build package
+      run: |
+        python -m pip install pytest bottleneck "dask[dataframe]" build
+        python -m build --wheel . --outdir dist
+
+    - name: Install wheel
+      run: |
+        python -m pip install dist/*.whl
+      
+    - name: Run Test
+      run: |
+        python -m pytest --pyargs pyxpcm
