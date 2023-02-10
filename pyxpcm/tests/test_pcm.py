@@ -79,20 +79,20 @@ def test_pcm_init_opt():
                     m = pcm(K=3, features=pcm_features, scaling=scaling,
                             reduction=reduction, maxvar=90.,
                             classif='gmm', covariance_type=covariance_type,
-                            verb=False, debug=True)
+                            verb=False, debug=0)
                     assert isinstance(m, pcm) == True
 
                     m = pcm(K=3, features=pcm_features, scaling=scaling,
                             reduction=reduction, maxvar=90.,
                             classif='gmm', covariance_type=covariance_type,
-                            verb=False, debug=True,
+                            verb=False, debug=0,
                             timeit=True)
                     assert isinstance(m, pcm) == True
 
                     m = pcm(K=3, features=pcm_features, scaling=scaling,
                             reduction=reduction, maxvar=90.,
                             classif='gmm', covariance_type=covariance_type,
-                            verb=False, debug=True,
+                            verb=False, debug=0,
                             timeit=True, timeit_verb=True)
                     assert isinstance(m, pcm) == True
 

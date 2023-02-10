@@ -7,18 +7,19 @@
 __author__ = 'gmaze@ifremer.fr'
 
 import os
+import pytest
 import pyxpcm
 from pyxpcm.models import pcm
 import xarray as xr
 
-def test_data_loader():
+@pytest.mark.parametrize("d", ['dummy', 'argo', 'isas_snapshot', 'isas_series', 'orsi'], indirect=False)
+def test_data_loader(d):
     """Test dummy dataset loader"""
-    for d in ['dummy', 'argo', 'isas_snapshot', 'isas_series', 'orsi']:
-        ds = pyxpcm.tutorial.open_dataset(d).load()
-        assert isinstance(ds, xr.Dataset) == True
-        print("Load", d, "OK")
+    ds = pyxpcm.tutorial.open_dataset(d).load()
+    assert isinstance(ds, xr.Dataset) == True
 
-def test_saveload_prediction():
+
+class Test_saveload_prediction:
     """Test PCM save to netcdf"""
     ds = pyxpcm.tutorial.open_dataset('dummy').load(Np=50, Nz=20)
     pcm_features = {'TEMP': ds['depth'], 'PSAL': ds['depth']}
@@ -36,18 +37,26 @@ def test_saveload_prediction():
     except ModuleNotFoundError:
         pass
 
+    scaling = [0, 1, 2]
+    scaling_ids = ["scaling=%i" % s for s in scaling]
+
+    reduction = [0, 1]
+    reduction_ids = ["reduction=%i" % s for s in reduction]
+
     # Create a model, fit, predict, save, load, predict
     file = '.pyxpcm_dummy_file.nc'
-    for backend in backends:
-        for scaling in [0, 1, 2]:
-            for reduction in [0, 1]:
-                M = pcm(K=3, features=pcm_features, scaling=scaling, reduction=reduction, backend=backend)
-                M.fit(ds)
-                M.to_netcdf(file, mode='w')
-                label_ref = M.predict(ds, inplace=False)
-                M_loaded = pyxpcm.load_netcdf(file)
-                label_new = M_loaded.predict(ds, inplace=False)
-                assert label_ref.equals(label_new) == True, "Netcdf I/O not producing similar results"
 
-    # Delete file at the end of the test:
-    os.remove(file)
+    @pytest.mark.parametrize("scaling", scaling, indirect=False, ids=scaling_ids)
+    @pytest.mark.parametrize("reduction", reduction, indirect=False, ids=reduction_ids)
+    @pytest.mark.parametrize("backend", backends, indirect=False, ids=backends)
+    def test(self, backend, scaling, reduction):
+        M = pcm(K=3, features=self.pcm_features, scaling=scaling, reduction=reduction, backend=backend)
+        M.fit(self.ds)
+        M.to_netcdf(self.file, mode='w')
+        label_ref = M.predict(self.ds, inplace=False)
+        M_loaded = pyxpcm.load_netcdf(self.file)
+        label_new = M_loaded.predict(self.ds, inplace=False)
+        assert label_ref.equals(label_new) == True, "Netcdf I/O not producing similar results"
+
+        # Delete file at the end of the test:
+        os.remove(self.file)
