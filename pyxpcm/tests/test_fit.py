@@ -16,21 +16,7 @@ import pytest
 from sklearn.utils import validation
 import warnings
 
-# Determine backends to test:
-backends = list()
-try:
-    import sklearn
-    backends.append('sklearn')
-except ModuleNotFoundError:
-    pass
-
-try:
-    import dask_ml
-    backends.append('dask_ml')
-except ModuleNotFoundError:
-    pass
-
-backends_ids = ["backend=%s" % s for s in backends]
+from utils import backends, backends_ids
 
 
 def get_a_dataset(d):

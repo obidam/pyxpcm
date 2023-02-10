@@ -11,6 +11,7 @@ import pytest
 import pyxpcm
 from pyxpcm.models import pcm
 import xarray as xr
+from utils import backends, backends_ids
 
 @pytest.mark.parametrize("d", ['dummy', 'argo', 'isas_snapshot', 'isas_series', 'orsi'], indirect=False)
 def test_data_loader(d):
@@ -24,19 +25,6 @@ class Test_saveload_prediction:
     ds = pyxpcm.tutorial.open_dataset('dummy').load(Np=50, Nz=20)
     pcm_features = {'TEMP': ds['depth'], 'PSAL': ds['depth']}
 
-    # Determine backends to test:
-    backends = list()
-    try:
-        import sklearn
-        backends.append('sklearn')
-    except ModuleNotFoundError:
-        pass
-    try:
-        import dask_ml
-        backends.append('dask_ml')
-    except ModuleNotFoundError:
-        pass
-
     scaling = [0, 1, 2]
     scaling_ids = ["scaling=%i" % s for s in scaling]
 
@@ -48,7 +36,7 @@ class Test_saveload_prediction:
 
     @pytest.mark.parametrize("scaling", scaling, indirect=False, ids=scaling_ids)
     @pytest.mark.parametrize("reduction", reduction, indirect=False, ids=reduction_ids)
-    @pytest.mark.parametrize("backend", backends, indirect=False, ids=backends)
+    @pytest.mark.parametrize("backend", backends, indirect=False, ids=backends_ids)
     def test(self, backend, scaling, reduction):
         M = pcm(K=3, features=self.pcm_features, scaling=scaling, reduction=reduction, backend=backend)
         M.fit(self.ds)
