@@ -33,8 +33,7 @@ Development version:
 ## Dev roadmap
 This library has shown to be quiet robust over a couple of years now: it kept working without active dev and was used in [numerous research papers](https://pyxpcm.readthedocs.io/en/latest/bibliography.html) as well to create new tools in big projects like [Blue-Cloud](https://blue-cloud.org/article/applying-machine-learning-methods-ocean-patterns-and-ocean-regimes-indicators) and Euro-Argo RISE (see [here for Argo floats QC](10.5281/zenodo.7362293) and [here for boundary currents monitoring](https://github.com/euroargodev/boundary_currents_pcm/)). 
 
-Our plan is a new release in 2023 that will:
+Our plan is a new release in 2024 that will:
 
 - [ ] fix issues: [#33](https://github.com/obidam/pyxpcm/issues/33), [#38](https://github.com/obidam/pyxpcm/issues/38)
 - [ ] implement new features: [#5](https://github.com/obidam/pyxpcm/issues/5), [#13](https://github.com/obidam/pyxpcm/issues/13), [#17](https://github.com/obidam/pyxpcm/issues/17), [#26](https://github.com/obidam/pyxpcm/issues/26)
-- [x] Move from Travis to GHA for CI tests [#40](https://github.com/obidam/pyxpcm/pull/40)
