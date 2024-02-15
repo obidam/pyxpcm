@@ -3,6 +3,11 @@
 What's New
 ==========
 
+Upcoming release
+----------------
+
+- Fix bug with last numpy and integer management :issue:`42`.
+
 v0.4.1 (21 Feb. 2020)
 ---------------------
 
