@@ -169,6 +169,14 @@ html_theme = 'sphinx_rtd_theme'
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
 
+html_context = {
+    "github_user": "obidam",
+    "github_repo": "pyxpcm",
+    "github_version": "master",
+    "doc_path": "docs",
+}
+
+
 # Sometimes the savefig directory doesn't exist and needs to be created
 # https://github.com/ipython/ipython/issues/8733
 # becomes obsolete when we can pin ipython>=5.2; see doc/environment.yml
@@ -210,6 +218,10 @@ latex_documents = [
     (master_doc, 'pyxpcm.tex', u'pyXpcm Documentation',
      u'pyXpcm Developers', 'manual'),
 ]
+
+# -- Options for Github ---------------------------------------
+# GitHub repo
+issues_github_path = "obidam/pyxpcm"
 
 
 # -- Options for manual page output ---------------------------------------

@@ -3,6 +3,11 @@
 What's New
 ==========
 
+Upcoming release
+----------------
+
+- Fix bug with last numpy and integer management :issue:`42`. (:pr:`43`) by `G. Maze <http://www.github.com/gmaze>`_
+
 v0.4.1 (21 Feb. 2020)
 ---------------------
 

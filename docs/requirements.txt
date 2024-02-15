@@ -6,3 +6,5 @@ nbsphinx>=0.4
 #pyproj>=2.4
 #geos>=0.2
 #cartopy
+sphinx-rtd-theme
+gitpython
