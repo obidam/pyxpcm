@@ -1,13 +1,8 @@
 name: Publish to PyPI
 
 on:
-  pull_request:
-  push:
-    branches:
-      - main
   release:
-    types:
-      - published
+    types: [created, edited]
 
 jobs:
   packages:
