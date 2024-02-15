@@ -230,7 +230,7 @@ def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
     ncols = K
 
     if K > maxcols:
-        nrows = 1 + np.int(K / maxcols)
+        nrows = 1 + int(K / maxcols)
         ncols = maxcols
     if ncols == 1:
         nrows = K

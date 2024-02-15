@@ -139,7 +139,7 @@ class pcm(object):
 
         #todo check validity of the dict of features
 
-        self._props = {'K': np.int_(K),
+        self._props = {'K': int(K),
                        'F': len(features),
                         'llh': None,
                         'COVARTYPE': covariance_type,
