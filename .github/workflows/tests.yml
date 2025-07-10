@@ -61,15 +61,17 @@ jobs:
           echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
 
       - name: Setup micromamba
-        uses: mamba-org/provision-with-micromamba@v15
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ${{ env.CONDA_ENV_FILE }}
           environment-name: pyxpcm-tests
-          cache-env: true
-          cache-env-key: "${{runner.os}}-${{runner.arch}}-py${{matrix.python-version}}-${{env.TODAY}}-${{hashFiles(env.CONDA_ENV_FILE)}}"
-          extra-specs: |
-            python=${{matrix.python-version}}
-            conda
+          # persist only for runs on this commit.
+          cache-environment-key: environment-${{ github.sha }}
+          cache-downloads-key: downloads-${{ github.sha }}
+          post-cleanup: 'all'
+          init-shell: >-
+            bash
+            powershell
 
       # We only want to install this on one run, because otherwise we'll have
       # duplicate annotations.
@@ -80,8 +82,8 @@ jobs:
 
       - name: Version info
         run: |
-          conda info
-          conda list
+          micromamba info
+          micromamba list
 
 #      - name: Lint with flake8
 #        run: |
@@ -131,20 +133,22 @@ jobs:
           echo "PYTHON_VERSION=${{ matrix.python-version }}" >> $GITHUB_ENV
 
       - name: Setup micromamba
-        uses: mamba-org/provision-with-micromamba@v15
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ${{ env.CONDA_ENV_FILE }}
           environment-name: pyxpcm-tests
-          cache-env: true
-          cache-env-key: "${{runner.os}}-${{runner.arch}}-py${{matrix.python-version}}-${{env.TODAY}}-${{hashFiles(env.CONDA_ENV_FILE)}}"
-          extra-specs: |
-            python=${{matrix.python-version}}
-            conda
+          # persist only for runs on this commit.
+          cache-environment-key: environment-${{ github.sha }}
+          cache-downloads-key: downloads-${{ github.sha }}
+          post-cleanup: 'all'
+          init-shell: >-
+            bash
+            powershell
 
       - name: Version info
         run: |
-          conda info
-          conda list
+          micromamba info
+          micromamba list
 
 #      - name: Lint with flake8
 #        run: |
