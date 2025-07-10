@@ -10,3 +10,13 @@ from . import utils
 from . import plot
 from . import stat
 from .io import load_netcdf
+
+__all__ = (
+    pcm,
+#    pyXpcmDataSetAccessor,
+    tutorial,
+    utils,
+    plot,
+    stat,
+    load_netcdf
+)
