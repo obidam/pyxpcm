@@ -49,7 +49,7 @@ class PCMFeatureError(Exception):
 class PCMClassError(Exception):
     """Exception raised when classes not correct"""
 
-class pcm(object):
+class pcm(BaseEstimator):
     """Profile Classification Model class constructor
 
         Consume and return :mod:`xarray` objects
