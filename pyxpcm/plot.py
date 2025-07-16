@@ -46,6 +46,9 @@ except ModuleNotFoundError:
     with_seaborn = False
 
 
+inf_value = np.inf if not hasattr(np, 'Inf') else np.Inf
+
+
 # Let's start
 
 @contextmanager
@@ -189,7 +192,7 @@ def colorbar(m, cmap=None, **kwargs):
     z = { **{'fraction':0.03, 'label':'Class'}, **kwargs}
     return colorbar_index(ncolors=m.K, cmap=cmap, **z)
 
-def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
+def subplots(m, maxcols=3, K=inf_value, subplot_kw=None, **kwargs):
     """ Return (figure, axis) with one subplot per cluster
 
         Parameters
@@ -225,7 +228,7 @@ def subplots(m, maxcols=3, K=np.Inf, subplot_kw=None, **kwargs):
         __author__: gmaze@ifremer.fr
     """
     nrows = 1
-    if K == np.Inf:
+    if K == inf_value:
         K = m.K
     ncols = K
 
@@ -423,7 +426,7 @@ def scaler(m, style="whitegrid", plot_kw=None, subplot_kw=None, **kwargs):
 
     return fig, ax
 
-def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, subplot_kw=None, **kwargs):
+def reducer(m, pcalist=None, style="whitegrid", maxcols=inf_value, plot_kw=None, subplot_kw=None, **kwargs):
     """ Plot PCM reducers properties """
 
     # Check if the PCM is trained:
@@ -433,12 +436,12 @@ def reducer(m, pcalist=None, style="whitegrid", maxcols=np.Inf, plot_kw=None, su
     with axes_style(style):
         defaults = {'sharey': 'row', 'figsize': (5*m.F, 5), 'dpi': 80, 'facecolor': 'w', 'edgecolor': 'k'}
         if not subplot_kw:
-            if maxcols == np.Inf:
+            if maxcols == inf_value:
                 fig, ax = m.plot.subplots(K=m.F, maxcols=m.F, **{**defaults, **kwargs})
             else:
                 fig, ax = m.plot.subplots(K=m.F, maxcols=maxcols, **{**defaults, **kwargs})
         else:
-            if maxcols == np.Inf:
+            if maxcols == inf_value:
                 fig, ax = m.plot.subplots(K=m.F, maxcols=m.F, **{**defaults, **kwargs}, subplot_kw=subplot_kw)
             else:
                 fig, ax = m.plot.subplots(K=m.F, maxcols=maxcols, **{**defaults, **kwargs}, subplot_kw=subplot_kw)

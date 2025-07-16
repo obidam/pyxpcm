@@ -43,6 +43,9 @@ from sklearn.exceptions import NotFittedError
 # http://scikit-learn.org/stable/modules/mixture.html
 from sklearn.mixture import GaussianMixture
 
+inf_value = np.inf if not hasattr(np, 'Inf') else np.Inf
+
+
 class PCMFeatureError(Exception):
     """Exception raised when features not correct"""
 
@@ -219,7 +222,7 @@ class pcm(object):
 
     @contextmanager
     def __timeit_context(self, name, opts=dict()):
-        default_opts = {'maxlevel': np.inf, 'verb':False}
+        default_opts = {'maxlevel': inf_value, 'verb':False}
         for key in opts:
             if key in default_opts:
                 default_opts[key] = opts[key]
