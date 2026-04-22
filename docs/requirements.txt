@@ -1,5 +1,5 @@
 pkgconfig
-ipykernel>=5.1
+ipykernel>=6.31.0
 seaborn>=0.9.0
 geos>=0.2
 nbsphinx>=0.4
